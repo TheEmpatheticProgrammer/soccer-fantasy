@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#05080f">
+  <title>World Cup 2026 Fantasy</title>
+  <meta name="description" content="Predict every group-stage match of the 2026 FIFA World Cup. Friends-league fantasy with live scoring.">
+
+  <!-- Open Graph / link preview (WhatsApp, iMessage, Slack, etc.) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="World Cup 2026 Fantasy">
+  <meta property="og:description" content="Predict every group-stage match. Friends-league fantasy with live scoring.">
+  <meta property="og:image" content="og-image.svg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="World Cup 2026 Fantasy">
+  <meta name="twitter:description" content="Predict every group-stage match. Friends-league fantasy with live scoring.">
+  <meta name="twitter:image" content="og-image.svg">
+
+  <!-- Favicon (inline SVG soccer ball) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23ffffff' stroke='%23000' stroke-opacity='0.15' stroke-width='0.8'/%3E%3Cpolygon points='20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7' fill='%230a3b1f'/%3E%3Cline x1='20' y1='10' x2='20' y2='3' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='26.5' y1='14.7' x2='33' y2='12.5' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='13.5' y1='14.7' x2='7' y2='12.5' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='24' y1='22.2' x2='28' y2='29' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='16' y1='22.2' x2='12' y2='29' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Auth screen (shown when signed out) -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <h1 data-i18n="app.title">World Cup 2026 Fantasy</h1>
+      <p class="auth-subtitle" data-i18n="auth.subtitle">Sign in to make your predictions</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="signin" data-i18n="auth.signIn">Sign In</button>
+        <button class="auth-tab" data-tab="signup" data-i18n="auth.signUp">Sign Up</button>
+      </div>
+
+      <form id="auth-form" autocomplete="on">
+        <input type="email" id="auth-email" required autocomplete="email"
+               data-i18n-placeholder="auth.email" placeholder="Email">
+        <input type="password" id="auth-password" required minlength="6" autocomplete="current-password"
+               data-i18n-placeholder="auth.password" placeholder="Password (6+ chars)">
+        <div id="auth-displayname-wrap" class="hidden">
+          <input type="text" id="auth-displayname" autocomplete="nickname"
+                 data-i18n-placeholder="auth.displayName" placeholder="Display name (shown on leaderboard)">
+        </div>
+        <button type="submit" id="auth-submit" class="btn btn-primary" data-i18n="auth.signIn">Sign In</button>
+        <div id="auth-error" class="auth-error hidden"></div>
+      </form>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand">
+        <svg class="brand-ball" viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="18" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+          <polygon points="20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7" fill="#0a3b1f"/>
+          <line x1="20" y1="10" x2="20" y2="3" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="26.5" y1="14.7" x2="33" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="13.5" y1="14.7" x2="7" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="24" y1="22.2" x2="28" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="16" y1="22.2" x2="12" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <div class="brand-text">
+          <h1 class="brand-title" data-i18n="app.title">World Cup 2026 Fantasy</h1>
+          <span class="brand-tagline" data-i18n="app.tagline">Group Stage Predictions</span>
+        </div>
+        <div class="brand-hosts" aria-hidden="true">
+          <span class="host-dot" style="background:#006847"></span>
+          <span class="host-dot" style="background:#ffffff"></span>
+          <span class="host-dot" style="background:#ce1126"></span>
+        </div>
+      </div>
+      <nav class="main-nav">
+        <button class="nav-btn active" data-view="predictions" data-i18n="nav.predictions">Predictions</button>
+        <button class="nav-btn" data-view="leaderboard" data-i18n="nav.leaderboard">Leaderboard</button>
+        <button class="nav-btn" data-view="rules" data-i18n="nav.rules">Rules</button>
+        <button class="nav-btn" id="btn-settings">&#9881; <span data-i18n="nav.settings">Settings</span></button>
+        <div class="lang-toggle" role="group" data-i18n-title="nav.langTitle" title="Switch language">
+          <button class="lang-flag" data-lang="en" aria-label="English">
+            <svg viewBox="0 0 24 16" aria-hidden="true">
+              <rect width="24" height="16" fill="#b22234"/>
+              <rect y="1.23" width="24" height="1.23" fill="#fff"/>
+              <rect y="3.69" width="24" height="1.23" fill="#fff"/>
+              <rect y="6.15" width="24" height="1.23" fill="#fff"/>
+              <rect y="8.62" width="24" height="1.23" fill="#fff"/>
+              <rect y="11.08" width="24" height="1.23" fill="#fff"/>
+              <rect y="13.54" width="24" height="1.23" fill="#fff"/>
+              <rect width="9.6" height="8.62" fill="#3c3b6e"/>
+            </svg>
+          </button>
+          <button class="lang-flag" data-lang="es" aria-label="Español">
+            <svg viewBox="0 0 24 16" aria-hidden="true">
+              <rect width="24" height="16" fill="#aa151b"/>
+              <rect y="4" width="24" height="8" fill="#f1bf00"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Settings panel (below header, toggled) -->
+  <div id="settings-panel" class="settings-panel hidden">
+    <div class="settings-inner">
+      <div id="user-info" class="user-info hidden">
+        <span class="user-label" data-i18n="settings.signedInAs">Signed in as</span>
+        <strong id="user-display-email"></strong>
+        <button id="btn-signout" class="btn btn-secondary" data-i18n="settings.signOut">Sign Out</button>
+      </div>
+      <div class="settings-left">
+        <label class="settings-label" data-i18n="settings.apiKey">football-data.org API Key</label>
+        <div class="api-key-row">
+          <input type="password" id="api-key-input" autocomplete="off" spellcheck="false"
+                 data-i18n-placeholder="settings.apiKeyPlaceholder" placeholder="Paste your free API key here">
+          <button id="btn-toggle-key" class="btn-icon" data-i18n-title="settings.toggleKey" title="Show / hide key">&#128065;</button>
+          <button id="btn-save-key" class="btn btn-primary" data-i18n="settings.connect">Connect</button>
+        </div>
+        <a class="api-link" href="https://www.football-data.org/client/register" target="_blank" rel="noopener" data-i18n="settings.apiKeyLink">
+          Get a free key at football-data.org →
+        </a>
+      </div>
+      <div class="settings-right">
+        <span id="api-status" class="api-status"></span>
+        <button id="btn-refresh" class="btn btn-primary" disabled data-i18n="settings.refresh">Refresh Scores</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="app-main">
+
+    <!-- Predictions view -->
+    <div id="view-predictions" class="view">
+
+      <div class="player-bar">
+        <div id="player-status" class="player-status">
+          <span data-i18n="predictions.playingAs">Playing as:</span> <strong id="player-display"></strong>
+        </div>
+      </div>
+
+      <div class="sub-tabs">
+        <button class="sub-tab active" data-subtab="mine" data-i18n="predictions.tabMine">Yours</button>
+        <button class="sub-tab" data-subtab="everyone" data-i18n="predictions.tabEveryone">Everyone</button>
+      </div>
+
+      <div id="subview-mine" class="subview">
+        <div id="matches-container" class="matches-container">
+          <div class="empty-state" data-i18n="predictions.loadingMatches">Loading matches…</div>
+        </div>
+
+        <div class="save-bar">
+          <span id="save-status"></span>
+          <span id="autosave-indicator" class="autosave-indicator"></span>
+        </div>
+      </div>
+
+      <div id="subview-everyone" class="subview hidden">
+        <div id="everyone-container">
+          <div class="empty-state" data-i18n="predictions.loadingMatches">Loading…</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Rules view -->
+    <div id="view-rules" class="view hidden">
+      <div class="rules-card">
+        <h2 class="rules-section-title" data-i18n="rules.scoringTitle">How scoring works</h2>
+        <p class="rules-intro" data-i18n="rules.intro">Each prediction earns points based on how close you got.</p>
+
+        <div class="rule-item">
+          <span class="rule-badge points-3">3</span>
+          <div class="rule-content">
+            <h3 data-i18n="rules.exactTitle">Exact score</h3>
+            <p data-i18n="rules.exactExample">You predicted 2–1 and the match ended 2–1.</p>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <span class="rule-badge points-1">1</span>
+          <div class="rule-content">
+            <h3 data-i18n="rules.outcomeTitle">Correct outcome</h3>
+            <p data-i18n="rules.outcomeExample">You picked the right winner (or a draw) but the score was different. Example: predicted 2–0, actual 3–1.</p>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <span class="rule-badge points-0">0</span>
+          <div class="rule-content">
+            <h3 data-i18n="rules.wrongTitle">Wrong outcome</h3>
+            <p data-i18n="rules.wrongExample">Your predicted winner didn't win, or you picked a draw and someone won.</p>
+          </div>
+        </div>
+
+        <h2 class="rules-section-title" data-i18n="rules.editTitle">Editing your predictions</h2>
+        <p data-i18n="rules.editText">You can update your predictions as often as you'd like until they lock at midnight on June 10, 2026 — the night before the tournament starts.</p>
+      </div>
+    </div>
+
+    <!-- Leaderboard view -->
+    <div id="view-leaderboard" class="view hidden">
+
+      <details id="admin-panel" class="admin-panel hidden">
+        <summary class="admin-toggle" data-i18n="leaderboard.adminToggle">Admin: Enter Match Results</summary>
+        <div class="admin-content">
+          <p class="admin-note" data-i18n="leaderboard.adminNote">Results from the API are filled in automatically. Use this to override or enter scores manually.</p>
+          <div id="admin-matches"></div>
+          <div class="admin-actions">
+            <button id="btn-save-results" class="btn btn-primary" data-i18n="leaderboard.saveResults">Save Results</button>
+          </div>
+        </div>
+      </details>
+
+      <div id="leaderboard-container" class="leaderboard-container">
+        <div class="empty-state" data-i18n="leaderboard.empty">No players have submitted predictions yet.</div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/config.local.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/firebase-init.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

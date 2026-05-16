@@ -1,0 +1,409 @@
+const TRANSLATIONS = {
+  en: {
+    'app.title': 'World Cup 2026 Fantasy',
+    'app.tagline': 'Group Stage Predictions',
+    'app.dateTBD': 'Date TBD',
+
+    'nav.predictions': 'Predictions',
+    'nav.leaderboard': 'Leaderboard',
+    'nav.rules': 'Rules',
+    'nav.settings': 'Settings',
+    'nav.langTitle': 'Switch language',
+
+    'rules.scoringTitle': 'How scoring works',
+    'rules.intro': 'Each prediction earns points based on how close you got.',
+    'rules.exactTitle': 'Exact score',
+    'rules.exactExample': 'You predicted 2–1 and the match ended 2–1.',
+    'rules.outcomeTitle': 'Correct outcome',
+    'rules.outcomeExample': "You picked the right winner (or a draw) but the score was different. Example: predicted 2–0, actual 3–1.",
+    'rules.wrongTitle': 'Wrong outcome',
+    'rules.wrongExample': "Your predicted winner didn't win, or you picked a draw and someone won.",
+    'rules.editTitle': 'Editing your predictions',
+    'rules.editText': "You can update your predictions as often as you'd like until they lock at midnight on June 10, 2026 — the night before the tournament starts.",
+
+    'auth.subtitle': 'Sign in to make your predictions',
+    'auth.signIn': 'Sign In',
+    'auth.signUp': 'Sign Up',
+    'auth.createAccount': 'Create Account',
+    'auth.email': 'Email',
+    'auth.password': 'Password (6+ chars)',
+    'auth.displayName': 'Display name (shown on leaderboard)',
+    'auth.err.emailInUse': 'An account with this email already exists.',
+    'auth.err.invalidEmail': 'Please enter a valid email.',
+    'auth.err.weakPassword': 'Password must be at least 6 characters.',
+    'auth.err.invalidCred': 'Incorrect email or password.',
+    'auth.err.tooMany': 'Too many attempts. Try again later.',
+    'auth.err.network': 'Network error. Check your connection.',
+    'auth.err.generic': 'Something went wrong. Please try again.',
+    'auth.err.nameRequired': 'Display name is required.',
+
+    'settings.apiKey': 'football-data.org API Key',
+    'settings.apiKeyPlaceholder': 'Paste your free API key here',
+    'settings.toggleKey': 'Show / hide key',
+    'settings.connect': 'Connect',
+    'settings.refresh': 'Refresh Scores',
+    'settings.refreshing': 'Refreshing…',
+    'settings.signedInAs': 'Signed in as',
+    'settings.signOut': 'Sign Out',
+    'settings.apiKeyLink': 'Get a free key at football-data.org →',
+    'settings.enterKey': 'Enter your API key in Settings to load live data.',
+    'settings.noKey': 'No API key set.',
+    'settings.loading': 'Loading…',
+    'settings.lastRefreshed': 'Last refreshed: {time}',
+    'settings.error': 'Error: {msg}',
+
+    'predictions.playingAs': 'Playing as:',
+    'predictions.tabMine': 'Yours',
+    'predictions.tabEveryone': 'Everyone',
+    'predictions.loadingMatches': 'Loading matches…',
+    'predictions.save': 'Save Predictions',
+    'predictions.saved': 'Predictions saved!',
+    'predictions.saving': 'Saving…',
+    'predictions.allSaved': 'All changes saved',
+    'predictions.editing': 'Unsaved changes',
+    'predictions.locked': 'Predictions are locked — the tournament has started.',
+    'predictions.count': '{count} of {total} matches predicted',
+    'predictions.everyoneLocked': "Other players' predictions will be revealed when the tournament starts on June 11, 2026.",
+    'predictions.noOthers': 'No other players have joined yet.',
+    'predictions.noPredsForMatch': 'No predictions for this match.',
+    'predictions.saveFailed': 'Save failed: {msg}',
+
+    'match.yourPick': 'Your pick',
+    'match.actual': 'Actual',
+    'match.group': 'Group {letter}',
+    'match.vs': 'vs',
+    'match.pts': '{n} pt',
+
+    'leaderboard.adminToggle': 'Admin: Enter Match Results',
+    'leaderboard.adminNote': 'Results from the API are filled in automatically. Use this to override or enter scores manually.',
+    'leaderboard.saveResults': 'Save Results',
+    'leaderboard.resultsSaved': 'Results saved!',
+    'leaderboard.empty': 'No players have submitted predictions yet.',
+    'leaderboard.player': 'Player',
+    'leaderboard.points': 'Points',
+    'leaderboard.matchesScored': 'Matches Scored',
+    'leaderboard.predictionsMade': 'Predictions Made',
+
+    'time.justNow': 'just now',
+    'time.minutes': '{n}m ago',
+    'time.hours': '{n}h ago',
+
+    'toast.predLoadFail': 'Could not load predictions: {msg}',
+    'toast.resultsLoadFail': 'Could not load results: {msg}',
+    'toast.unknown': '(unknown)',
+  },
+
+  es: {
+    'app.title': 'Mundial 2026 Fantasy',
+    'app.tagline': 'Pronósticos de la Fase de Grupos',
+    'app.dateTBD': 'Fecha por confirmar',
+
+    'nav.predictions': 'Pronósticos',
+    'nav.leaderboard': 'Posiciones',
+    'nav.rules': 'Reglas',
+    'nav.settings': 'Ajustes',
+    'nav.langTitle': 'Cambiar idioma',
+
+    'rules.scoringTitle': 'Cómo funcionan los puntos',
+    'rules.intro': 'Cada pronóstico gana puntos según cuán cerca estés del resultado real.',
+    'rules.exactTitle': 'Marcador exacto',
+    'rules.exactExample': 'Predijiste 2–1 y el partido terminó 2–1.',
+    'rules.outcomeTitle': 'Resultado correcto',
+    'rules.outcomeExample': 'Acertaste al ganador (o empate) pero el marcador fue distinto. Ejemplo: predijiste 2–0, fue 3–1.',
+    'rules.wrongTitle': 'Resultado incorrecto',
+    'rules.wrongExample': 'El equipo que elegiste no ganó, o predijiste empate y alguien ganó.',
+    'rules.editTitle': 'Editar tus pronósticos',
+    'rules.editText': 'Puedes actualizar tus pronósticos cuantas veces quieras hasta que se bloqueen a medianoche del 10 de junio de 2026 — la noche anterior al inicio del torneo.',
+
+    'auth.subtitle': 'Inicia sesión para hacer tus pronósticos',
+    'auth.signIn': 'Iniciar Sesión',
+    'auth.signUp': 'Registrarse',
+    'auth.createAccount': 'Crear Cuenta',
+    'auth.email': 'Correo electrónico',
+    'auth.password': 'Contraseña (mín. 6 caracteres)',
+    'auth.displayName': 'Nombre (visible en la tabla de posiciones)',
+    'auth.err.emailInUse': 'Ya existe una cuenta con este correo.',
+    'auth.err.invalidEmail': 'Por favor ingresa un correo válido.',
+    'auth.err.weakPassword': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth.err.invalidCred': 'Correo o contraseña incorrectos.',
+    'auth.err.tooMany': 'Demasiados intentos. Inténtalo más tarde.',
+    'auth.err.network': 'Error de red. Verifica tu conexión.',
+    'auth.err.generic': 'Algo salió mal. Por favor intenta de nuevo.',
+    'auth.err.nameRequired': 'El nombre es requerido.',
+
+    'settings.apiKey': 'Clave API de football-data.org',
+    'settings.apiKeyPlaceholder': 'Pega tu clave API gratuita aquí',
+    'settings.toggleKey': 'Mostrar / ocultar clave',
+    'settings.connect': 'Conectar',
+    'settings.refresh': 'Actualizar Resultados',
+    'settings.refreshing': 'Actualizando…',
+    'settings.signedInAs': 'Conectado como',
+    'settings.signOut': 'Cerrar Sesión',
+    'settings.apiKeyLink': 'Obtén una clave gratuita en football-data.org →',
+    'settings.enterKey': 'Ingresa tu clave API en Ajustes para cargar datos en vivo.',
+    'settings.noKey': 'Sin clave API configurada.',
+    'settings.loading': 'Cargando…',
+    'settings.lastRefreshed': 'Última actualización: {time}',
+    'settings.error': 'Error: {msg}',
+
+    'predictions.playingAs': 'Jugando como:',
+    'predictions.tabMine': 'Tuyos',
+    'predictions.tabEveryone': 'Todos',
+    'predictions.loadingMatches': 'Cargando partidos…',
+    'predictions.save': 'Guardar Pronósticos',
+    'predictions.saved': '¡Pronósticos guardados!',
+    'predictions.saving': 'Guardando…',
+    'predictions.allSaved': 'Cambios guardados',
+    'predictions.editing': 'Cambios sin guardar',
+    'predictions.locked': 'Los pronósticos están bloqueados — el torneo ha comenzado.',
+    'predictions.count': '{count} de {total} partidos pronosticados',
+    'predictions.everyoneLocked': 'Los pronósticos de otros jugadores se revelarán cuando el torneo comience el 11 de junio de 2026.',
+    'predictions.noOthers': 'Ningún otro jugador se ha unido aún.',
+    'predictions.noPredsForMatch': 'Sin pronósticos para este partido.',
+    'predictions.saveFailed': 'Error al guardar: {msg}',
+
+    'match.yourPick': 'Tu pronóstico',
+    'match.actual': 'Resultado',
+    'match.group': 'Grupo {letter}',
+    'match.vs': 'vs',
+    'match.pts': '{n} pt',
+
+    'leaderboard.adminToggle': 'Admin: Ingresar Resultados',
+    'leaderboard.adminNote': 'Los resultados de la API se llenan automáticamente. Úsalo para sobrescribir o ingresar resultados manualmente.',
+    'leaderboard.saveResults': 'Guardar Resultados',
+    'leaderboard.resultsSaved': '¡Resultados guardados!',
+    'leaderboard.empty': 'Ningún jugador ha enviado pronósticos aún.',
+    'leaderboard.player': 'Jugador',
+    'leaderboard.points': 'Puntos',
+    'leaderboard.matchesScored': 'Partidos Calificados',
+    'leaderboard.predictionsMade': 'Pronósticos Hechos',
+
+    'time.justNow': 'ahora mismo',
+    'time.minutes': 'hace {n}m',
+    'time.hours': 'hace {n}h',
+
+    'toast.predLoadFail': 'No se pudieron cargar los pronósticos: {msg}',
+    'toast.resultsLoadFail': 'No se pudieron cargar los resultados: {msg}',
+    'toast.unknown': '(desconocido)',
+  },
+};
+
+const COUNTRY_TRANSLATIONS = {
+  es: {
+    // Hosts
+    'Mexico': 'México',
+    'Canada': 'Canadá',
+    'United States': 'Estados Unidos',
+    'USA': 'Estados Unidos',
+
+    // South America
+    'Brazil': 'Brasil',
+    'Argentina': 'Argentina',
+    'Uruguay': 'Uruguay',
+    'Chile': 'Chile',
+    'Colombia': 'Colombia',
+    'Ecuador': 'Ecuador',
+    'Paraguay': 'Paraguay',
+    'Peru': 'Perú',
+    'Venezuela': 'Venezuela',
+    'Bolivia': 'Bolivia',
+
+    // Europe
+    'France': 'Francia',
+    'Spain': 'España',
+    'England': 'Inglaterra',
+    'Germany': 'Alemania',
+    'Italy': 'Italia',
+    'Portugal': 'Portugal',
+    'Netherlands': 'Países Bajos',
+    'Belgium': 'Bélgica',
+    'Croatia': 'Croacia',
+    'Switzerland': 'Suiza',
+    'Denmark': 'Dinamarca',
+    'Austria': 'Austria',
+    'Poland': 'Polonia',
+    'Turkey': 'Turquía',
+    'Türkiye': 'Turquía',
+    'Serbia': 'Serbia',
+    'Scotland': 'Escocia',
+    'Wales': 'Gales',
+    'Northern Ireland': 'Irlanda del Norte',
+    'Republic of Ireland': 'Irlanda',
+    'Ireland': 'Irlanda',
+    'Sweden': 'Suecia',
+    'Norway': 'Noruega',
+    'Finland': 'Finlandia',
+    'Czech Republic': 'República Checa',
+    'Czechia': 'República Checa',
+    'Slovakia': 'Eslovaquia',
+    'Hungary': 'Hungría',
+    'Romania': 'Rumanía',
+    'Bulgaria': 'Bulgaria',
+    'Greece': 'Grecia',
+    'Ukraine': 'Ucrania',
+    'Russia': 'Rusia',
+    'Slovenia': 'Eslovenia',
+    'Albania': 'Albania',
+    'Iceland': 'Islandia',
+    'Bosnia and Herzegovina': 'Bosnia y Herzegovina',
+
+    // Asia
+    'Japan': 'Japón',
+    'Korea Republic': 'Corea del Sur',
+    'South Korea': 'Corea del Sur',
+    'Korea DPR': 'Corea del Norte',
+    'North Korea': 'Corea del Norte',
+    'Iran': 'Irán',
+    'Islamic Republic of Iran': 'Irán',
+    'Saudi Arabia': 'Arabia Saudí',
+    'Australia': 'Australia',
+    'Qatar': 'Catar',
+    'Jordan': 'Jordania',
+    'Iraq': 'Irak',
+    'United Arab Emirates': 'Emiratos Árabes Unidos',
+    'Uzbekistan': 'Uzbekistán',
+    'China': 'China',
+    'China PR': 'China',
+    'India': 'India',
+    'Thailand': 'Tailandia',
+    'Vietnam': 'Vietnam',
+    'Indonesia': 'Indonesia',
+    'Lebanon': 'Líbano',
+    'Oman': 'Omán',
+    'Bahrain': 'Baréin',
+    'Kuwait': 'Kuwait',
+    'Syria': 'Siria',
+    'Palestine': 'Palestina',
+    'Tajikistan': 'Tayikistán',
+
+    // Africa
+    'Morocco': 'Marruecos',
+    'Senegal': 'Senegal',
+    'Tunisia': 'Túnez',
+    'Egypt': 'Egipto',
+    'Cameroon': 'Camerún',
+    'Ghana': 'Ghana',
+    'Ivory Coast': 'Costa de Marfil',
+    "Côte d'Ivoire": 'Costa de Marfil',
+    'Nigeria': 'Nigeria',
+    'Algeria': 'Argelia',
+    'South Africa': 'Sudáfrica',
+    'Mali': 'Malí',
+    'Burkina Faso': 'Burkina Faso',
+    'Cape Verde': 'Cabo Verde',
+    'Cabo Verde': 'Cabo Verde',
+    'DR Congo': 'RD del Congo',
+    'Democratic Republic of the Congo': 'RD del Congo',
+    'Congo': 'Congo',
+    'Kenya': 'Kenia',
+    'Ethiopia': 'Etiopía',
+    'Sudan': 'Sudán',
+    'Zambia': 'Zambia',
+    'Zimbabwe': 'Zimbabue',
+    'Angola': 'Angola',
+    'Mozambique': 'Mozambique',
+    'Guinea': 'Guinea',
+    'Equatorial Guinea': 'Guinea Ecuatorial',
+    'Gabon': 'Gabón',
+    'Libya': 'Libia',
+    'Mauritania': 'Mauritania',
+
+    // CONCACAF
+    'Costa Rica': 'Costa Rica',
+    'Panama': 'Panamá',
+    'Honduras': 'Honduras',
+    'Jamaica': 'Jamaica',
+    'Haiti': 'Haití',
+    'El Salvador': 'El Salvador',
+    'Guatemala': 'Guatemala',
+    'Trinidad and Tobago': 'Trinidad y Tobago',
+    'Cuba': 'Cuba',
+    'Dominican Republic': 'República Dominicana',
+
+    // Oceania
+    'New Zealand': 'Nueva Zelanda',
+    'Fiji': 'Fiyi',
+    'Papua New Guinea': 'Papúa Nueva Guinea',
+    'Solomon Islands': 'Islas Salomón',
+
+    'TBD': 'Por confirmar',
+  },
+};
+
+function tCountry(name) {
+  if (!name) return '';
+  if (currentLang === 'en') return name;
+  const map = COUNTRY_TRANSLATIONS[currentLang];
+  return (map && map[name]) || name;
+}
+
+let currentLang = localStorage.getItem('wc2026_lang')
+  || ((navigator.language || '').toLowerCase().startsWith('es') ? 'es' : 'en');
+
+function t(key, vars) {
+  let str = TRANSLATIONS[currentLang]?.[key];
+  if (str == null) str = TRANSLATIONS.en[key];
+  if (str == null) return key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.split(`{${k}}`).join(String(v));
+    }
+  }
+  return str;
+}
+
+function getLanguage() { return currentLang; }
+
+function setLanguage(lang) {
+  if (!TRANSLATIONS[lang] || lang === currentLang) return;
+  const draft = captureCurrentInputDraft();
+  currentLang = lang;
+  localStorage.setItem('wc2026_lang', lang);
+  document.documentElement.lang = lang;
+  document.querySelectorAll('.lang-flag').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === lang)
+  );
+  applyStaticTranslations();
+  if (typeof refreshDynamicContent === 'function') refreshDynamicContent();
+  restoreInputDraft(draft);
+}
+
+function applyStaticTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  document.title = t('app.title');
+}
+
+function captureCurrentInputDraft() {
+  const draft = {};
+  document.querySelectorAll('#view-predictions .score-input').forEach(input => {
+    if (input.value !== '') {
+      const key = `${input.dataset.match}_${input.dataset.side}`;
+      draft[key] = input.value;
+    }
+  });
+  return draft;
+}
+
+function restoreInputDraft(draft) {
+  document.querySelectorAll('#view-predictions .score-input').forEach(input => {
+    const key = `${input.dataset.match}_${input.dataset.side}`;
+    if (draft[key] !== undefined) input.value = draft[key];
+  });
+}
+
+function initLanguageToggle() {
+  document.querySelectorAll('.lang-flag').forEach(btn => {
+    btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+  document.documentElement.lang = currentLang;
+  applyStaticTranslations();
+}
