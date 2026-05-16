@@ -80,7 +80,8 @@
         <button class="nav-btn active" data-view="predictions" data-i18n="nav.predictions">Predictions</button>
         <button class="nav-btn" data-view="leaderboard" data-i18n="nav.leaderboard">Leaderboard</button>
         <button class="nav-btn" data-view="rules" data-i18n="nav.rules">Rules</button>
-        <button class="nav-btn" id="btn-settings">&#9881; <span data-i18n="nav.settings">Settings</span></button>
+        <button class="nav-btn" data-view="profile" data-i18n="nav.profile">Profile</button>
+        <button class="nav-btn admin-only" id="btn-settings">&#9881; <span data-i18n="nav.settings">Settings</span></button>
         <div class="lang-toggle" role="group" data-i18n-title="nav.langTitle" title="Switch language">
           <button class="lang-flag" data-lang="en" aria-label="English">
             <svg viewBox="0 0 24 16" aria-hidden="true">
@@ -108,11 +109,6 @@
   <!-- Settings panel (below header, toggled) -->
   <div id="settings-panel" class="settings-panel hidden">
     <div class="settings-inner">
-      <div id="user-info" class="user-info hidden">
-        <span class="user-label" data-i18n="settings.signedInAs">Signed in as</span>
-        <strong id="user-display-email"></strong>
-        <button id="btn-signout" class="btn btn-secondary" data-i18n="settings.signOut">Sign Out</button>
-      </div>
       <div class="settings-left">
         <label class="settings-label" data-i18n="settings.apiKey">football-data.org API Key</label>
         <div class="api-key-row">
@@ -165,6 +161,32 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- Profile view -->
+    <div id="view-profile" class="view hidden">
+      <div class="profile-card">
+        <h2 class="profile-title" data-i18n="profile.title">Profile</h2>
+
+        <div class="profile-field">
+          <label class="profile-label" data-i18n="profile.email">Email</label>
+          <div class="profile-value" id="profile-email"></div>
+        </div>
+
+        <div class="profile-field">
+          <label class="profile-label" for="profile-name-input" data-i18n="profile.displayName">Display name</label>
+          <div class="profile-name-row">
+            <input id="profile-name-input" type="text" maxlength="40" autocomplete="nickname"
+                   data-i18n-placeholder="profile.namePlaceholder" placeholder="How you appear on the leaderboard">
+            <button id="btn-update-name" class="btn btn-primary" data-i18n="profile.save">Save</button>
+          </div>
+          <div id="profile-name-status" class="profile-status"></div>
+        </div>
+
+        <div class="profile-divider"></div>
+
+        <button id="btn-profile-signout" class="btn btn-secondary profile-signout" data-i18n="profile.signOut">Sign out</button>
+      </div>
     </div>
 
     <!-- Rules view -->

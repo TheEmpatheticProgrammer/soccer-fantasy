@@ -20,12 +20,13 @@ const state = {
   apiKey: '',
 };
 
-function teamLabel(name) {
+function teamLabel(name, flagPos = 'left') {
   const crest = state.crests[name];
   const flag = crest
     ? `<img class="team-flag" src="${crest}" alt="" loading="lazy" decoding="async">`
     : '';
-  return `${flag}<span class="team-name">${tCountry(name)}</span>`;
+  const nameSpan = `<span class="team-name">${tCountry(name)}</span>`;
+  return flagPos === 'right' ? `${nameSpan}${flag}` : `${flag}${nameSpan}`;
 }
 
 function teamFlag(name) {
@@ -47,6 +48,17 @@ function formatMatchDateTime(utcDate) {
     hour: 'numeric',
     minute: '2-digit',
   }).format(d);
+}
+
+function formatMatchDateParts(utcDate) {
+  if (!utcDate) return { day: t('app.dateTBD'), time: '' };
+  const d = new Date(utcDate);
+  if (isNaN(d.getTime())) return { day: t('app.dateTBD'), time: '' };
+  const locale = getLanguage() === 'es' ? 'es-MX' : 'en-US';
+  return {
+    day: new Intl.DateTimeFormat(locale, { weekday: 'short', month: 'short', day: 'numeric' }).format(d),
+    time: new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(d),
+  };
 }
 
 let unsubPredictions = null;
@@ -75,9 +87,9 @@ async function onSignedIn(user) {
   state.currentPlayer = user.displayName || user.email;
 
   document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('user-info').classList.remove('hidden');
-  document.getElementById('user-display-email').textContent = user.email;
   document.getElementById('player-display').textContent = state.currentPlayer;
+  renderProfile();
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin()));
 
   document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin());
 
@@ -105,8 +117,55 @@ function onSignedOut() {
   if (unsubResults)     { unsubResults();     unsubResults = null; }
 
   document.getElementById('auth-screen').classList.remove('hidden');
-  document.getElementById('user-info').classList.add('hidden');
   document.getElementById('settings-panel').classList.add('hidden');
+}
+
+function renderProfile() {
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+  document.getElementById('profile-email').textContent = user.email;
+  document.getElementById('profile-name-input').value = user.displayName || '';
+}
+
+async function updateDisplayName() {
+  const input = document.getElementById('profile-name-input');
+  const newName = input.value.trim();
+  const statusEl = document.getElementById('profile-name-status');
+  const btn = document.getElementById('btn-update-name');
+
+  if (newName.length < 2) {
+    statusEl.textContent = t('profile.nameTooShort');
+    statusEl.className = 'profile-status status-error';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = t('profile.saving');
+  statusEl.className = 'profile-status';
+
+  try {
+    const user = firebase.auth().currentUser;
+    await user.updateProfile({ displayName: newName });
+    await user.reload();
+
+    state.currentPlayer = newName;
+    document.getElementById('player-display').textContent = newName;
+
+    const docRef = firebase.firestore().collection('predictions').doc(state.uid);
+    const snap = await docRef.get();
+    if (snap.exists) {
+      await docRef.update({ displayName: newName });
+    }
+
+    statusEl.textContent = `✓ ${t('profile.nameUpdated')}`;
+    statusEl.className = 'profile-status status-ok';
+    refreshDynamicContent();
+  } catch (err) {
+    statusEl.textContent = err.message;
+    statusEl.className = 'profile-status status-error';
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function subscribeToPredictions() {
@@ -190,6 +249,11 @@ function bindEvents() {
 
   document.getElementById('btn-refresh').addEventListener('click', () => loadFromApi(true));
   document.getElementById('btn-save-results').addEventListener('click', saveResults);
+  document.getElementById('btn-update-name').addEventListener('click', updateDisplayName);
+  document.getElementById('btn-profile-signout').addEventListener('click', () => firebase.auth().signOut());
+  document.getElementById('profile-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') updateDisplayName();
+  });
 
   document.getElementById('matches-container').addEventListener('input', e => {
     if (!e.target.classList.contains('score-input')) return;
@@ -460,34 +524,48 @@ function matchCard(match, pred = {}, result) {
   const pts = (result && pred.home !== undefined && pred.away !== undefined)
     ? calcPoints(pred, result) : null;
 
-  const statusBadge = match.status && match.status !== 'SCHEDULED'
-    ? `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`
-    : '';
-
-  const actualChip = result
-    ? `<span class="actual-score">${result.home}–${result.away}</span>`
-    : '';
-
-  const pointsBadge = pts !== null
-    ? `<span class="match-points points-${pts}">${t('match.pts', { n: pts })}</span>`
-    : '<span class="match-points points-none"></span>';
-
   const lockAttr = arePredictionsLocked() ? 'disabled' : '';
+  const { day, time } = formatMatchDateParts(match.utcDate);
+
+  let rightCell = '';
+  if (result) {
+    rightCell = `
+      <span class="actual-pill">
+        ${teamFlag(match.home)}
+        <span class="actual-num">${result.home}</span>
+        <span class="actual-dash">−</span>
+        <span class="actual-num">${result.away}</span>
+        ${teamFlag(match.away)}
+      </span>
+      ${pts !== null
+        ? `<span class="match-points points-${pts}">${t('match.pts', { n: pts })}</span>`
+        : ''}`;
+  } else if (match.status && match.status !== 'SCHEDULED') {
+    rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
+  } else {
+    rightCell = `<span class="actual-placeholder">—</span>`;
+  }
 
   return `
-    <div class="match-row">
-      <span class="team home">${teamLabel(match.home)}</span>
-      <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-             data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
-      <span class="vs">−</span>
-      <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-             data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
-      <span class="team away">${teamLabel(match.away)}</span>
-      <span class="match-row-meta">
-        ${statusBadge}
-        ${actualChip}
-        ${pointsBadge}
+    <div class="predict-row">
+      <span class="match-date">
+        <span class="match-date-day">${day}</span>
+        <span class="match-date-time">${time}</span>
       </span>
+
+      <div class="match-fixture">
+        <span class="team home">${teamLabel(match.home, 'left')}</span>
+        <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+               data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
+        <span class="vs">−</span>
+        <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+               data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
+        <span class="team away">${teamLabel(match.away, 'right')}</span>
+      </div>
+
+      <div class="match-actual">
+        ${rightCell}
+      </div>
     </div>`;
 }
 

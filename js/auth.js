@@ -6,7 +6,6 @@ function initAuthForm() {
   });
 
   document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
-  document.getElementById('btn-signout').addEventListener('click', () => firebase.auth().signOut());
 }
 
 function switchAuthMode(mode) {
