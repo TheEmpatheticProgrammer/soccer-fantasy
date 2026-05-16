@@ -1014,6 +1014,7 @@ function renderLeagues() {
       <div class="leagues-grid">${browseHtml}</div>
     </section>
 
+    ${isAdmin() ? `
     <div class="leagues-forms">
       <section class="leagues-form-card">
         <h3>${t('leagues.createHeading')}</h3>
@@ -1041,6 +1042,7 @@ function renderLeagues() {
         <div id="create-league-status" class="form-status"></div>
       </section>
     </div>
+    ` : ''}
   `;
 
   bindLeaguesViewEvents();
@@ -1170,7 +1172,9 @@ function bindLeaguesViewEvents() {
     });
   });
 
-  document.getElementById('btn-create-league').addEventListener('click', async () => {
+  const createBtn = document.getElementById('btn-create-league');
+  if (!createBtn) return;
+  createBtn.addEventListener('click', async () => {
     const name = document.getElementById('create-league-name').value.trim();
     const isPublic = document.querySelector('input[name="create-visibility"]:checked').value === 'public';
     const password = document.getElementById('create-league-password').value;
