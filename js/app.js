@@ -251,6 +251,7 @@ function bindEvents() {
   document.getElementById('btn-save-results').addEventListener('click', saveResults);
   document.getElementById('btn-update-name').addEventListener('click', updateDisplayName);
   document.getElementById('btn-profile-signout').addEventListener('click', () => firebase.auth().signOut());
+  document.getElementById('btn-header-signout').addEventListener('click', () => firebase.auth().signOut());
   document.getElementById('profile-name-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') updateDisplayName();
   });
