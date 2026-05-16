@@ -427,13 +427,12 @@ function renderPredictions() {
   container.innerHTML = lockBanner + Object.entries(state.groups).map(([group, teams]) => {
     const matches = state.matches.filter(m => m.group === group);
     return `
-      <div class="group-section">
-        <div class="group-header">
-          <h2>${t('match.group', { letter: group })}</h2>
-          <span class="group-teams">${teams.map(tCountry).join(' · ')}</span>
+      <section class="prediction-group">
+        <h3 class="prediction-group-title">${t('match.group', { letter: group })}</h3>
+        <div class="prediction-group-rows">
+          ${matches.map(m => matchCard(m, preds[m.id], state.results[m.id])).join('')}
         </div>
-        ${matches.map(m => matchCard(m, preds[m.id], state.results[m.id])).join('')}
-      </div>`;
+      </section>`;
   }).join('');
 
   restoreInputDraft(draft);
@@ -465,51 +464,30 @@ function matchCard(match, pred = {}, result) {
     ? `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`
     : '';
 
+  const actualChip = result
+    ? `<span class="actual-score">${result.home}–${result.away}</span>`
+    : '';
+
   const pointsBadge = pts !== null
     ? `<span class="match-points points-${pts}">${t('match.pts', { n: pts })}</span>`
-    : '';
+    : '<span class="match-points points-none"></span>';
 
   const lockAttr = arePredictionsLocked() ? 'disabled' : '';
 
-  const actualRow = result ? `
-    <div class="score-row actual-row">
-      <span class="score-label">${t('match.actual')}</span>
-      <span class="score-static">${result.home}</span>
-      <span class="vs">−</span>
-      <span class="score-static">${result.away}</span>
-    </div>` : '';
-
   return `
-    <div class="match-card">
-      <div class="match-card-top">
-        <span class="match-card-date">${formatMatchDateTime(match.utcDate)}</span>
-        <span class="match-card-meta">
-          ${statusBadge}
-          ${pointsBadge}
-        </span>
-      </div>
-      <div class="match-card-fixture">
-        <div class="team-side home">
-          ${teamFlag(match.home)}
-          <span class="team-name">${tCountry(match.home)}</span>
-        </div>
-        <span class="fixture-vs">${t('match.vs')}</span>
-        <div class="team-side away">
-          <span class="team-name">${tCountry(match.away)}</span>
-          ${teamFlag(match.away)}
-        </div>
-      </div>
-      <div class="match-card-body">
-        <div class="score-row your-row">
-          <span class="score-label">${t('match.yourPick')}</span>
-          <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-                 data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
-          <span class="vs">−</span>
-          <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-                 data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
-        </div>
-        ${actualRow}
-      </div>
+    <div class="match-row">
+      <span class="team home">${teamLabel(match.home)}</span>
+      <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+             data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
+      <span class="vs">−</span>
+      <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+             data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
+      <span class="team away">${teamLabel(match.away)}</span>
+      <span class="match-row-meta">
+        ${statusBadge}
+        ${actualChip}
+        ${pointsBadge}
+      </span>
     </div>`;
 }
 
