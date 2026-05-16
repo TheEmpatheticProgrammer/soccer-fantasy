@@ -147,13 +147,11 @@ async function loadMyLeagues() {
 
 async function loadPublicLeagues() {
   try {
-    const snap = await firebase.firestore().collection('leagues')
-      .where('isPublic', '==', true)
-      .get();
+    const snap = await firebase.firestore().collection('leagues').get();
     state.publicLeagues = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
     state.publicLeagues = [];
-    console.error('Could not load public leagues', err);
+    console.error('Could not load leagues', err);
   }
 }
 
@@ -1042,20 +1040,6 @@ function renderLeagues() {
         </div>
         <div id="create-league-status" class="form-status"></div>
       </section>
-
-      <section class="leagues-form-card">
-        <h3>${t('leagues.joinHeading')}</h3>
-        <div class="form-row">
-          <input id="join-league-id" type="text" placeholder="${t('leagues.join.idPlaceholder')}">
-        </div>
-        <div class="form-row">
-          <input id="join-league-password" type="text" placeholder="${t('leagues.join.passwordPlaceholder')}">
-        </div>
-        <div class="form-row">
-          <button id="btn-join-league" class="btn btn-primary">${t('leagues.join.submit')}</button>
-        </div>
-        <div id="join-league-status" class="form-status"></div>
-      </section>
     </div>
   `;
 
@@ -1068,28 +1052,43 @@ function leagueCard(league, isMember) {
   const memberLabel = memberCount === 1
     ? t('leagues.members', { n: 1 })
     : t('leagues.membersPlural', { n: memberCount });
-  const badge = league.isPublic
-    ? `<span class="league-badge league-badge-public">${t('leagues.public')}</span>`
-    : `<span class="league-badge league-badge-private">${t('leagues.private')}</span>`;
+  const lockIcon = !league.isPublic
+    ? `<span class="league-lock" title="${t('leagues.private')}" aria-label="${t('leagues.private')}">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+         </svg>
+       </span>`
+    : '';
   const ownerNote = owned ? `<span class="league-owner-note">★ ${t('leagues.owner')}</span>` : '';
 
-  const action = isMember
-    ? `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`
-    : (league.isPublic
-        ? `<button class="btn btn-primary" data-league-join-public="${league.id}">${t('leagues.join')}</button>`
-        : '');
+  let actionHtml;
+  if (isMember) {
+    actionHtml = `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`;
+  } else if (league.isPublic) {
+    actionHtml = `<button class="btn btn-primary" data-league-join-public="${league.id}">${t('leagues.join')}</button>`;
+  } else {
+    actionHtml = `
+      <button class="btn btn-primary" data-league-join-private-btn="${league.id}">${t('leagues.join')}</button>
+      <form class="league-card-passform hidden" data-league-passform="${league.id}">
+        <input type="password" class="league-card-passinput" autocomplete="off"
+               placeholder="${t('leagues.join.passwordPlaceholder')}">
+        <button type="submit" class="btn btn-primary">${t('leagues.join.submit')}</button>
+        <button type="button" class="btn btn-secondary" data-league-passcancel="${league.id}" aria-label="Cancel">✕</button>
+      </form>
+      <div class="league-card-error form-status" data-league-error="${league.id}"></div>`;
+  }
 
   return `
     <div class="league-card">
       <div class="league-card-header">
-        <h4>${escapeHtml(league.name)}</h4>
-        ${badge}
+        <h4>${lockIcon}${escapeHtml(league.name)}</h4>
       </div>
       <div class="league-card-meta">
         <span>${memberLabel}</span>
         ${ownerNote}
       </div>
-      <div class="league-card-actions">${action}</div>
+      <div class="league-card-actions">${actionHtml}</div>
     </div>`;
 }
 
@@ -1123,6 +1122,47 @@ function bindLeaguesViewEvents() {
     });
   });
 
+  document.querySelectorAll('[data-league-join-private-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.leagueJoinPrivateBtn;
+      btn.classList.add('hidden');
+      const form = document.querySelector(`[data-league-passform="${id}"]`);
+      form.classList.remove('hidden');
+      form.querySelector('input').focus();
+    });
+  });
+
+  document.querySelectorAll('[data-league-passcancel]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.leaguePasscancel;
+      const form = document.querySelector(`[data-league-passform="${id}"]`);
+      form.classList.add('hidden');
+      form.querySelector('input').value = '';
+      document.querySelector(`[data-league-join-private-btn="${id}"]`).classList.remove('hidden');
+      const errEl = document.querySelector(`[data-league-error="${id}"]`);
+      if (errEl) errEl.textContent = '';
+    });
+  });
+
+  document.querySelectorAll('[data-league-passform]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = form.dataset.leaguePassform;
+      const password = form.querySelector('input').value;
+      const errEl = document.querySelector(`[data-league-error="${id}"]`);
+      try {
+        if (errEl) errEl.textContent = '';
+        const result = await joinLeague(id, password);
+        showToast(t('leagues.joined.success', { name: result.name }));
+        await loadMyLeagues();
+        await enterLeague(id);
+        switchView('predictions');
+      } catch (err) {
+        if (errEl) { errEl.textContent = err.message; errEl.className = 'league-card-error form-status status-error'; }
+      }
+    });
+  });
+
   document.querySelectorAll('input[name="create-visibility"]').forEach(input => {
     input.addEventListener('change', () => {
       const isPublic = document.querySelector('input[name="create-visibility"]:checked').value === 'public';
@@ -1142,24 +1182,6 @@ function bindLeaguesViewEvents() {
       statusEl.className = 'form-status status-ok';
       await loadMyLeagues();
       await enterLeague(newId);
-      switchView('predictions');
-    } catch (err) {
-      statusEl.textContent = err.message;
-      statusEl.className = 'form-status status-error';
-    }
-  });
-
-  document.getElementById('btn-join-league').addEventListener('click', async () => {
-    const id = document.getElementById('join-league-id').value.trim();
-    const password = document.getElementById('join-league-password').value;
-    const statusEl = document.getElementById('join-league-status');
-    try {
-      statusEl.textContent = '';
-      const result = await joinLeague(id, password);
-      statusEl.textContent = `✓ ${t('leagues.joined.success', { name: result.name })}`;
-      statusEl.className = 'form-status status-ok';
-      await loadMyLeagues();
-      await enterLeague(id);
       switchView('predictions');
     } catch (err) {
       statusEl.textContent = err.message;

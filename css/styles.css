@@ -142,7 +142,16 @@ html { color-scheme: dark; }
   font-weight: 700;
   color: var(--text);
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
+.league-lock {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+.league-lock svg { width: 14px; height: 14px; display: block; }
 .league-badge {
   font-size: 0.65rem;
   font-weight: 700;
@@ -162,8 +171,41 @@ html { color-scheme: dark; }
   flex-wrap: wrap;
 }
 .league-owner-note { color: var(--highlight); font-weight: 600; }
-.league-card-actions { display: flex; gap: 0.4rem; }
-.league-card-actions .btn { flex: 1; padding: 0.45rem 0.75rem; font-size: 0.85rem; }
+.league-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.league-card-actions .btn { padding: 0.45rem 0.75rem; font-size: 0.85rem; }
+.league-card-passform {
+  display: flex;
+  gap: 0.35rem;
+  align-items: stretch;
+}
+.league-card-passform.hidden { display: none; }
+.league-card-passinput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+.league-card-passinput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-hi);
+  box-shadow: var(--accent-glow);
+}
+.league-card-passform .btn { padding: 0.4rem 0.7rem; font-size: 0.82rem; flex: 0 0 auto; }
+.league-card-passform .btn-secondary { padding: 0.4rem 0.55rem; }
+.league-card-error {
+  font-size: 0.78rem;
+  min-height: 0.9em;
+}
+.league-card-error:empty { display: none; }
 
 .leagues-forms {
   display: grid;
