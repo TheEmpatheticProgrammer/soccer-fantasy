@@ -7,6 +7,8 @@ const Storage = {
   setApiKey(k) { localStorage.setItem(this.keys.apiKey, k); },
 };
 
+const hasApiAccess = () => !!(state.apiKey || window.LOCAL_CONFIG?.apiBaseUrl);
+
 const state = {
   uid: null,
   currentPlayer: '',
@@ -78,15 +80,15 @@ async function onSignedIn(user) {
   document.getElementById('player-display').textContent = state.currentPlayer;
 
   document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin());
-  document.getElementById('btn-refresh').disabled = !state.apiKey;
 
   state.apiKey = Storage.getApiKey() || window.LOCAL_CONFIG?.apiKey || '';
   document.getElementById('api-key-input').value = state.apiKey;
+  document.getElementById('btn-refresh').disabled = !hasApiAccess();
 
   subscribeToPredictions();
   subscribeToResults();
 
-  if (state.apiKey) {
+  if (hasApiAccess()) {
     await loadFromApi(false);
   } else {
     showApiStatus('settings.enterKey', 'warn');
@@ -270,7 +272,7 @@ function setAutosaveStatus(stateName, errMsg) {
 }
 
 async function loadFromApi(force = false) {
-  if (!state.apiKey) { showApiStatus('settings.noKey', 'warn'); return; }
+  if (!hasApiAccess()) { showApiStatus('settings.noKey', 'warn'); return; }
 
   setRefreshing(true);
   showApiStatus('settings.loading', 'info');
