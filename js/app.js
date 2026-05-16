@@ -2,16 +2,36 @@ const PREDICTIONS_LOCK_DATE = new Date('2026-06-10T00:00:00');
 const arePredictionsLocked = () => Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
 
 const Storage = {
-  keys: { apiKey: 'wc2026_api_key' },
-  getApiKey()  { return localStorage.getItem(this.keys.apiKey) || ''; },
-  setApiKey(k) { localStorage.setItem(this.keys.apiKey, k); },
+  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id' },
+  getApiKey()         { return localStorage.getItem(this.keys.apiKey) || ''; },
+  setApiKey(k)        { localStorage.setItem(this.keys.apiKey, k); },
+  getLastLeagueId()   { return localStorage.getItem(this.keys.lastLeagueId) || ''; },
+  setLastLeagueId(id) { localStorage.setItem(this.keys.lastLeagueId, id); },
+  clearLastLeagueId() { localStorage.removeItem(this.keys.lastLeagueId); },
 };
+
+const DEFAULT_LEAGUE_PASSWORD = 'wc2026';
+const DEFAULT_LEAGUE_NAME = 'World Cup 2026 League';
+
+function leagueDocRef(leagueId) {
+  return firebase.firestore().collection('leagues').doc(leagueId);
+}
+function leaguePredictionsCol(leagueId) {
+  return leagueDocRef(leagueId).collection('predictions');
+}
+function isLeagueOwner(league = state.currentLeague) {
+  return !!league && firebase.auth().currentUser?.uid === league.ownerUid;
+}
 
 const hasApiAccess = () => !!(state.apiKey || window.LOCAL_CONFIG?.apiBaseUrl);
 
 const state = {
   uid: null,
   currentPlayer: '',
+  leagueId: null,
+  currentLeague: null,
+  myLeagues: [],
+  publicLeagues: [],
   predictionDocs: {},
   results: {},
   groups:  { ...GROUPS },
@@ -91,13 +111,11 @@ async function onSignedIn(user) {
   renderProfile();
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin()));
 
-  document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin());
-
   state.apiKey = Storage.getApiKey() || window.LOCAL_CONFIG?.apiKey || '';
   document.getElementById('api-key-input').value = state.apiKey;
   document.getElementById('btn-refresh').disabled = !hasApiAccess();
 
-  subscribeToPredictions();
+  // Results are global; subscribe once regardless of league
   subscribeToResults();
 
   if (hasApiAccess()) {
@@ -105,11 +123,107 @@ async function onSignedIn(user) {
   } else {
     showApiStatus('settings.enterKey', 'warn');
   }
+
+  // Admin one-time migration: if old /predictions exist and no leagues yet, build a default league
+  if (isAdmin()) {
+    await maybeRunMigration();
+  }
+
+  await loadMyLeagues();
+  await routeAfterSignIn();
+}
+
+async function loadMyLeagues() {
+  try {
+    const snap = await firebase.firestore().collection('leagues')
+      .where('memberUids', 'array-contains', state.uid)
+      .get();
+    state.myLeagues = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    state.myLeagues = [];
+    console.error('Could not load leagues', err);
+  }
+}
+
+async function loadPublicLeagues() {
+  try {
+    const snap = await firebase.firestore().collection('leagues')
+      .where('isPublic', '==', true)
+      .get();
+    state.publicLeagues = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    state.publicLeagues = [];
+    console.error('Could not load public leagues', err);
+  }
+}
+
+async function routeAfterSignIn() {
+  if (state.myLeagues.length === 0) {
+    await enterLeaguesView();
+    return;
+  }
+  const lastId = Storage.getLastLeagueId();
+  const chosen = state.myLeagues.find(l => l.id === lastId) || state.myLeagues[0];
+  await enterLeague(chosen.id);
+  switchView('predictions');
+}
+
+async function enterLeague(leagueId) {
+  if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
+
+  state.leagueId = leagueId;
+  Storage.setLastLeagueId(leagueId);
+
+  const doc = await leagueDocRef(leagueId).get();
+  if (!doc.exists) {
+    state.leagueId = null;
+    state.currentLeague = null;
+    Storage.clearLastLeagueId();
+    await enterLeaguesView();
+    return;
+  }
+  state.currentLeague = { id: doc.id, ...doc.data() };
+
+  document.querySelectorAll('.league-owner-only').forEach(el =>
+    el.classList.toggle('hidden', !isLeagueOwner())
+  );
+
+  document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin());
+
+  updateCurrentLeagueBadge();
+  subscribeToPredictions();
+}
+
+async function enterLeaguesView() {
+  state.leagueId = null;
+  state.currentLeague = null;
+  state.predictionDocs = {};
+  if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
+  updateCurrentLeagueBadge();
+  await loadPublicLeagues();
+  switchView('leagues');
+  renderLeagues();
+}
+
+function updateCurrentLeagueBadge() {
+  const badge = document.getElementById('current-league-badge');
+  if (!badge) return;
+  if (state.currentLeague) {
+    badge.textContent = state.currentLeague.name;
+    badge.classList.remove('hidden');
+  } else {
+    badge.textContent = '';
+    badge.classList.add('hidden');
+  }
 }
 
 function onSignedOut() {
   state.uid = null;
   state.currentPlayer = '';
+  state.leagueId = null;
+  state.currentLeague = null;
+  state.myLeagues = [];
+  state.publicLeagues = [];
   state.predictionDocs = {};
   state.results = {};
 
@@ -118,6 +232,7 @@ function onSignedOut() {
 
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('settings-panel').classList.add('hidden');
+  updateCurrentLeagueBadge();
 }
 
 function renderProfile() {
@@ -151,10 +266,12 @@ async function updateDisplayName() {
     state.currentPlayer = newName;
     document.getElementById('player-display').textContent = newName;
 
-    const docRef = firebase.firestore().collection('predictions').doc(state.uid);
-    const snap = await docRef.get();
-    if (snap.exists) {
-      await docRef.update({ displayName: newName });
+    if (state.leagueId) {
+      const docRef = leaguePredictionsCol(state.leagueId).doc(state.uid);
+      const snap = await docRef.get();
+      if (snap.exists) {
+        await docRef.update({ displayName: newName });
+      }
     }
 
     statusEl.textContent = `✓ ${t('profile.nameUpdated')}`;
@@ -169,14 +286,16 @@ async function updateDisplayName() {
 }
 
 function subscribeToPredictions() {
-  unsubPredictions = firebase.firestore().collection('predictions').onSnapshot(
+  if (!state.leagueId) return;
+  const leagueId = state.leagueId;
+  unsubPredictions = leaguePredictionsCol(leagueId).onSnapshot(
     snap => {
       state.predictionDocs = {};
       snap.forEach(doc => { state.predictionDocs[doc.id] = doc.data(); });
 
       const myDoc = state.predictionDocs[state.uid];
       if (myDoc && state.currentPlayer && myDoc.displayName !== state.currentPlayer) {
-        firebase.firestore().collection('predictions').doc(state.uid)
+        leaguePredictionsCol(leagueId).doc(state.uid)
           .set({ displayName: state.currentPlayer }, { merge: true });
       }
 
@@ -214,6 +333,7 @@ function refreshDynamicContent() {
   renderLeaderboard();
   renderPredictions();
   renderEveryone();
+  if (state.leagueId === null) renderLeagues();
   refreshApiStatus();
   refreshSaveStatus();
 }
@@ -270,7 +390,7 @@ function scheduleAutosave() {
 }
 
 async function runAutosave() {
-  if (!state.uid || arePredictionsLocked() || isSaving) return;
+  if (!state.uid || !state.leagueId || arePredictionsLocked() || isSaving) return;
 
   const preds = {};
   document.querySelectorAll('#view-predictions .score-input').forEach(input => {
@@ -292,7 +412,7 @@ async function runAutosave() {
   isSaving = true;
   setAutosaveStatus('saving');
   try {
-    await firebase.firestore().collection('predictions').doc(state.uid).set({
+    await leaguePredictionsCol(state.leagueId).doc(state.uid).set({
       displayName,
       predictions: cleaned,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -422,6 +542,7 @@ function switchView(view) {
   );
   if (view === 'leaderboard') renderLeaderboard();
   if (view === 'predictions') { renderPredictions(); renderEveryone(); }
+  if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
 }
 
 function switchSubview(name) {
@@ -732,6 +853,8 @@ function renderLeaderboard() {
     };
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
+  const ownerCanRemove = isLeagueOwner();
+
   container.innerHTML = `
     <table class="leaderboard-table">
       <thead>
@@ -741,12 +864,20 @@ function renderLeaderboard() {
           <th>${t('leaderboard.points')}</th>
           <th>${t('leaderboard.matchesScored')}</th>
           <th>${t('leaderboard.predictionsMade')}</th>
+          ${ownerCanRemove ? '<th></th>' : ''}
         </tr>
       </thead>
       <tbody>
         ${standings.map((player, i) => {
           const rank = i + 1;
           const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+          const removeCell = ownerCanRemove && player.uid !== state.uid
+            ? `<td><button class="btn-remove-player" data-remove-uid="${player.uid}" data-remove-name="${escapeHtml(player.name)}" title="${t('leaderboard.removePlayer')}" aria-label="${t('leaderboard.removePlayer')}">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                   <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                 </svg>
+               </button></td>`
+            : (ownerCanRemove ? '<td></td>' : '');
           return `
             <tr${player.uid === state.uid ? ' class="current-player"' : ''}>
               <td><span class="rank-badge ${rankClass}">${rank}</span></td>
@@ -754,10 +885,287 @@ function renderLeaderboard() {
               <td><span class="points-display">${player.points}</span></td>
               <td>${player.scored} / ${total}</td>
               <td>${player.predicted} / ${total}</td>
+              ${removeCell}
             </tr>`;
         }).join('')}
       </tbody>
     </table>`;
+
+  document.querySelectorAll('.btn-remove-player').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.dataset.removeUid;
+      const name = btn.dataset.removeName;
+      const leagueName = state.currentLeague?.name || '';
+      if (!confirm(t('leaderboard.removeConfirm', { name, league: leagueName }))) return;
+      try {
+        await removePlayerFromLeague(uid);
+        showToast(t('leaderboard.removed', { name }));
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+  });
+}
+
+// ── League CRUD ───────────────────────────────────────────────────────────────
+
+async function createLeague(name, isPublic, password) {
+  if (!name || name.trim().length < 3) throw new Error(t('leagues.create.invalidName'));
+  if (!isPublic && (!password || password.length < 4)) throw new Error(t('leagues.create.invalidPassword'));
+
+  const doc = {
+    name: name.trim(),
+    ownerUid: state.uid,
+    isPublic: !!isPublic,
+    joinPassword: isPublic ? '' : password,
+    memberUids: [state.uid],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  const ref = await firebase.firestore().collection('leagues').add(doc);
+  return ref.id;
+}
+
+async function joinLeague(leagueId, password) {
+  const doc = await leagueDocRef(leagueId).get();
+  if (!doc.exists) throw new Error(t('leagues.join.notFound'));
+  const data = doc.data();
+  if (!data.isPublic && data.joinPassword !== (password || '')) {
+    throw new Error(t('leagues.join.wrongPassword'));
+  }
+  if (!data.memberUids.includes(state.uid)) {
+    await leagueDocRef(leagueId).update({
+      memberUids: firebase.firestore.FieldValue.arrayUnion(state.uid),
+    });
+  }
+  return { id: leagueId, name: data.name };
+}
+
+async function leaveLeague(leagueId) {
+  await leaguePredictionsCol(leagueId).doc(state.uid).delete().catch(() => {});
+  await leagueDocRef(leagueId).update({
+    memberUids: firebase.firestore.FieldValue.arrayRemove(state.uid),
+  });
+}
+
+async function removePlayerFromLeague(playerUid) {
+  if (!state.leagueId || !isLeagueOwner()) return;
+  await leaguePredictionsCol(state.leagueId).doc(playerUid).delete().catch(() => {});
+  await leagueDocRef(state.leagueId).update({
+    memberUids: firebase.firestore.FieldValue.arrayRemove(playerUid),
+  });
+}
+
+async function maybeRunMigration() {
+  if (!isAdmin()) return;
+
+  const oldSnap = await firebase.firestore().collection('predictions').limit(1).get().catch(() => null);
+  if (!oldSnap || oldSnap.empty) return;
+
+  const leaguesSnap = await firebase.firestore().collection('leagues').limit(1).get().catch(() => null);
+  if (leaguesSnap && !leaguesSnap.empty) return;
+
+  const allOld = await firebase.firestore().collection('predictions').get();
+  const memberUids = allOld.docs.map(d => d.id);
+  const newLeagueId = (await firebase.firestore().collection('leagues').add({
+    name: DEFAULT_LEAGUE_NAME,
+    ownerUid: state.uid,
+    isPublic: false,
+    joinPassword: DEFAULT_LEAGUE_PASSWORD,
+    memberUids,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+  })).id;
+
+  const batch = firebase.firestore().batch();
+  for (const d of allOld.docs) {
+    batch.set(leaguePredictionsCol(newLeagueId).doc(d.id), d.data());
+  }
+  await batch.commit();
+
+  showToast(`Migrated ${allOld.size} predictions into "${DEFAULT_LEAGUE_NAME}" (password: ${DEFAULT_LEAGUE_PASSWORD})`);
+}
+
+// ── Leagues view rendering ───────────────────────────────────────────────────
+
+function renderLeagues() {
+  const container = document.getElementById('leagues-container');
+  if (!container) return;
+
+  const yoursHtml = state.myLeagues.length === 0
+    ? `<div class="empty-state">${t('leagues.noneJoined')}</div>`
+    : state.myLeagues.map(league => leagueCard(league, true)).join('');
+
+  const browseList = state.publicLeagues.filter(l => !state.myLeagues.some(ml => ml.id === l.id));
+  const browseHtml = browseList.length === 0
+    ? `<div class="empty-state">${t('leagues.noPublic')}</div>`
+    : browseList.map(league => leagueCard(league, false)).join('');
+
+  container.innerHTML = `
+    <div class="leagues-hero">
+      <h2 data-i18n="leagues.title">${t('leagues.title')}</h2>
+      <p data-i18n="leagues.subtitle">${t('leagues.subtitle')}</p>
+    </div>
+
+    <section class="leagues-section">
+      <h3>${t('leagues.yoursHeading')}</h3>
+      <div class="leagues-grid">${yoursHtml}</div>
+    </section>
+
+    <section class="leagues-section">
+      <h3>${t('leagues.browseHeading')}</h3>
+      <div class="leagues-grid">${browseHtml}</div>
+    </section>
+
+    <div class="leagues-forms">
+      <section class="leagues-form-card">
+        <h3>${t('leagues.createHeading')}</h3>
+        <div class="form-row">
+          <input id="create-league-name" type="text" maxlength="60"
+                 placeholder="${t('leagues.create.namePlaceholder')}">
+        </div>
+        <div class="form-row visibility-row">
+          <label class="visibility-option">
+            <input type="radio" name="create-visibility" value="public" checked>
+            <span><strong>${t('leagues.public')}</strong> · ${t('leagues.create.publicHint')}</span>
+          </label>
+          <label class="visibility-option">
+            <input type="radio" name="create-visibility" value="private">
+            <span><strong>${t('leagues.private')}</strong> · ${t('leagues.create.privateHint')}</span>
+          </label>
+        </div>
+        <div class="form-row hidden" id="create-password-wrap">
+          <input id="create-league-password" type="text" maxlength="40"
+                 placeholder="${t('leagues.create.passwordPlaceholder')}">
+        </div>
+        <div class="form-row">
+          <button id="btn-create-league" class="btn btn-primary">${t('leagues.create.submit')}</button>
+        </div>
+        <div id="create-league-status" class="form-status"></div>
+      </section>
+
+      <section class="leagues-form-card">
+        <h3>${t('leagues.joinHeading')}</h3>
+        <div class="form-row">
+          <input id="join-league-id" type="text" placeholder="${t('leagues.join.idPlaceholder')}">
+        </div>
+        <div class="form-row">
+          <input id="join-league-password" type="text" placeholder="${t('leagues.join.passwordPlaceholder')}">
+        </div>
+        <div class="form-row">
+          <button id="btn-join-league" class="btn btn-primary">${t('leagues.join.submit')}</button>
+        </div>
+        <div id="join-league-status" class="form-status"></div>
+      </section>
+    </div>
+  `;
+
+  bindLeaguesViewEvents();
+}
+
+function leagueCard(league, isMember) {
+  const owned = league.ownerUid === state.uid;
+  const memberCount = (league.memberUids || []).length;
+  const memberLabel = memberCount === 1
+    ? t('leagues.members', { n: 1 })
+    : t('leagues.membersPlural', { n: memberCount });
+  const badge = league.isPublic
+    ? `<span class="league-badge league-badge-public">${t('leagues.public')}</span>`
+    : `<span class="league-badge league-badge-private">${t('leagues.private')}</span>`;
+  const ownerNote = owned ? `<span class="league-owner-note">★ ${t('leagues.owner')}</span>` : '';
+
+  const action = isMember
+    ? `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`
+    : (league.isPublic
+        ? `<button class="btn btn-primary" data-league-join-public="${league.id}">${t('leagues.join')}</button>`
+        : '');
+
+  return `
+    <div class="league-card">
+      <div class="league-card-header">
+        <h4>${escapeHtml(league.name)}</h4>
+        ${badge}
+      </div>
+      <div class="league-card-meta">
+        <span>${memberLabel}</span>
+        ${ownerNote}
+      </div>
+      <div class="league-card-actions">${action}</div>
+    </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]
+  );
+}
+
+function bindLeaguesViewEvents() {
+  document.querySelectorAll('[data-league-enter]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.leagueEnter;
+      await enterLeague(id);
+      switchView('predictions');
+    });
+  });
+
+  document.querySelectorAll('[data-league-join-public]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.leagueJoinPublic;
+      try {
+        const result = await joinLeague(id, '');
+        showToast(t('leagues.joined.success', { name: result.name }));
+        await loadMyLeagues();
+        await enterLeague(id);
+        switchView('predictions');
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+  });
+
+  document.querySelectorAll('input[name="create-visibility"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const isPublic = document.querySelector('input[name="create-visibility"]:checked').value === 'public';
+      document.getElementById('create-password-wrap').classList.toggle('hidden', isPublic);
+    });
+  });
+
+  document.getElementById('btn-create-league').addEventListener('click', async () => {
+    const name = document.getElementById('create-league-name').value.trim();
+    const isPublic = document.querySelector('input[name="create-visibility"]:checked').value === 'public';
+    const password = document.getElementById('create-league-password').value;
+    const statusEl = document.getElementById('create-league-status');
+    try {
+      statusEl.textContent = '';
+      const newId = await createLeague(name, isPublic, password);
+      statusEl.textContent = `✓ ${t('leagues.created')}`;
+      statusEl.className = 'form-status status-ok';
+      await loadMyLeagues();
+      await enterLeague(newId);
+      switchView('predictions');
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = 'form-status status-error';
+    }
+  });
+
+  document.getElementById('btn-join-league').addEventListener('click', async () => {
+    const id = document.getElementById('join-league-id').value.trim();
+    const password = document.getElementById('join-league-password').value;
+    const statusEl = document.getElementById('join-league-status');
+    try {
+      statusEl.textContent = '';
+      const result = await joinLeague(id, password);
+      statusEl.textContent = `✓ ${t('leagues.joined.success', { name: result.name })}`;
+      statusEl.className = 'form-status status-ok';
+      await loadMyLeagues();
+      await enterLeague(id);
+      switchView('predictions');
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = 'form-status status-error';
+    }
+  });
 }
 
 function showToast(msg) {

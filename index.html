@@ -77,6 +77,7 @@
         </div>
       </div>
       <nav class="main-nav">
+        <button class="nav-btn" data-view="leagues" data-i18n="nav.leagues">Leagues</button>
         <button class="nav-btn active" data-view="predictions" data-i18n="nav.predictions">Predictions</button>
         <button class="nav-btn" data-view="leaderboard" data-i18n="nav.leaderboard">Leaderboard</button>
         <button class="nav-btn" data-view="rules" data-i18n="nav.rules">Rules</button>
@@ -135,7 +136,17 @@
     </div>
   </div>
 
+  <div id="current-league-bar" class="current-league-bar">
+    <span class="current-league-label" data-i18n="nav.currentLeague">Current league</span>
+    <span id="current-league-badge" class="current-league-badge hidden"></span>
+  </div>
+
   <main class="app-main">
+
+    <!-- Leagues view -->
+    <div id="view-leagues" class="view hidden">
+      <div id="leagues-container"></div>
+    </div>
 
     <!-- Predictions view -->
     <div id="view-predictions" class="view">

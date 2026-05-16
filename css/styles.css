@@ -54,6 +54,210 @@ html { color-scheme: dark; }
 /* Generic hide utility — overrides any element-specific display value */
 .hidden { display: none !important; }
 
+/* ── Current-league bar (under header) ── */
+.current-league-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.55rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+.current-league-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  font-size: 0.68rem;
+}
+.current-league-badge {
+  color: var(--accent);
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  background: var(--accent-soft);
+  border-radius: 999px;
+  border: 1px solid rgba(0, 217, 119, 0.3);
+}
+
+/* ── Leagues view ── */
+.leagues-hero {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.leagues-hero h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+.leagues-hero p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.leagues-section { margin-bottom: 2rem; }
+.leagues-section > h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  font-weight: 800;
+}
+
+.leagues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.85rem;
+}
+
+.league-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.18s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.league-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.league-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.league-card h4 {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.league-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.league-badge-public  { background: var(--accent-soft); color: var(--accent); }
+.league-badge-private { background: var(--highlight-soft); color: var(--highlight); }
+.league-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.league-owner-note { color: var(--highlight); font-weight: 600; }
+.league-card-actions { display: flex; gap: 0.4rem; }
+.league-card-actions .btn { flex: 1; padding: 0.45rem 0.75rem; font-size: 0.85rem; }
+
+.leagues-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.leagues-form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.leagues-form-card h3 {
+  font-size: 1rem;
+  color: var(--accent);
+  margin: 0;
+  font-weight: 700;
+}
+.form-row { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-row input[type="text"],
+.form-row input[type="password"] {
+  padding: 0.6rem 0.8rem;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.92rem;
+}
+.form-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface-hi);
+  box-shadow: var(--accent-glow);
+}
+.visibility-row {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.visibility-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: border-color 0.15s, background 0.15s;
+}
+.visibility-option:hover { border-color: var(--border-strong); }
+.visibility-option input { margin-top: 0.18rem; accent-color: var(--accent); }
+.visibility-option strong { color: var(--text); font-weight: 700; }
+.form-status {
+  font-size: 0.82rem;
+  min-height: 1.1em;
+  color: var(--text-muted);
+}
+.form-status.status-ok    { color: var(--accent); }
+.form-status.status-error { color: var(--error); }
+
+/* ── Remove player button (leaderboard owner action) ── */
+.btn-remove-player {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  padding: 0.3rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, transform 0.08s;
+}
+.btn-remove-player svg { width: 16px; height: 16px; display: block; }
+.btn-remove-player:hover {
+  color: var(--error);
+  background: rgba(255, 90, 79, 0.1);
+  border-color: rgba(255, 90, 79, 0.3);
+}
+.btn-remove-player:active { transform: scale(0.94); }
+
+@media (max-width: 600px) {
+  .current-league-bar { padding: 0.45rem 0.8rem; font-size: 0.72rem; }
+  .leagues-hero h2 { font-size: 1.4rem; }
+  .leagues-grid { grid-template-columns: 1fr; }
+  .leagues-forms { grid-template-columns: 1fr; }
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
   background:
