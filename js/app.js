@@ -586,7 +586,7 @@ function renderEveryone() {
     return;
   }
 
-  if (!arePredictionsLocked()) {
+  if (!arePredictionsLocked() && !isAdmin()) {
     container.innerHTML = `<div class="lock-banner">${t('predictions.everyoneLocked')}</div>`;
     return;
   }
