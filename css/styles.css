@@ -1623,15 +1623,40 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 
 /* ── Responsive ── */
-@media (max-width: 600px) {
-  .app-header { padding: 0 0.85rem; }
-  .header-content { min-height: 68px; gap: 0.5rem; }
+@media (max-width: 720px) {
+  .app-header { padding: 0.5rem 0.85rem; }
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    min-height: 0;
+    padding: 0;
+  }
   .brand { gap: 0.55rem; }
-  .brand-ball { width: 30px; height: 30px; }
+  .brand-ball { width: 30px; height: 30px; flex-shrink: 0; }
   .brand-title { font-size: 1rem; }
   .brand-tagline { font-size: 0.62rem; letter-spacing: 0.8px; }
   .brand-hosts { display: none; }
 
+  .main-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    justify-content: flex-start;
+    width: 100%;
+    padding-bottom: 0.1rem;
+  }
+  .main-nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .nav-signout, .lang-toggle { flex-shrink: 0; }
+}
+
+@media (max-width: 600px) {
   .match-row { grid-template-columns: 1fr 44px 14px 44px 1fr minmax(60px, auto); gap: 0.3rem; padding: 0.5rem 0.7rem; }
   .team { font-size: 0.78rem; }
   .match-row .team-name { font-size: 0.78rem; }
@@ -1643,6 +1668,10 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .leaderboard-table td:nth-child(4) { display: none; }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .brand-tagline { display: none; }
+  .auth-card { padding: 1.4rem 1.2rem; }
+  .nav-btn { padding: 0.35rem 0.55rem; font-size: 0.78rem; }
+  .leagues-hero h2 { font-size: 1.25rem; }
+  .leagues-form-card { padding: 1rem 1.1rem; }
 }
