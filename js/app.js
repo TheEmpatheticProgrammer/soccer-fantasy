@@ -660,10 +660,8 @@ function matchCard(match, pred = {}, result) {
       ${pts !== null
         ? `<span class="match-points points-${pts}">${t('match.pts', { n: pts })}</span>`
         : ''}`;
-  } else if (match.status && match.status !== 'SCHEDULED') {
+  } else if (match.status === 'IN_PLAY' || match.status === 'PAUSED') {
     rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
-  } else {
-    rightCell = `<span class="actual-placeholder">—</span>`;
   }
 
   return `
@@ -731,11 +729,20 @@ function renderEveryone() {
 
 function everyoneMatchBlock(match, others) {
   const result = state.results[match.id];
-  const resultText = result
-    ? `<span class="other-match-result">${result.home}–${result.away} ${formatStatus(match.status || 'FINISHED')}</span>`
-    : (match.status && match.status !== 'SCHEDULED'
-        ? `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`
-        : '');
+
+  let rightCell = '';
+  if (result) {
+    rightCell = `
+      <span class="actual-pill">
+        ${teamFlag(match.home)}
+        <span class="actual-num">${result.home}</span>
+        <span class="actual-dash">−</span>
+        <span class="actual-num">${result.away}</span>
+        ${teamFlag(match.away)}
+      </span>`;
+  } else if (match.status === 'IN_PLAY' || match.status === 'PAUSED') {
+    rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
+  }
 
   const rows = others.map(([uid, doc]) => {
     const pred = doc.predictions?.[match.id];
@@ -755,7 +762,7 @@ function everyoneMatchBlock(match, others) {
     <div class="other-match-block">
       <div class="other-match-header">
         <span class="other-teams">${teamLabel(match.home)} <span class="vs-small">${t('match.vs')}</span> ${teamLabel(match.away)}</span>
-        ${resultText}
+        ${rightCell}
       </div>
       ${rows.length > 0
         ? rows.join('')
