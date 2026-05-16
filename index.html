@@ -56,24 +56,55 @@
 
   <header class="app-header">
     <div class="header-content">
-      <div class="brand">
-        <svg class="brand-ball" viewBox="0 0 40 40" aria-hidden="true">
-          <circle cx="20" cy="20" r="18" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
-          <polygon points="20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7" fill="#0a3b1f"/>
-          <line x1="20" y1="10" x2="20" y2="3" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="26.5" y1="14.7" x2="33" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="13.5" y1="14.7" x2="7" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="24" y1="22.2" x2="28" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="16" y1="22.2" x2="12" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <div class="brand-text">
-          <h1 class="brand-title" data-i18n="app.title">World Cup 2026 Fantasy</h1>
-          <span class="brand-tagline" data-i18n="app.tagline">Group Stage Predictions</span>
+      <div class="header-top">
+        <div class="brand">
+          <svg class="brand-ball" viewBox="0 0 40 40" aria-hidden="true">
+            <circle cx="20" cy="20" r="18" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
+            <polygon points="20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7" fill="#0a3b1f"/>
+            <line x1="20" y1="10" x2="20" y2="3" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="26.5" y1="14.7" x2="33" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="13.5" y1="14.7" x2="7" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="24" y1="22.2" x2="28" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="16" y1="22.2" x2="12" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <div class="brand-text">
+            <h1 class="brand-title" data-i18n="app.title">World Cup 2026 Fantasy</h1>
+            <span class="brand-tagline" data-i18n="app.tagline">Group Stage Predictions</span>
+          </div>
+          <div class="brand-hosts" aria-hidden="true">
+            <span class="host-dot" style="background:#006847"></span>
+            <span class="host-dot" style="background:#ffffff"></span>
+            <span class="host-dot" style="background:#ce1126"></span>
+          </div>
         </div>
-        <div class="brand-hosts" aria-hidden="true">
-          <span class="host-dot" style="background:#006847"></span>
-          <span class="host-dot" style="background:#ffffff"></span>
-          <span class="host-dot" style="background:#ce1126"></span>
+        <div class="header-utilities">
+          <button class="nav-signout" id="btn-header-signout" data-i18n-title="profile.signOut" title="Sign out" aria-label="Sign out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+          <div class="lang-toggle" role="group" data-i18n-title="nav.langTitle" title="Switch language">
+            <button class="lang-flag" data-lang="en" aria-label="English">
+              <svg viewBox="0 0 24 16" aria-hidden="true">
+                <rect width="24" height="16" fill="#b22234"/>
+                <rect y="1.23" width="24" height="1.23" fill="#fff"/>
+                <rect y="3.69" width="24" height="1.23" fill="#fff"/>
+                <rect y="6.15" width="24" height="1.23" fill="#fff"/>
+                <rect y="8.62" width="24" height="1.23" fill="#fff"/>
+                <rect y="11.08" width="24" height="1.23" fill="#fff"/>
+                <rect y="13.54" width="24" height="1.23" fill="#fff"/>
+                <rect width="9.6" height="8.62" fill="#3c3b6e"/>
+              </svg>
+            </button>
+            <button class="lang-flag" data-lang="es" aria-label="Español">
+              <svg viewBox="0 0 24 16" aria-hidden="true">
+                <rect width="24" height="16" fill="#aa151b"/>
+                <rect y="4" width="24" height="8" fill="#f1bf00"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       <nav class="main-nav">
@@ -83,33 +114,6 @@
         <button class="nav-btn" data-view="rules" data-i18n="nav.rules">Rules</button>
         <button class="nav-btn" data-view="profile" data-i18n="nav.profile">Profile</button>
         <button class="nav-btn admin-only" id="btn-settings">&#9881; <span data-i18n="nav.settings">Settings</span></button>
-        <button class="nav-signout" id="btn-header-signout" data-i18n-title="profile.signOut" title="Sign out" aria-label="Sign out">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-        </button>
-        <div class="lang-toggle" role="group" data-i18n-title="nav.langTitle" title="Switch language">
-          <button class="lang-flag" data-lang="en" aria-label="English">
-            <svg viewBox="0 0 24 16" aria-hidden="true">
-              <rect width="24" height="16" fill="#b22234"/>
-              <rect y="1.23" width="24" height="1.23" fill="#fff"/>
-              <rect y="3.69" width="24" height="1.23" fill="#fff"/>
-              <rect y="6.15" width="24" height="1.23" fill="#fff"/>
-              <rect y="8.62" width="24" height="1.23" fill="#fff"/>
-              <rect y="11.08" width="24" height="1.23" fill="#fff"/>
-              <rect y="13.54" width="24" height="1.23" fill="#fff"/>
-              <rect width="9.6" height="8.62" fill="#3c3b6e"/>
-            </svg>
-          </button>
-          <button class="lang-flag" data-lang="es" aria-label="Español">
-            <svg viewBox="0 0 24 16" aria-hidden="true">
-              <rect width="24" height="16" fill="#aa151b"/>
-              <rect y="4" width="24" height="8" fill="#f1bf00"/>
-            </svg>
-          </button>
-        </div>
       </nav>
     </div>
   </header>
