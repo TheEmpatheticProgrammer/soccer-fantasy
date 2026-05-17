@@ -272,6 +272,65 @@ html { color-scheme: dark; }
 .form-status.status-ok    { color: var(--accent); }
 .form-status.status-error { color: var(--error); }
 
+/* ── League owner tools (leaderboard) ── */
+.league-owner-tools {
+  margin-bottom: 1rem;
+}
+.lock-toggle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+}
+.lock-toggle-text { min-width: 0; flex: 1; }
+.lock-toggle-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+.lock-toggle-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.lock-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.08s;
+  flex-shrink: 0;
+}
+.lock-toggle-btn:hover { background: var(--surface-hi); }
+.lock-toggle-btn:active { transform: scale(0.97); }
+.lock-toggle-btn.is-unlocked {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(0, 217, 119, 0.35);
+}
+.lock-toggle-icon { font-size: 1rem; line-height: 1; }
+.lock-toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 600px) {
+  .lock-toggle-card { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+  .lock-toggle-btn { align-self: flex-end; }
+}
+
 /* ── Remove player button (leaderboard owner action) ── */
 .btn-remove-player {
   background: transparent;

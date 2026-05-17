@@ -62,6 +62,10 @@ const TRANSLATIONS = {
     'leaderboard.removePlayer': 'Remove from league',
     'leaderboard.removeConfirm': 'Remove {name} from {league}? Their predictions in this league will be deleted.',
     'leaderboard.removed': '{name} removed',
+    'leaderboard.lockToggleTitle': 'Predictions visibility',
+    'leaderboard.lockToggleHint': 'When unlocked, all members can edit predictions and see everyone\'s picks before the lock date. For testing.',
+    'leaderboard.locked': 'Locked',
+    'leaderboard.unlocked': 'Unlocked',
 
     'profile.title': 'Profile',
     'profile.email': 'Email',
@@ -220,6 +224,10 @@ const TRANSLATIONS = {
     'leaderboard.removePlayer': 'Quitar de la liga',
     'leaderboard.removeConfirm': '¿Quitar a {name} de {league}? Sus pronósticos en esta liga se eliminarán.',
     'leaderboard.removed': '{name} fue removido',
+    'leaderboard.lockToggleTitle': 'Visibilidad de pronósticos',
+    'leaderboard.lockToggleHint': 'Cuando está desbloqueado, todos los miembros pueden editar pronósticos y ver los de los demás antes del bloqueo. Para pruebas.',
+    'leaderboard.locked': 'Bloqueado',
+    'leaderboard.unlocked': 'Desbloqueado',
 
     'profile.title': 'Perfil',
     'profile.email': 'Correo',

@@ -1,5 +1,12 @@
 const PREDICTIONS_LOCK_DATE = new Date('2026-06-10T00:00:00');
-const arePredictionsLocked = () => Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
+const arePredictionsLocked = () => {
+  if (state.currentLeague?.unlocked === true) return false;
+  return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
+};
+const shouldRevealOthers = () => {
+  if (state.currentLeague?.unlocked === true) return true;
+  return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
+};
 
 const Storage = {
   keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id' },
@@ -83,6 +90,7 @@ function formatMatchDateParts(utcDate) {
 
 let unsubPredictions = null;
 let unsubResults = null;
+let unsubLeague = null;
 let lastApiStatus = null;
 let lastRefreshTs = null;
 let autosaveTimer = null;
@@ -168,6 +176,7 @@ async function routeAfterSignIn() {
 
 async function enterLeague(leagueId) {
   if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
+  if (unsubLeague)      { unsubLeague();      unsubLeague = null; }
 
   state.leagueId = leagueId;
   Storage.setLastLeagueId(leagueId);
@@ -190,6 +199,25 @@ async function enterLeague(leagueId) {
 
   updateCurrentLeagueBadge();
   subscribeToPredictions();
+  subscribeToLeague();
+}
+
+function subscribeToLeague() {
+  if (!state.leagueId) return;
+  unsubLeague = leagueDocRef(state.leagueId).onSnapshot(
+    doc => {
+      if (!doc.exists) return;
+      state.currentLeague = { id: doc.id, ...doc.data() };
+      updateCurrentLeagueBadge();
+      document.querySelectorAll('.league-owner-only').forEach(el =>
+        el.classList.toggle('hidden', !isLeagueOwner())
+      );
+      renderPredictions();
+      renderEveryone();
+      renderLeaderboard();
+    },
+    err => console.error('league subscription error', err)
+  );
 }
 
 async function enterLeaguesView() {
@@ -227,6 +255,7 @@ function onSignedOut() {
 
   if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
   if (unsubResults)     { unsubResults();     unsubResults = null; }
+  if (unsubLeague)      { unsubLeague();      unsubLeague = null; }
 
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('settings-panel').classList.add('hidden');
@@ -703,7 +732,7 @@ function renderEveryone() {
     return;
   }
 
-  if (!arePredictionsLocked() && !isAdmin()) {
+  if (!shouldRevealOthers() && !isAdmin() && !isLeagueOwner()) {
     container.innerHTML = `<div class="lock-banner">${t('predictions.everyoneLocked')}</div>`;
     return;
   }
@@ -859,8 +888,26 @@ function renderLeaderboard() {
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
   const ownerCanRemove = isLeagueOwner();
+  const isUnlocked = state.currentLeague?.unlocked === true;
+
+  const ownerToolsHtml = ownerCanRemove ? `
+    <div class="league-owner-tools">
+      <div class="lock-toggle-card">
+        <div class="lock-toggle-text">
+          <div class="lock-toggle-title">${t('leaderboard.lockToggleTitle')}</div>
+          <div class="lock-toggle-hint">${t('leaderboard.lockToggleHint')}</div>
+        </div>
+        <button id="btn-toggle-lock" class="lock-toggle-btn ${isUnlocked ? 'is-unlocked' : ''}"
+                aria-pressed="${isUnlocked}">
+          <span class="lock-toggle-icon" aria-hidden="true">${isUnlocked ? '🔓' : '🔒'}</span>
+          <span class="lock-toggle-label">${isUnlocked ? t('leaderboard.unlocked') : t('leaderboard.locked')}</span>
+        </button>
+      </div>
+    </div>
+  ` : '';
 
   container.innerHTML = `
+    ${ownerToolsHtml}
     <table class="leaderboard-table">
       <thead>
         <tr>
@@ -910,6 +957,22 @@ function renderLeaderboard() {
       }
     });
   });
+
+  const lockBtn = document.getElementById('btn-toggle-lock');
+  if (lockBtn) {
+    lockBtn.addEventListener('click', async () => {
+      if (!state.leagueId || !isLeagueOwner()) return;
+      const next = !(state.currentLeague?.unlocked === true);
+      lockBtn.disabled = true;
+      try {
+        await leagueDocRef(state.leagueId).update({ unlocked: next });
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        lockBtn.disabled = false;
+      }
+    });
+  }
 }
 
 // ── League CRUD ───────────────────────────────────────────────────────────────
