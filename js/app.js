@@ -725,11 +725,18 @@ function renderPredictions() {
     ? `<div class="lock-banner">${t('predictions.locked')}</div>`
     : '';
 
+  const columnHeader = `
+    <div class="predict-column-header">
+      <span></span>
+      <span></span>
+      <span class="column-header-label">${t('match.actualResults')}</span>
+    </div>`;
+
   const openPredictionGroups = captureOpenGroups('matches-container');
   const predictionsFirstRender = !state.predictionsRendered;
   state.predictionsRendered = true;
 
-  container.innerHTML = lockBanner + Object.entries(state.groups).map(([group, teams], i) => {
+  container.innerHTML = lockBanner + columnHeader + Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
     const isOpen = predictionsFirstRender ? i === 0 : openPredictionGroups.has(group);
     return `
@@ -845,7 +852,13 @@ function renderEveryone() {
   const everyoneFirstRender = !state.everyoneRendered;
   state.everyoneRendered = true;
 
-  container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
+  const everyoneColumnHeader = `
+    <div class="everyone-column-header">
+      <span></span>
+      <span class="column-header-label">${t('match.actualResults')}</span>
+    </div>`;
+
+  container.innerHTML = everyoneColumnHeader + Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
     const isOpen = everyoneFirstRender ? i === 0 : openEveryoneGroups.has(group);
     return `

@@ -146,6 +146,7 @@ const TRANSLATIONS = {
 
     'match.yourPick': 'Your pick',
     'match.actual': 'Actual',
+    'match.actualResults': 'Actual results',
     'match.group': 'Group {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',
@@ -316,6 +317,7 @@ const TRANSLATIONS = {
 
     'match.yourPick': 'Tu pronóstico',
     'match.actual': 'Resultado',
+    'match.actualResults': 'Resultados reales',
     'match.group': 'Grupo {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',

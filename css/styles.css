@@ -809,6 +809,38 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .group-section > summary::-webkit-details-marker { display: none; }
 .group-section > summary:hover { filter: brightness(1.1); }
 
+/* ── Column header (above predictions / everyone lists) ── */
+.predict-column-header {
+  display: grid;
+  grid-template-columns: minmax(96px, max-content) 1fr minmax(150px, max-content);
+  align-items: center;
+  gap: 1rem;
+  padding: 0.4rem 1rem 0.6rem;
+}
+.everyone-column-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.4rem 1rem 0.6rem;
+}
+.column-header-label {
+  text-align: right;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .predict-column-header {
+    grid-template-columns: 1fr minmax(120px, auto);
+    padding: 0.3rem 0.8rem 0.5rem;
+  }
+  .predict-column-header span:first-child { display: none; }
+  .everyone-column-header { padding: 0.3rem 0.8rem 0.5rem; }
+}
+
 /* ── Predict row (three zones: date | fixture | actual) ── */
 .predict-row {
   display: grid;
