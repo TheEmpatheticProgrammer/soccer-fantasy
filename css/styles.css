@@ -111,10 +111,20 @@ html { color-scheme: dark; }
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.rank-pill {
+.name-pill {
   background: var(--surface-2);
-  color: var(--accent);
+  color: var(--text);
   border: 1px solid var(--border);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+.rank-pill {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(0, 217, 119, 0.3);
 }
 .countdown-pill[data-kind="pending"] {
   background: var(--highlight-soft);
@@ -1331,6 +1341,22 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   border-radius: 4px;
 }
 .other-prediction-row:nth-child(odd) { background: var(--surface-2); }
+.other-prediction-row.is-self {
+  background: var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  padding-left: 0.5rem;
+}
+.self-tag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(0, 217, 119, 0.18);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  margin-left: 0.35rem;
+}
 .other-name  { color: var(--gray-800); }
 .other-score {
   font-weight: 700;

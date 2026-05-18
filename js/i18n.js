@@ -3,7 +3,7 @@ const TRANSLATIONS = {
     'app.title': 'World Cup 2026 Fantasy',
     'app.tagline': 'Group Stage Predictions',
     'app.dateTBD': 'Date TBD',
-    'header.locksIn': 'Locks in {time}',
+    'header.locksIn': 'Predictions lock in {time}',
     'header.tournamentLive': 'Tournament live',
     'header.testMode': 'Test mode',
 
@@ -168,7 +168,7 @@ const TRANSLATIONS = {
     'app.title': 'Mundial 2026 Fantasy',
     'app.tagline': 'Pronósticos de la Fase de Grupos',
     'app.dateTBD': 'Fecha por confirmar',
-    'header.locksIn': 'Bloqueo en {time}',
+    'header.locksIn': 'Pronósticos bloquean en {time}',
     'header.tournamentLive': 'Torneo en vivo',
     'header.testMode': 'Modo prueba',
 

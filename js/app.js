@@ -283,19 +283,28 @@ function computeMyRank() {
 }
 
 function renderHeaderStats() {
+  const nameEl = document.getElementById('name-pill');
   const rankEl = document.getElementById('rank-pill');
   const countdownEl = document.getElementById('countdown-pill');
-  if (!rankEl || !countdownEl) return;
+  if (!rankEl || !countdownEl || !nameEl) return;
 
   if (!state.currentLeague) {
+    nameEl.classList.add('hidden');
     rankEl.classList.add('hidden');
     countdownEl.classList.add('hidden');
     return;
   }
 
+  if (state.currentPlayer) {
+    nameEl.textContent = state.currentPlayer;
+    nameEl.classList.remove('hidden');
+  } else {
+    nameEl.classList.add('hidden');
+  }
+
   const myRank = computeMyRank();
   if (myRank) {
-    rankEl.textContent = `#${myRank.rank} · ${myRank.points}${myRank.points === 1 ? 'pt' : 'pt'}`;
+    rankEl.textContent = `#${myRank.rank} · ${myRank.points}pt`;
     rankEl.classList.remove('hidden');
   } else {
     rankEl.classList.add('hidden');
@@ -823,8 +832,8 @@ function renderEveryone() {
     return;
   }
 
-  const others = Object.entries(state.predictionDocs).filter(([uid]) => uid !== state.uid);
-  if (others.length === 0) {
+  const participants = Object.entries(state.predictionDocs);
+  if (participants.length === 0) {
     container.innerHTML = `<div class="empty-state">${t('predictions.noOthers')}</div>`;
     return;
   }
@@ -837,12 +846,12 @@ function renderEveryone() {
           <h2>${t('match.group', { letter: group })}</h2>
           <span class="group-teams">${teams.map(tCountry).join(' · ')}</span>
         </div>
-        ${matches.map(m => everyoneMatchBlock(m, others)).join('')}
+        ${matches.map(m => everyoneMatchBlock(m, participants)).join('')}
       </div>`;
   }).join('');
 }
 
-function everyoneMatchBlock(match, others) {
+function everyoneMatchBlock(match, participants) {
   const result = state.results[match.id];
 
   let rightCell = '';
@@ -859,13 +868,14 @@ function everyoneMatchBlock(match, others) {
     rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
   }
 
-  const rows = others.map(([uid, doc]) => {
+  const rows = participants.map(([uid, doc]) => {
     const pred = doc.predictions?.[match.id];
     if (!pred) return null;
     const pts = result ? calcPoints(pred, result) : null;
+    const isSelf = uid === state.uid;
     return `
-      <div class="other-prediction-row">
-        <span class="other-name">${doc.displayName || t('toast.unknown')}</span>
+      <div class="other-prediction-row${isSelf ? ' is-self' : ''}">
+        <span class="other-name">${doc.displayName || t('toast.unknown')}${isSelf ? ' <span class="self-tag">you</span>' : ''}</span>
         <span class="other-score">${pred.home}–${pred.away}</span>
         <span class="match-points ${pts !== null ? `points-${pts}` : 'points-none'}">
           ${pts !== null ? t('match.pts', { n: pts }) : ''}
