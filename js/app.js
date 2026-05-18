@@ -180,6 +180,8 @@ async function enterLeague(leagueId) {
   if (unsubLeague)      { unsubLeague();      unsubLeague = null; }
 
   state.leagueId = leagueId;
+  state.predictionsRendered = false;
+  state.everyoneRendered = false;
   Storage.setLastLeagueId(leagueId);
 
   const doc = await leagueDocRef(leagueId).get();
@@ -283,23 +285,14 @@ function computeMyRank() {
 }
 
 function renderHeaderStats() {
-  const nameEl = document.getElementById('name-pill');
   const rankEl = document.getElementById('rank-pill');
   const countdownEl = document.getElementById('countdown-pill');
-  if (!rankEl || !countdownEl || !nameEl) return;
+  if (!rankEl || !countdownEl) return;
 
   if (!state.currentLeague) {
-    nameEl.classList.add('hidden');
     rankEl.classList.add('hidden');
     countdownEl.classList.add('hidden');
     return;
-  }
-
-  if (state.currentPlayer) {
-    nameEl.textContent = state.currentPlayer;
-    nameEl.classList.remove('hidden');
-  } else {
-    nameEl.classList.add('hidden');
   }
 
   const myRank = computeMyRank();
@@ -732,15 +725,25 @@ function renderPredictions() {
     ? `<div class="lock-banner">${t('predictions.locked')}</div>`
     : '';
 
-  container.innerHTML = lockBanner + Object.entries(state.groups).map(([group, teams]) => {
+  const openPredictionGroups = captureOpenGroups('matches-container');
+  const predictionsFirstRender = !state.predictionsRendered;
+  state.predictionsRendered = true;
+
+  container.innerHTML = lockBanner + Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
+    const isOpen = predictionsFirstRender ? i === 0 : openPredictionGroups.has(group);
     return `
-      <section class="prediction-group">
-        <h3 class="prediction-group-title">${t('match.group', { letter: group })}</h3>
+      <details class="prediction-group" data-group="${group}"${isOpen ? ' open' : ''}>
+        <summary class="prediction-group-title">
+          <span>${t('match.group', { letter: group })}</span>
+          <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
         <div class="prediction-group-rows">
           ${matches.map(m => matchCard(m, preds[m.id], state.results[m.id])).join('')}
         </div>
-      </section>`;
+      </details>`;
   }).join('');
 
   restoreInputDraft(draft);
@@ -838,17 +841,33 @@ function renderEveryone() {
     return;
   }
 
-  container.innerHTML = Object.entries(state.groups).map(([group, teams]) => {
+  const openEveryoneGroups = captureOpenGroups('everyone-container');
+  const everyoneFirstRender = !state.everyoneRendered;
+  state.everyoneRendered = true;
+
+  container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
+    const isOpen = everyoneFirstRender ? i === 0 : openEveryoneGroups.has(group);
     return `
-      <div class="group-section">
-        <div class="group-header">
+      <details class="group-section" data-group="${group}"${isOpen ? ' open' : ''}>
+        <summary class="group-header">
           <h2>${t('match.group', { letter: group })}</h2>
           <span class="group-teams">${teams.map(tCountry).join(' · ')}</span>
-        </div>
+          <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
         ${matches.map(m => everyoneMatchBlock(m, participants)).join('')}
-      </div>`;
+      </details>`;
   }).join('');
+}
+
+function captureOpenGroups(containerId) {
+  const open = new Set();
+  document.querySelectorAll(`#${containerId} details[data-group]`).forEach(el => {
+    if (el.open) open.add(el.dataset.group);
+  });
+  return open;
 }
 
 function everyoneMatchBlock(match, participants) {

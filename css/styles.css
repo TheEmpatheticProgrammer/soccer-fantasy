@@ -111,20 +111,20 @@ html { color-scheme: dark; }
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.name-pill {
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--border);
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: inline-block;
-}
-.rank-pill {
+.player-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.6rem;
+  padding: 0.15rem 0.55rem;
   background: var(--accent-soft);
   color: var(--accent);
   border: 1px solid rgba(0, 217, 119, 0.3);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .countdown-pill[data-kind="pending"] {
   background: var(--highlight-soft);
@@ -762,25 +762,52 @@ body {
   letter-spacing: -0.3px;
 }
 
-/* ── Prediction group container (admin-style minimal) ── */
+/* ── Prediction group container (admin-style minimal, collapsible) ── */
 .prediction-group {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   overflow: hidden;
 }
-.prediction-group-title {
+.prediction-group > summary.prediction-group-title {
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-muted);
   padding: 0.7rem 1rem;
-  border-bottom: 1px solid var(--border);
   background: var(--surface-2);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  transition: background 0.15s;
 }
+.prediction-group > summary::-webkit-details-marker { display: none; }
+.prediction-group > summary:hover { background: var(--surface-hi); }
+.prediction-group[open] > summary { border-bottom: 1px solid var(--border); }
 .prediction-group-rows { display: flex; flex-direction: column; }
+
+.group-chevron {
+  width: 12px;
+  height: 12px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+details[open] > summary .group-chevron { transform: rotate(180deg); }
+
+/* Everyone view group sections are also collapsible */
+.group-section > summary.group-header {
+  cursor: pointer;
+  list-style: none;
+  transition: filter 0.15s;
+}
+.group-section > summary::-webkit-details-marker { display: none; }
+.group-section > summary:hover { filter: brightness(1.1); }
 
 /* ── Predict row (three zones: date | fixture | actual) ── */
 .predict-row {
