@@ -66,6 +66,21 @@ html { color-scheme: dark; }
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;
+  flex-wrap: wrap;
+}
+.league-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .current-league-label {
   color: var(--text-muted);
@@ -81,6 +96,50 @@ html { color-scheme: dark; }
   background: var(--accent-soft);
   border-radius: 999px;
   border: 1px solid rgba(0, 217, 119, 0.3);
+}
+
+.header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.rank-pill {
+  background: var(--surface-2);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+.countdown-pill[data-kind="pending"] {
+  background: var(--highlight-soft);
+  color: var(--highlight);
+  border: 1px solid rgba(255, 214, 10, 0.3);
+}
+.countdown-pill[data-kind="live"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(0, 217, 119, 0.35);
+  animation: livePulse 2s ease-in-out infinite;
+}
+.countdown-pill[data-kind="unlocked"] {
+  background: rgba(255, 90, 79, 0.12);
+  color: var(--error);
+  border: 1px solid rgba(255, 90, 79, 0.3);
+}
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 217, 119, 0.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(0, 217, 119, 0); }
+}
+
+@media (max-width: 500px) {
+  .header-stats { width: 100%; justify-content: flex-end; margin-left: 0; }
+  .header-pill { font-size: 0.62rem; padding: 0.18rem 0.5rem; }
 }
 
 /* ── Leagues view ── */

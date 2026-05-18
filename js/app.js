@@ -103,6 +103,7 @@ function init() {
   bindEvents();
   renderAdminMatches();
   renderLeaderboard();
+  startCountdownInterval();
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) onSignedIn(user);
@@ -241,6 +242,88 @@ function updateCurrentLeagueBadge() {
     badge.textContent = '';
     badge.classList.add('hidden');
   }
+  renderHeaderStats();
+}
+
+function formatCountdown(targetMs) {
+  const diff = targetMs - Date.now();
+  if (diff <= 0) return null;
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+function computeMyRank() {
+  if (!state.uid) return null;
+  const players = Object.entries(state.predictionDocs);
+  if (players.length === 0) return null;
+
+  const standings = players.map(([uid, doc]) => {
+    const preds = doc.predictions || {};
+    let points = 0;
+    for (const [matchId, pred] of Object.entries(preds)) {
+      const actual = state.results[matchId];
+      if (!actual) continue;
+      points += calcPoints(pred, actual);
+    }
+    return { uid, points, predicted: Object.keys(preds).length };
+  }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
+
+  const myIndex = standings.findIndex(s => s.uid === state.uid);
+  if (myIndex === -1) return null;
+
+  return {
+    rank: myIndex + 1,
+    points: standings[myIndex].points,
+    totalPlayers: standings.length,
+  };
+}
+
+function renderHeaderStats() {
+  const rankEl = document.getElementById('rank-pill');
+  const countdownEl = document.getElementById('countdown-pill');
+  if (!rankEl || !countdownEl) return;
+
+  if (!state.currentLeague) {
+    rankEl.classList.add('hidden');
+    countdownEl.classList.add('hidden');
+    return;
+  }
+
+  const myRank = computeMyRank();
+  if (myRank) {
+    rankEl.textContent = `#${myRank.rank} · ${myRank.points}${myRank.points === 1 ? 'pt' : 'pt'}`;
+    rankEl.classList.remove('hidden');
+  } else {
+    rankEl.classList.add('hidden');
+  }
+
+  let label, kind;
+  if (state.currentLeague.unlocked === true) {
+    label = t('header.testMode');
+    kind = 'unlocked';
+  } else {
+    const remaining = formatCountdown(PREDICTIONS_LOCK_DATE.getTime());
+    if (!remaining) {
+      label = t('header.tournamentLive');
+      kind = 'live';
+    } else {
+      label = t('header.locksIn', { time: remaining });
+      kind = 'pending';
+    }
+  }
+  countdownEl.textContent = label;
+  countdownEl.dataset.kind = kind;
+  countdownEl.classList.remove('hidden');
+}
+
+let countdownInterval = null;
+function startCountdownInterval() {
+  if (countdownInterval) return;
+  countdownInterval = setInterval(renderHeaderStats, 60000);
 }
 
 function onSignedOut() {
@@ -329,6 +412,7 @@ function subscribeToPredictions() {
       renderLeaderboard();
       renderPredictions();
       renderEveryone();
+      renderHeaderStats();
     },
     err => showToast(t('toast.predLoadFail', { msg: err.message }))
   );
@@ -342,6 +426,7 @@ function subscribeToResults() {
       renderLeaderboard();
       renderPredictions();
       renderEveryone();
+      renderHeaderStats();
     },
     err => showToast(t('toast.resultsLoadFail', { msg: err.message }))
   );
@@ -363,6 +448,7 @@ function refreshDynamicContent() {
   if (state.leagueId === null) renderLeagues();
   refreshApiStatus();
   refreshSaveStatus();
+  renderHeaderStats();
 }
 
 function bindEvents() {
