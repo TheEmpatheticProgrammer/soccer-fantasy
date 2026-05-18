@@ -1660,6 +1660,24 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   margin-bottom: 1.2rem;
   font-size: 0.92rem;
 }
+.rules-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.rules-list li {
+  margin-bottom: 0.55rem;
+}
+.rules-list li::marker { color: var(--accent); }
+.rules-paragraph {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+.rules-paragraph:first-of-type { margin-top: 1.5rem; }
 .rule-item {
   display: grid;
   grid-template-columns: 56px 1fr;

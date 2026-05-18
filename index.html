@@ -221,35 +221,39 @@
     <!-- Rules view -->
     <div id="view-rules" class="view hidden">
       <div class="rules-card">
-        <h2 class="rules-section-title" data-i18n="rules.scoringTitle">How scoring works</h2>
-        <p class="rules-intro" data-i18n="rules.intro">Each prediction earns points based on how close you got.</p>
+        <h2 class="rules-section-title" data-i18n="rules.mainTitle">Rules</h2>
+        <ul class="rules-list">
+          <li data-i18n="rules.prizes20">The prizes are calculated based on 20 participants.</li>
+          <li data-i18n="rules.prizesProportional">If more or fewer people participate, the prizes will increase or decrease proportionally.</li>
+          <li data-i18n="rules.deadline">The deadline to submit your predictions and the $30 fee is June 9.</li>
+          <li data-i18n="rules.transparency">For transparency, before the start of the first match and after everyone has submitted their scores, I will provide each of you with a matrix showing everyone's predictions.</li>
+        </ul>
+
+        <h2 class="rules-section-title" data-i18n="rules.scoringSystemTitle">Scoring System</h2>
 
         <div class="rule-item">
           <span class="rule-badge points-3">3</span>
           <div class="rule-content">
-            <h3 data-i18n="rules.exactTitle">Exact score</h3>
-            <p data-i18n="rules.exactExample">You predicted 2–1 and the match ended 2–1.</p>
+            <p data-i18n="rules.exactPoints">Exact score predicted → 3 points</p>
           </div>
         </div>
 
         <div class="rule-item">
           <span class="rule-badge points-1">1</span>
           <div class="rule-content">
-            <h3 data-i18n="rules.outcomeTitle">Correct outcome</h3>
-            <p data-i18n="rules.outcomeExample">You picked the right winner (or a draw) but the score was different. Example: predicted 2–0, actual 3–1.</p>
+            <p data-i18n="rules.correctResult">Correct result (without exact score) → 1 point</p>
           </div>
         </div>
 
         <div class="rule-item">
           <span class="rule-badge points-0">0</span>
           <div class="rule-content">
-            <h3 data-i18n="rules.wrongTitle">Wrong outcome</h3>
-            <p data-i18n="rules.wrongExample">Your predicted winner didn't win, or you picked a draw and someone won.</p>
+            <p data-i18n="rules.incorrectResult">Incorrect result → 0 points</p>
           </div>
         </div>
 
-        <h2 class="rules-section-title" data-i18n="rules.editTitle">Editing your predictions</h2>
-        <p data-i18n="rules.editText">You can update your predictions as often as you'd like until they lock at midnight on June 10, 2026 — the night before the tournament starts.</p>
+        <p class="rules-paragraph" data-i18n="rules.totalsAfterGroupStage">After the group stage ends, the points from all matches will be totaled to determine the winners.</p>
+        <p class="rules-paragraph" data-i18n="rules.tieRule">If two or more people tie for first place, they will be assigned 1st, 2nd, and/or 3rd place accordingly, and so on in case of a tie in points.</p>
       </div>
     </div>
 
