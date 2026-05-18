@@ -1678,6 +1678,35 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   margin-top: 1rem;
 }
 .rules-paragraph:first-of-type { margin-top: 1.5rem; }
+
+.prizes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0;
+}
+.prize-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.prize-label {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+.prize-amount {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  letter-spacing: -0.2px;
+}
 .rule-item {
   display: grid;
   grid-template-columns: 56px 1fr;
