@@ -4,7 +4,7 @@ const isUsingProxy = () => !!window.LOCAL_CONFIG?.apiBaseUrl;
 
 const ApiCache = {
   key: 'wc2026_api_cache_v3',
-  ttl: 15 * 60 * 1000, // 15 minutes
+  ttl: 5 * 60 * 1000, // 5 minutes
 
   set(data) {
     localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data }));

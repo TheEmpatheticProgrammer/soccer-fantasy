@@ -584,15 +584,19 @@ async function loadFromApi(force = false) {
     state.matches = data.matches;
     state.crests  = data.crests || {};
 
-    if (isAdmin()) {
-      const apiResults = {};
-      for (const m of data.matches) {
-        if (m.result) apiResults[m.id] = m.result;
-      }
-      const merged = { ...state.results, ...apiResults };
-      if (Object.keys(apiResults).length > 0) {
+    const apiResults = {};
+    for (const m of data.matches) {
+      if (m.result) apiResults[m.id] = m.result;
+    }
+    if (Object.keys(apiResults).length > 0) {
+      // Merge into local state so every user sees fresh scores without
+      // waiting for admin to push to Firestore.
+      state.results = { ...state.results, ...apiResults };
+
+      // Admin propagates to Firestore as the canonical source for the league.
+      if (isAdmin()) {
         await firebase.firestore().collection('results').doc('all').set({
-          results: merged,
+          results: state.results,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
       }
@@ -658,6 +662,13 @@ function switchView(view) {
   if (view === 'leaderboard') renderLeaderboard();
   if (view === 'predictions') { renderPredictions(); renderEveryone(); }
   if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
+
+  // Auto-refresh API data when entering predictions/leaderboard. ApiCache
+  // (5min TTL) prevents hammering; admin's call additionally fans out to
+  // Firestore so others' onSnapshot picks up the new results.
+  if ((view === 'predictions' || view === 'leaderboard') && hasApiAccess()) {
+    loadFromApi(false).catch(() => { /* errors surface via api-status pill */ });
+  }
 }
 
 function switchSubview(name) {
