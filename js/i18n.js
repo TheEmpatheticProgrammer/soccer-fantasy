@@ -6,6 +6,8 @@ const TRANSLATIONS = {
     'header.locksIn': 'Predictions lock in {time}',
     'header.tournamentLive': 'Tournament live',
     'header.testMode': 'Test mode',
+    'header.rank': 'Rank',
+    'header.points': 'Points',
 
     'nav.leagues': 'Leagues',
     'nav.predictions': 'Predictions',
@@ -69,6 +71,11 @@ const TRANSLATIONS = {
     'leaderboard.lockToggleHint': 'When unlocked, all members can edit predictions and see everyone\'s picks before the lock date. For testing.',
     'leaderboard.locked': 'Locked',
     'leaderboard.unlocked': 'Unlocked',
+    'leaderboard.exportTitle': 'Export predictions',
+    'leaderboard.exportHint': "Download every player's picks and per-match points as a CSV (opens in Excel).",
+    'leaderboard.exportButton': 'Export to Excel',
+    'leaderboard.exportEmpty': 'No predictions to export yet.',
+    'leaderboard.exportDone': 'Exported {n} matches × {p} players',
 
     'profile.title': 'Profile',
     'profile.email': 'Email',
@@ -177,6 +184,8 @@ const TRANSLATIONS = {
     'header.locksIn': 'Pronósticos bloquean en {time}',
     'header.tournamentLive': 'Torneo en vivo',
     'header.testMode': 'Modo prueba',
+    'header.rank': 'Lugar',
+    'header.points': 'Puntos',
 
     'nav.leagues': 'Ligas',
     'nav.predictions': 'Pronósticos',
@@ -240,6 +249,11 @@ const TRANSLATIONS = {
     'leaderboard.lockToggleHint': 'Cuando está desbloqueado, todos los miembros pueden editar pronósticos y ver los de los demás antes del bloqueo. Para pruebas.',
     'leaderboard.locked': 'Bloqueado',
     'leaderboard.unlocked': 'Desbloqueado',
+    'leaderboard.exportTitle': 'Exportar pronósticos',
+    'leaderboard.exportHint': 'Descarga los pronósticos y puntos por partido de todos como CSV (se abre en Excel).',
+    'leaderboard.exportButton': 'Exportar a Excel',
+    'leaderboard.exportEmpty': 'Aún no hay pronósticos que exportar.',
+    'leaderboard.exportDone': 'Exportados {n} partidos × {p} jugadores',
 
     'profile.title': 'Perfil',
     'profile.email': 'Correo',

@@ -297,7 +297,7 @@ function renderHeaderStats() {
 
   const myRank = computeMyRank();
   if (myRank) {
-    rankEl.textContent = `#${myRank.rank} · ${myRank.points}pt`;
+    rankEl.textContent = `${t('header.rank')} #${myRank.rank} · ${myRank.points} ${t('header.points')}`;
     rankEl.classList.remove('hidden');
   } else {
     rankEl.classList.add('hidden');
@@ -1031,15 +1031,29 @@ function renderLeaderboard() {
 
   const ownerToolsHtml = ownerCanRemove ? `
     <div class="league-owner-tools">
-      <div class="lock-toggle-card">
-        <div class="lock-toggle-text">
-          <div class="lock-toggle-title">${t('leaderboard.lockToggleTitle')}</div>
-          <div class="lock-toggle-hint">${t('leaderboard.lockToggleHint')}</div>
+      <div class="owner-tool-card">
+        <div class="owner-tool-text">
+          <div class="owner-tool-title">${t('leaderboard.lockToggleTitle')}</div>
+          <div class="owner-tool-hint">${t('leaderboard.lockToggleHint')}</div>
         </div>
         <button id="btn-toggle-lock" class="lock-toggle-btn ${isUnlocked ? 'is-unlocked' : ''}"
                 aria-pressed="${isUnlocked}">
           <span class="lock-toggle-icon" aria-hidden="true">${isUnlocked ? '🔓' : '🔒'}</span>
           <span class="lock-toggle-label">${isUnlocked ? t('leaderboard.unlocked') : t('leaderboard.locked')}</span>
+        </button>
+      </div>
+      <div class="owner-tool-card">
+        <div class="owner-tool-text">
+          <div class="owner-tool-title">${t('leaderboard.exportTitle')}</div>
+          <div class="owner-tool-hint">${t('leaderboard.exportHint')}</div>
+        </div>
+        <button id="btn-export-predictions" class="btn btn-secondary export-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>${t('leaderboard.exportButton')}</span>
         </button>
       </div>
     </div>
@@ -1112,6 +1126,105 @@ function renderLeaderboard() {
       }
     });
   }
+
+  const exportBtn = document.getElementById('btn-export-predictions');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportPredictionsCSV);
+  }
+}
+
+function exportPredictionsCSV() {
+  const players = Object.entries(state.predictionDocs);
+  if (players.length === 0) {
+    showToast(t('leaderboard.exportEmpty'));
+    return;
+  }
+
+  const playerNames = players.map(([, doc]) => doc.displayName || '(unknown)');
+
+  // Pivot layout — one row per match, one column per player + Actual + per-player points
+  const headers = [
+    'Group',
+    'Date (UTC)',
+    'Match',
+    ...playerNames,
+    'Actual',
+    ...playerNames.map(name => `${name} (pts)`),
+  ];
+
+  const sortedMatches = [...state.matches].sort((a, b) => {
+    if (a.group !== b.group) return a.group.localeCompare(b.group);
+    return (a.utcDate || '').localeCompare(b.utcDate || '');
+  });
+
+  const lines = [headers.map(csvEscape).join(',')];
+
+  for (const match of sortedMatches) {
+    const result = state.results[match.id];
+    const actualStr = result ? `${result.home}-${result.away}` : '';
+
+    const playerPreds = players.map(([, doc]) => {
+      const pred = doc.predictions?.[match.id];
+      return pred ? `${pred.home}-${pred.away}` : '';
+    });
+
+    const playerPts = players.map(([, doc]) => {
+      const pred = doc.predictions?.[match.id];
+      if (!pred || !result) return '';
+      return calcPoints(pred, result);
+    });
+
+    const row = [
+      match.group,
+      match.utcDate || '',
+      `${match.home} vs ${match.away}`,
+      ...playerPreds,
+      actualStr,
+      ...playerPts,
+    ];
+    lines.push(row.map(csvEscape).join(','));
+  }
+
+  // Totals row
+  const totals = players.map(([, doc]) => {
+    const preds = doc.predictions || {};
+    let total = 0;
+    for (const [matchId, pred] of Object.entries(preds)) {
+      const actual = state.results[matchId];
+      if (!actual) continue;
+      total += calcPoints(pred, actual);
+    }
+    return total;
+  });
+  const totalRow = ['', '', 'TOTAL', ...players.map(() => ''), '', ...totals];
+  lines.push(totalRow.map(csvEscape).join(','));
+
+  const csv = lines.join('\r\n');
+  const leagueName = (state.currentLeague?.name || 'predictions').replace(/[^\w-]+/g, '_');
+  const stamp = new Date().toISOString().slice(0, 10);
+  downloadCSV(csv, `${leagueName}_${stamp}.csv`);
+  showToast(t('leaderboard.exportDone', { n: sortedMatches.length, p: players.length }));
+}
+
+function csvEscape(value) {
+  const s = String(value ?? '');
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function downloadCSV(csv, filename) {
+  // UTF-8 BOM so Excel reads accented characters correctly
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // ── League CRUD ───────────────────────────────────────────────────────────────

@@ -343,9 +343,12 @@ html { color-scheme: dark; }
 
 /* ── League owner tools (leaderboard) ── */
 .league-owner-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
   margin-bottom: 1rem;
 }
-.lock-toggle-card {
+.owner-tool-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -355,8 +358,8 @@ html { color-scheme: dark; }
   gap: 1rem;
   justify-content: space-between;
 }
-.lock-toggle-text { min-width: 0; flex: 1; }
-.lock-toggle-title {
+.owner-tool-text { min-width: 0; flex: 1; }
+.owner-tool-title {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -364,11 +367,20 @@ html { color-scheme: dark; }
   color: var(--text-muted);
   margin-bottom: 0.15rem;
 }
-.lock-toggle-hint {
+.owner-tool-hint {
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.35;
 }
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+}
+.export-btn svg { width: 16px; height: 16px; }
 .lock-toggle-btn {
   display: inline-flex;
   align-items: center;
@@ -396,7 +408,7 @@ html { color-scheme: dark; }
 .lock-toggle-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (max-width: 600px) {
-  .lock-toggle-card { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+  .owner-tool-card { flex-direction: column; align-items: stretch; gap: 0.6rem; }
   .lock-toggle-btn { align-self: flex-end; }
 }
 
