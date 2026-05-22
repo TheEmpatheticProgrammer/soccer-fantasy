@@ -1111,6 +1111,18 @@ function renderLeaderboard() {
           <span>${t('leaderboard.exportButton')}</span>
         </button>
       </div>
+      <div class="owner-tool-card">
+        <div class="owner-tool-text">
+          <div class="owner-tool-title">${t('leaderboard.resetTitle')}</div>
+          <div class="owner-tool-hint">${t('leaderboard.resetHint')}</div>
+        </div>
+        <button id="btn-reset-league" class="btn btn-secondary export-btn reset-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          <span>${t('leaderboard.resetButton')}</span>
+        </button>
+      </div>
     </div>
   ` : '';
 
@@ -1185,6 +1197,24 @@ function renderLeaderboard() {
   const exportBtn = document.getElementById('btn-export-predictions');
   if (exportBtn) {
     exportBtn.addEventListener('click', exportPredictionsCSV);
+  }
+
+  const resetBtn = document.getElementById('btn-reset-league');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', async () => {
+      if (!state.leagueId || !isLeagueOwner()) return;
+      const leagueName = displayLeagueName(state.currentLeague?.name) || '';
+      if (!confirm(t('leaderboard.resetConfirm', { name: leagueName }))) return;
+      resetBtn.disabled = true;
+      try {
+        await resetLeague();
+        showToast(t('leaderboard.resetDone'));
+      } catch (err) {
+        showToast(err.message);
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
   }
 }
 
@@ -1297,6 +1327,23 @@ async function createLeague(name) {
 
   const ref = await firebase.firestore().collection('leagues').add(doc);
   return ref.id;
+}
+
+async function resetLeague() {
+  if (!state.leagueId || !isLeagueOwner()) throw new Error(t('leaderboard.resetDenied'));
+
+  const snap = await leaguePredictionsCol(state.leagueId).get();
+  const batch = firebase.firestore().batch();
+  snap.docs.forEach(d => batch.delete(d.ref));
+  await batch.commit();
+
+  await firebase.firestore().collection('results').doc('all').delete().catch(() => {});
+
+  ApiCache.clear?.();
+  state.results = {};
+  state.predictionDocs = {};
+  document.querySelectorAll('#matches-container .score-input').forEach(input => { input.value = ''; });
+  refreshDynamicContent();
 }
 
 async function joinLeague(leagueId) {
