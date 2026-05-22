@@ -8,7 +8,7 @@
 window.LOCAL_CONFIG = window.LOCAL_CONFIG || {};
 Object.assign(window.LOCAL_CONFIG, {
   apiBaseUrl: 'https://c2026-proxy.mongitox.workers.dev/v4',
-  adminEmail: 'cagrija@microsoft.com',
+  adminEmails: ['cagrija@microsoft.com', 'cgrijalvah@hotmail.com'],
   firebase: {
     apiKey: "AIzaSyBETHqT0A8DfACRVu-6l6Mb477qc7V_gPI",
     authDomain: "soccer-fantasy-17cb0.firebaseapp.com",
