@@ -43,13 +43,22 @@
       <form id="auth-form" autocomplete="on">
         <input type="email" id="auth-email" required autocomplete="email"
                data-i18n-placeholder="auth.email" placeholder="Email">
-        <input type="password" id="auth-password" required minlength="6" autocomplete="current-password"
-               data-i18n-placeholder="auth.password" placeholder="Password (6+ chars)">
+        <div class="password-row">
+          <input type="password" id="auth-password" required minlength="6" autocomplete="current-password"
+                 data-i18n-placeholder="auth.password" placeholder="Password (6+ chars)">
+          <button type="button" id="btn-toggle-auth-password" class="password-eye"
+                  data-i18n-title="auth.showPassword" title="Show / hide password" aria-label="Show password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
         <div id="auth-displayname-wrap" class="hidden">
           <input type="text" id="auth-displayname" autocomplete="nickname"
                  data-i18n-placeholder="auth.displayName" placeholder="Display name (shown on leaderboard)">
         </div>
         <button type="submit" id="auth-submit" class="btn btn-primary" data-i18n="auth.signIn">Sign In</button>
+        <button type="button" id="btn-forgot-password" class="auth-link-btn" data-i18n="auth.forgot">Forgot password?</button>
         <div id="auth-error" class="auth-error hidden"></div>
       </form>
     </div>
@@ -211,6 +220,36 @@
             <button id="btn-update-name" class="btn btn-primary" data-i18n="profile.save">Save</button>
           </div>
           <div id="profile-name-status" class="profile-status"></div>
+        </div>
+
+        <div class="profile-divider"></div>
+
+        <div class="profile-field">
+          <label class="profile-label" data-i18n="profile.changePassword">Change password</label>
+          <div class="profile-password-grid">
+            <div class="password-row">
+              <input id="profile-current-password" type="password" autocomplete="current-password"
+                     data-i18n-placeholder="profile.currentPassword" placeholder="Current password">
+              <button type="button" class="password-eye" data-toggle-target="profile-current-password"
+                      data-i18n-title="auth.showPassword" title="Show / hide password" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="password-row">
+              <input id="profile-new-password" type="password" minlength="6" autocomplete="new-password"
+                     data-i18n-placeholder="profile.newPassword" placeholder="New password (6+ chars)">
+              <button type="button" class="password-eye" data-toggle-target="profile-new-password"
+                      data-i18n-title="auth.showPassword" title="Show / hide password" aria-label="Show password">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <button id="btn-change-password" class="btn btn-primary" data-i18n="profile.changePasswordSubmit">Update password</button>
+          </div>
+          <div id="profile-password-status" class="profile-status"></div>
         </div>
 
         <div class="profile-divider"></div>

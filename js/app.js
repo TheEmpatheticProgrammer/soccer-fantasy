@@ -405,6 +405,48 @@ async function updateDisplayName() {
   }
 }
 
+async function changePassword() {
+  const currentInput = document.getElementById('profile-current-password');
+  const newInput = document.getElementById('profile-new-password');
+  const statusEl = document.getElementById('profile-password-status');
+  const btn = document.getElementById('btn-change-password');
+
+  const current = currentInput.value;
+  const next = newInput.value;
+
+  if (!current || next.length < 6) {
+    statusEl.textContent = t('profile.passwordTooShort');
+    statusEl.className = 'profile-status status-error';
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.textContent = t('profile.saving');
+  statusEl.className = 'profile-status';
+
+  try {
+    const user = firebase.auth().currentUser;
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, current);
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(next);
+    currentInput.value = '';
+    newInput.value = '';
+    statusEl.textContent = `✓ ${t('profile.passwordUpdated')}`;
+    statusEl.className = 'profile-status status-ok';
+  } catch (err) {
+    const code = err.code || '';
+    let msg;
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') msg = t('profile.passwordWrongCurrent');
+    else if (code === 'auth/weak-password') msg = t('auth.err.weakPassword');
+    else if (code === 'auth/requires-recent-login') msg = t('profile.passwordReauth');
+    else msg = err.message;
+    statusEl.textContent = msg;
+    statusEl.className = 'profile-status status-error';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function subscribeToPredictions() {
   if (!state.leagueId) return;
   const leagueId = state.leagueId;
@@ -494,6 +536,10 @@ function bindEvents() {
   document.getElementById('btn-refresh').addEventListener('click', () => loadFromApi(true));
   document.getElementById('btn-save-results').addEventListener('click', saveResults);
   document.getElementById('btn-update-name').addEventListener('click', updateDisplayName);
+  document.getElementById('btn-change-password').addEventListener('click', changePassword);
+  document.querySelectorAll('.password-eye[data-toggle-target]').forEach(btn => {
+    btn.addEventListener('click', () => togglePasswordVisibility(btn.dataset.toggleTarget));
+  });
   document.getElementById('btn-profile-signout').addEventListener('click', () => firebase.auth().signOut());
   document.getElementById('btn-header-signout').addEventListener('click', () => firebase.auth().signOut());
   document.getElementById('profile-name-input').addEventListener('keydown', e => {

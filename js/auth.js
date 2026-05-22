@@ -6,6 +6,38 @@ function initAuthForm() {
   });
 
   document.getElementById('auth-form').addEventListener('submit', handleAuthSubmit);
+  document.getElementById('btn-toggle-auth-password').addEventListener('click', () => {
+    togglePasswordVisibility('auth-password');
+  });
+  document.getElementById('btn-forgot-password').addEventListener('click', handleForgotPassword);
+}
+
+function togglePasswordVisibility(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+  const btn = document.querySelector(`[data-toggle-target="${inputId}"]`)
+    || (inputId === 'auth-password' ? document.getElementById('btn-toggle-auth-password') : null);
+  if (btn) btn.classList.toggle('active', input.type === 'text');
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('auth-email').value.trim();
+  hideAuthError();
+  if (!email) {
+    showAuthError(t('auth.err.emailForReset'));
+    return;
+  }
+  const btn = document.getElementById('btn-forgot-password');
+  btn.disabled = true;
+  try {
+    await firebase.auth().sendPasswordResetEmail(email);
+    showAuthInfo(t('auth.resetSent', { email }));
+  } catch (err) {
+    showAuthError(prettyAuthError(err));
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function switchAuthMode(mode) {
@@ -71,8 +103,18 @@ function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg;
   el.classList.remove('hidden');
+  el.classList.remove('auth-info');
+}
+
+function showAuthInfo(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  el.classList.add('auth-info');
 }
 
 function hideAuthError() {
-  document.getElementById('auth-error').classList.add('hidden');
+  const el = document.getElementById('auth-error');
+  el.classList.add('hidden');
+  el.classList.remove('auth-info');
 }
