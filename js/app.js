@@ -990,12 +990,12 @@ function matchCard(match, pred = {}, result) {
   const statusIcon = result === undefined || result === null
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
     : pts === 3
-      ? `<span class="actual-status status-exact" aria-hidden="true">
-           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 7 12 13 4"/></svg>
-         </span>`
+      ? `<span class="actual-status status-label status-exact">${t('match.actual')}</span>`
       : pts === 1
-        ? `<span class="actual-status status-partial" aria-hidden="true">−</span>`
-        : `<span class="actual-status status-miss" aria-hidden="true">−</span>`;
+        ? `<span class="actual-status status-label status-partial">${t('match.actual')}</span>`
+        : pts === 0
+          ? `<span class="actual-status status-label status-miss">${t('match.actual')}</span>`
+          : `<span class="actual-status status-label status-neutral">${t('match.actual')}</span>`;
 
   const actualNumsHtml = result
     ? `<span class="actual-num">${result.home}</span>
