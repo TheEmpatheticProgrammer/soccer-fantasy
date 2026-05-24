@@ -88,6 +88,10 @@ const TRANSLATIONS = {
     'leaderboard.resetConfirm': 'Wipe ALL predictions and results in "{name}"? This cannot be undone.',
     'leaderboard.resetDone': 'League reset',
     'leaderboard.resetDenied': 'Only the league owner can reset.',
+    'leaderboard.membersTitle': 'League members ({count})',
+    'leaderboard.membersHint': 'Everyone who has joined this league.',
+    'leaderboard.memberNoName': '(no name yet)',
+    'leaderboard.memberPicksCount': '{count} picks',
 
     'profile.title': 'Profile',
     'profile.email': 'Email',
@@ -293,6 +297,10 @@ const TRANSLATIONS = {
     'leaderboard.resetConfirm': '¿Borrar TODOS los pronósticos y resultados de "{name}"? No se puede deshacer.',
     'leaderboard.resetDone': 'Liga reiniciada',
     'leaderboard.resetDenied': 'Solo el dueño de la liga puede reiniciarla.',
+    'leaderboard.membersTitle': 'Miembros de la liga ({count})',
+    'leaderboard.membersHint': 'Todos los que se han unido a esta liga.',
+    'leaderboard.memberNoName': '(sin nombre aún)',
+    'leaderboard.memberPicksCount': '{count} pronósticos',
 
     'profile.title': 'Perfil',
     'profile.email': 'Correo',

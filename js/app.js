@@ -1170,6 +1170,33 @@ function renderLeaderboard() {
 
   const ownerCanRemove = isLeagueOwner();
   const isUnlocked = state.currentLeague?.unlocked === true;
+  const adminOnly = isAdmin();
+
+  const memberUids = state.currentLeague?.memberUids || [];
+  const membersListHtml = adminOnly && memberUids.length > 0 ? memberUids.map(uid => {
+    const doc = state.predictionDocs[uid] || {};
+    const name = doc.displayName || t('leaderboard.memberNoName');
+    const picks = doc.predictions ? Object.keys(doc.predictions).length : 0;
+    const initial = (name.trim()[0] || '?').toUpperCase();
+    return `
+      <li class="member-item">
+        <span class="member-avatar">${escapeHtml(initial)}</span>
+        <span class="member-name">${escapeHtml(name)}</span>
+        <span class="member-picks">${t('leaderboard.memberPicksCount', { count: picks })}</span>
+      </li>`;
+  }).join('') : '';
+
+  const adminMembersHtml = adminOnly ? `
+    <div class="league-owner-tools admin-members-card">
+      <div class="owner-tool-card">
+        <div class="owner-tool-text">
+          <div class="owner-tool-title">${t('leaderboard.membersTitle', { count: memberUids.length })}</div>
+          <div class="owner-tool-hint">${t('leaderboard.membersHint')}</div>
+        </div>
+        <ul class="member-list">${membersListHtml}</ul>
+      </div>
+    </div>
+  ` : '';
 
   const ownerToolsHtml = ownerCanRemove ? `
     <div class="league-owner-tools">
@@ -1215,6 +1242,7 @@ function renderLeaderboard() {
 
   container.innerHTML = `
     ${ownerToolsHtml}
+    ${adminMembersHtml}
     <table class="leaderboard-table">
       <thead>
         <tr>
