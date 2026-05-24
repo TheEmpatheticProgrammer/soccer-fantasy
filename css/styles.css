@@ -1076,8 +1076,6 @@ body {
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
-  margin-left: auto;
-  margin-right: 0.6rem;
 }
 .group-reset-btn:hover {
   color: var(--error);
@@ -1088,8 +1086,24 @@ body {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.prediction-group > summary.prediction-group-title { justify-content: flex-start; }
+.prediction-group > summary.prediction-group-title { justify-content: space-between; }
 .prediction-group > summary.prediction-group-title > span:first-child { flex-shrink: 0; }
+.prediction-group-actual {
+  margin-left: auto;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+.prediction-group-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem 0.7rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
 
 .group-chevron {
   width: 12px;
@@ -1220,12 +1234,12 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.55rem;
-  background: var(--accent-soft);
-  border: 1px solid rgba(0, 217, 119, 0.3);
+  background: var(--highlight-soft);
+  border: 1px solid rgba(255, 184, 73, 0.35);
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--highlight);
   font-variant-numeric: tabular-nums;
 }
 .actual-pill .team-flag {
@@ -1236,7 +1250,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   object-fit: cover;
 }
 .actual-num { padding: 0 1px; }
-.actual-dash { color: var(--accent); padding: 0 1px; opacity: 0.7; }
+.actual-dash { color: var(--highlight); padding: 0 1px; opacity: 0.7; }
 .actual-placeholder {
   color: var(--text-faint);
   font-size: 1rem;

@@ -882,12 +882,7 @@ function renderPredictions() {
     ? `<div class="lock-banner">${t('predictions.locked')}</div>`
     : '';
 
-  const columnHeader = `
-    <div class="predict-column-header">
-      <span></span>
-      <span></span>
-      <span class="column-header-label">${t('match.actualResults')}</span>
-    </div>`;
+  const columnHeader = '';
 
   const openPredictionGroups = captureOpenGroups('matches-container');
   const predictionsFirstRender = !state.predictionsRendered;
@@ -903,7 +898,7 @@ function renderPredictions() {
       <details class="prediction-group" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="prediction-group-title">
           <span>${t('match.group', { letter: group })}</span>
-          ${resetBtn}
+          <span class="prediction-group-actual">${t('match.actualResults')}</span>
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -911,6 +906,7 @@ function renderPredictions() {
         <div class="prediction-group-rows">
           ${matches.map(m => matchCard(m, preds[m.id], state.results[m.id])).join('')}
         </div>
+        ${resetBtn ? `<div class="prediction-group-footer">${resetBtn}</div>` : ''}
       </details>`;
   }).join('');
 
