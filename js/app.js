@@ -1181,7 +1181,11 @@ function renderLeaderboard() {
   const adminOnly = isAdmin();
 
   const memberUids = state.currentLeague?.memberUids || [];
-  const membersListHtml = adminOnly && memberUids.length > 0 ? memberUids.map(uid => {
+  const allMemberUids = Array.from(new Set([
+    ...memberUids,
+    ...Object.keys(state.predictionDocs || {}),
+  ]));
+  const membersListHtml = adminOnly && allMemberUids.length > 0 ? allMemberUids.map(uid => {
     const doc = state.predictionDocs[uid] || {};
     const name = doc.displayName || t('leaderboard.memberNoName');
     const email = doc.email || '';
@@ -1211,7 +1215,7 @@ function renderLeaderboard() {
     <div class="league-owner-tools admin-members-card">
       <div class="owner-tool-card">
         <div class="owner-tool-text">
-          <div class="owner-tool-title">${t('leaderboard.membersTitle', { count: memberUids.length })}</div>
+          <div class="owner-tool-title">${t('leaderboard.membersTitle', { count: allMemberUids.length })}</div>
           <div class="owner-tool-hint">${t('leaderboard.membersHint')}</div>
         </div>
         <ul class="member-list">${membersListHtml}</ul>

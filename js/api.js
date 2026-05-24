@@ -74,6 +74,7 @@ function parseWorldCupResponse(json) {
       utcDate: m.utcDate,
       matchday: m.matchday,
       status: m.status,
+      venue: m.venue || null,
       result: m.status === 'FINISHED' && m.score?.fullTime?.home != null
         ? { home: m.score.fullTime.home, away: m.score.fullTime.away }
         : null,

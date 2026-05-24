@@ -1175,19 +1175,20 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .match-fixture {
   display: grid;
   grid-template-columns: 1fr 56px 18px 56px 1fr;
-  align-items: stretch;
+  align-items: start;
   gap: 0.55rem;
 }
 .match-fixture .score-input { align-self: center; }
 .match-fixture .vs { align-self: center; }
 .match-fixture .team {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.45rem;
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--text);
   min-width: 0;
+  min-height: 30px;
 }
 .match-fixture .team.home { justify-content: flex-end; text-align: right; }
 .match-fixture .team.away { justify-content: flex-start; text-align: left; }
@@ -1195,6 +1196,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 30px;
 }
 .match-fixture .team-flag {
   width: 30px;
@@ -1262,10 +1264,10 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
     grid-template-columns: 1fr 42px 10px 42px 1fr;
     gap: 0.3rem;
   }
-  .match-fixture .team { gap: 0.3rem; }
+  .match-fixture .team { gap: 0.3rem; min-height: 24px; }
   .match-fixture .team .team-name {
     font-size: 0.78rem;
-    line-height: 1.1;
+    line-height: 24px;
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
@@ -1288,8 +1290,8 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
     grid-template-columns: 1fr 38px 8px 38px 1fr;
     gap: 0.25rem;
   }
-  .match-fixture .team { gap: 0.25rem; }
-  .match-fixture .team .team-name { font-size: 0.72rem; }
+  .match-fixture .team { gap: 0.25rem; min-height: 22px; }
+  .match-fixture .team .team-name { font-size: 0.72rem; line-height: 22px; }
   .match-fixture .team-flag { width: 22px; height: 22px; border-radius: 50%; }
   .match-fixture .score-input { height: 30px; font-size: 0.85rem; }
 }
