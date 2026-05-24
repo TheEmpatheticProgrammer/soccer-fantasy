@@ -618,12 +618,12 @@ body {
 .host-flag-stripe span { flex: 1; }
 .brand-text { display: flex; flex-direction: column; min-width: 0; }
 .brand-title {
-  font-family: 'Bebas Neue', 'Impact', system-ui, sans-serif;
-  font-size: 2.4rem;
+  font-family: 'Russo One', 'Impact', system-ui, sans-serif;
+  font-size: 2rem;
   font-weight: 400;
-  letter-spacing: 3px;
+  letter-spacing: 0.5px;
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2418,7 +2418,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .brand-ball,
   .brand-trophy { width: 34px; height: 34px; flex-shrink: 0; }
   .brand-text { min-width: 0; flex: 1; }
-  .brand-title { font-size: 1.7rem; letter-spacing: 2px; }
+  .brand-title { font-size: 1.4rem; letter-spacing: 0.3px; }
   .brand-tagline { font-size: 0.62rem; letter-spacing: 0.8px; }
   .brand-hosts { display: none; }
   .nav-btn {
