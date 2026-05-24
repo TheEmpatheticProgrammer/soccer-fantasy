@@ -633,7 +633,7 @@ body {
   filter: drop-shadow(0 0 12px rgba(45,255,165,0.25));
 }
 .brand-logo-img {
-  height: 54px;
+  height: 78px;
   width: auto;
   display: block;
   filter: drop-shadow(0 0 16px rgba(45,255,165,0.18));
@@ -2622,7 +2622,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .brand-ball,
   .brand-trophy { width: 34px; height: 34px; flex-shrink: 0; }
   .brand-logo { width: 38px; height: 38px; flex-shrink: 0; }
-  .brand-logo-img { height: 40px; }
+  .brand-logo-img { height: 56px; }
   .brand-text { min-width: 0; flex: 1; }
   .brand-title { font-size: 1.4rem; letter-spacing: 0.3px; }
   .brand-tagline { font-size: 0.62rem; letter-spacing: 0.8px; }
