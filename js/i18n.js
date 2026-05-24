@@ -158,7 +158,10 @@ const TRANSLATIONS = {
     'settings.lastRefreshed': 'Last refreshed: {time}',
     'settings.error': 'Error: {msg}',
 
-    'predictions.playingAs': 'Playing as:',
+    'predictions.playingAs': 'Playing as',
+    'predictions.picksMade': 'picks made',
+    'predictions.resetGroup': 'Reset',
+    'predictions.resetGroupConfirm': 'Clear your predictions for Group {letter}?',
     'predictions.tabMine': 'Yours',
     'predictions.tabEveryone': 'Everyone',
     'predictions.loadingMatches': 'Loading matches…',
@@ -359,7 +362,10 @@ const TRANSLATIONS = {
     'settings.lastRefreshed': 'Última actualización: {time}',
     'settings.error': 'Error: {msg}',
 
-    'predictions.playingAs': 'Jugando como:',
+    'predictions.playingAs': 'Jugando como',
+    'predictions.picksMade': 'pronósticos',
+    'predictions.resetGroup': 'Borrar',
+    'predictions.resetGroupConfirm': '¿Borrar tus pronósticos del Grupo {letter}?',
     'predictions.tabMine': 'Tuyos',
     'predictions.tabEveryone': 'Todos',
     'predictions.loadingMatches': 'Cargando partidos…',

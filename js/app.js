@@ -499,6 +499,7 @@ function subscribeToPredictions() {
       renderPredictions();
       renderEveryone();
       renderHeaderStats();
+      renderPlayerCard();
     },
     err => showToast(t('toast.predLoadFail', { msg: err.message }))
   );
@@ -523,6 +524,26 @@ function onProfileUpdated() {
   if (!user) return;
   state.currentPlayer = user.displayName || user.email;
   document.getElementById('player-display').textContent = state.currentPlayer;
+  renderPlayerCard();
+}
+
+function renderPlayerCard() {
+  const name = state.currentPlayer || '';
+  const initial = (name.trim()[0] || '·').toUpperCase();
+  const avatar = document.getElementById('player-avatar');
+  if (avatar) avatar.textContent = initial;
+  const display = document.getElementById('player-display');
+  if (display) display.textContent = name;
+  const myDoc = state.predictionDocs?.[state.uid] || {};
+  const preds = myDoc.predictions || {};
+  const total = state.matches.length || 0;
+  const count = Object.keys(preds).filter(id =>
+    preds[id]?.home !== undefined && preds[id]?.away !== undefined
+  ).length;
+  const countEl = document.getElementById('picks-count');
+  const totalEl = document.getElementById('picks-total');
+  if (countEl) countEl.textContent = count;
+  if (totalEl) totalEl.textContent = total;
 }
 
 function refreshDynamicContent() {
@@ -537,6 +558,7 @@ function refreshDynamicContent() {
   renderHeaderStats();
   updateCurrentLeagueBadge();
   renderKickoffHero();
+  renderPlayerCard();
   document.querySelectorAll('.nav-btn.requires-league').forEach(btn => {
     btn.classList.toggle('hidden', !state.leagueId);
   });
@@ -587,6 +609,23 @@ function bindEvents() {
   document.getElementById('matches-container').addEventListener('input', e => {
     if (!e.target.classList.contains('score-input')) return;
     if (arePredictionsLocked()) return;
+    scheduleAutosave();
+  });
+
+  document.getElementById('matches-container').addEventListener('click', e => {
+    const btn = e.target.closest('.group-reset-btn');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (arePredictionsLocked()) return;
+    const group = btn.dataset.resetGroup;
+    if (!group) return;
+    const confirmMsg = t('predictions.resetGroupConfirm', { letter: group });
+    if (!window.confirm(confirmMsg)) return;
+    const groupMatchIds = new Set(state.matches.filter(m => m.group === group).map(m => m.id));
+    document.querySelectorAll('#view-predictions .score-input').forEach(input => {
+      if (groupMatchIds.has(input.dataset.match)) input.value = '';
+    });
     scheduleAutosave();
   });
 }
@@ -846,10 +885,14 @@ function renderPredictions() {
   container.innerHTML = lockBanner + columnHeader + Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
     const isOpen = predictionsFirstRender ? i === 0 : openPredictionGroups.has(group);
+    const resetBtn = arePredictionsLocked()
+      ? ''
+      : `<button type="button" class="group-reset-btn" data-reset-group="${group}" title="${t('predictions.resetGroup')}">${t('predictions.resetGroup')}</button>`;
     return `
       <details class="prediction-group" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="prediction-group-title">
           <span>${t('match.group', { letter: group })}</span>
+          ${resetBtn}
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
