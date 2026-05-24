@@ -1234,12 +1234,12 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.55rem;
-  background: var(--highlight-soft);
-  border: 1px solid rgba(255, 184, 73, 0.35);
+  background: rgba(179, 136, 255, 0.14);
+  border: 1px solid rgba(179, 136, 255, 0.35);
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: var(--highlight);
+  color: #c4a8ff;
   font-variant-numeric: tabular-nums;
 }
 .actual-pill .team-flag {
@@ -1250,7 +1250,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   object-fit: cover;
 }
 .actual-num { padding: 0 1px; }
-.actual-dash { color: var(--highlight); padding: 0 1px; opacity: 0.7; }
+.actual-dash { color: #c4a8ff; padding: 0 1px; opacity: 0.7; }
 .actual-placeholder {
   color: var(--text-faint);
   font-size: 1rem;
