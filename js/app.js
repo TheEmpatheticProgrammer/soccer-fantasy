@@ -979,6 +979,7 @@ function renderPredictions() {
         <summary class="prediction-group-title">
           <span class="group-letter-badge">${group}</span>
           <span class="group-letter-text">${t('match.group', { letter: group })}</span>
+          <span class="group-teams">${teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>
           <span class="group-stats">
             <span class="group-stats-pts">${groupPts} ${t('header.points')}</span>
             <span class="group-stats-sep">·</span>
@@ -1185,6 +1186,17 @@ function everyoneMatchBlock(match, participants) {
         </span>
         ${headerRight}
       </div>
+      ${(() => {
+        const { day, time } = formatMatchDateParts(match.utcDate);
+        const venue = displayVenue(venueForMatch(match));
+        return `
+        <div class="everyone-match-meta">
+          <span class="meta-day">${day}</span>
+          <span class="meta-sep">·</span>
+          <span class="meta-time">${time}</span>
+          ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+        </div>`;
+      })()}
       ${rows.length > 0
         ? rows.join('')
         : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}

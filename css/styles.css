@@ -1156,6 +1156,14 @@ body {
 }
 .prediction-group > summary.prediction-group-title { justify-content: flex-start; gap: 0.6rem; }
 .prediction-group > summary.prediction-group-title > .group-letter-text { flex-shrink: 0; }
+.prediction-group > summary.prediction-group-title > .group-teams {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+}
+.prediction-group > summary.prediction-group-title > .group-stats { margin-left: auto; }
 .group-letter-badge {
   width: 28px;
   height: 28px;
@@ -1978,6 +1986,19 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   padding: 0.7rem 0.85rem;
   border-bottom: 1px solid var(--border);
 }
+.everyone-match-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.everyone-match-meta .meta-sep { color: rgba(255,255,255,0.25); }
+.everyone-match-meta .meta-venue { color: var(--text); font-weight: 600; }
 .everyone-match-teams {
   display: inline-flex;
   align-items: center;
