@@ -1368,9 +1368,22 @@ function renderLeaderboard() {
     </div>
   ` : '';
 
+  const adminPanelHtml = (ownerCanRemove || adminOnly) ? `
+    <details class="admin-settings-panel">
+      <summary class="admin-settings-summary">
+        <span class="admin-settings-icon" aria-hidden="true">⚙️</span>
+        <span class="admin-settings-label">${t('leaderboard.adminSettings')}</span>
+        <span class="admin-settings-chevron" aria-hidden="true">▾</span>
+      </summary>
+      <div class="admin-settings-body">
+        ${ownerToolsHtml}
+        ${adminMembersHtml}
+      </div>
+    </details>
+  ` : '';
+
   container.innerHTML = `
-    ${ownerToolsHtml}
-    ${adminMembersHtml}
+    ${adminPanelHtml}
     <table class="leaderboard-table">
       <thead>
         <tr>
