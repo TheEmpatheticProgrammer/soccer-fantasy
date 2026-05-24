@@ -1491,9 +1491,16 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   .match-meta-line { font-size: 0.62rem; }
   .match-teams .team { font-size: 0.88rem; gap: 0.4rem; }
   .match-teams .team-flag { width: 22px; height: 22px; }
-  .my-pick, .actual-side { padding: 0.4rem 0.5rem; gap: 0.35rem; }
-  .my-pick .score-input { width: 38px; height: 30px; font-size: 0.9rem; }
-  .my-pick-avatar { width: 20px; height: 20px; font-size: 0.66rem; }
+  .my-pick, .actual-side { padding: 0.5rem 0.6rem; gap: 0.45rem; }
+  .my-pick .score-input {
+    width: 52px;
+    height: 44px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    border-radius: 10px;
+    border-width: 1.5px;
+  }
+  .my-pick-avatar { width: 24px; height: 24px; font-size: 0.7rem; }
   .actual-status { width: 22px; height: 22px; font-size: 0.65rem; }
   .actual-side .actual-num { font-size: 0.92rem; }
   .pts-badge { font-size: 0.66rem; padding: 0.15rem 0.42rem; }
@@ -1502,7 +1509,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 @media (max-width: 420px) {
   .match-teams .team { font-size: 0.82rem; }
   .match-teams .team-flag { width: 20px; height: 20px; }
-  .my-pick .score-input { width: 34px; height: 28px; font-size: 0.85rem; }
+  .my-pick .score-input { width: 46px; height: 40px; font-size: 1.1rem; }
   .actual-side .actual-num { font-size: 0.85rem; }
 }
 
