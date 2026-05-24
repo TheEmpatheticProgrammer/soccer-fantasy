@@ -22,6 +22,8 @@ const DEFAULT_LEAGUE_NAME = 'Polla World Cup 2026';
 const LEGACY_DEFAULT_LEAGUE_NAME = 'World Cup 2026 League';
 const LEAGUE_NAME_I18N = {
   'Polla World Cup 2026': { en: 'Polla World Cup 2026', es: 'Polla Mundial 2026' },
+  'Polla Mundial 2026':   { en: 'Polla World Cup 2026', es: 'Polla Mundial 2026' },
+  'World Cup 2026 League': { en: 'Polla World Cup 2026', es: 'Polla Mundial 2026' },
 };
 function displayLeagueName(name) {
   const entry = LEAGUE_NAME_I18N[name];
@@ -1505,14 +1507,17 @@ function renderLeagues() {
   const container = document.getElementById('leagues-container');
   if (!container) return;
 
-  const yoursHtml = state.myLeagues.length === 0
-    ? `<div class="empty-state">${t('leagues.noneJoined')}</div>`
-    : state.myLeagues.map(league => leagueCard(league, true)).join('');
+  const all = [...state.myLeagues];
+  state.publicLeagues.forEach(l => {
+    if (!all.some(a => a.id === l.id)) all.push(l);
+  });
 
-  const browseList = state.publicLeagues.filter(l => !state.myLeagues.some(ml => ml.id === l.id));
-  const browseHtml = browseList.length === 0
+  const cardsHtml = all.length === 0
     ? `<div class="empty-state">${t('leagues.noPublic')}</div>`
-    : browseList.map(league => leagueCard(league, false)).join('');
+    : all.map(league => {
+        const isMember = state.myLeagues.some(ml => ml.id === league.id);
+        return leagueCard(league, isMember);
+      }).join('');
 
   container.innerHTML = `
     <div class="leagues-hero">
@@ -1521,13 +1526,8 @@ function renderLeagues() {
     </div>
 
     <section class="leagues-section">
-      <h3>${t('leagues.yoursHeading')}</h3>
-      <div class="leagues-grid">${yoursHtml}</div>
-    </section>
-
-    <section class="leagues-section">
-      <h3>${t('leagues.browseHeading')}</h3>
-      <div class="leagues-grid">${browseHtml}</div>
+      <h3>${t('leagues.allHeading')}</h3>
+      <div class="leagues-grid">${cardsHtml}</div>
     </section>
 
     ${isAdmin() ? `
