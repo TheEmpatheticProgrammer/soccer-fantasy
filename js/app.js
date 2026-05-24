@@ -1,4 +1,5 @@
 const PREDICTIONS_LOCK_DATE = new Date('2026-06-10T00:00:00');
+const WORLD_CUP_START = new Date('2026-06-11T16:00:00-06:00');
 const arePredictionsLocked = () => {
   if (state.currentLeague?.unlocked === true) return false;
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
@@ -111,6 +112,7 @@ function init() {
   renderAdminMatches();
   renderLeaderboard();
   startCountdownInterval();
+  renderKickoffHero();
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) onSignedIn(user);
@@ -333,7 +335,39 @@ function renderHeaderStats() {
 let countdownInterval = null;
 function startCountdownInterval() {
   if (countdownInterval) return;
-  countdownInterval = setInterval(renderHeaderStats, 60000);
+  countdownInterval = setInterval(() => {
+    renderHeaderStats();
+    renderKickoffHero();
+  }, 60000);
+}
+
+function renderKickoffHero() {
+  const targets = [
+    { d: 'kickoff-days', h: 'kickoff-hours', m: 'kickoff-mins', wrap: 'kickoff-hero' },
+    { d: 'auth-kickoff-days', h: 'auth-kickoff-hours', m: 'auth-kickoff-mins', wrap: null },
+  ];
+  const diff = WORLD_CUP_START.getTime() - Date.now();
+  const live = diff <= 0;
+  const days  = live ? 0 : Math.floor(diff / 86400000);
+  const hours = live ? 0 : Math.floor((diff % 86400000) / 3600000);
+  const mins  = live ? 0 : Math.floor((diff % 3600000) / 60000);
+
+  for (const ids of targets) {
+    const dEl = document.getElementById(ids.d);
+    const hEl = document.getElementById(ids.h);
+    const mEl = document.getElementById(ids.m);
+    if (!dEl || !hEl || !mEl) continue;
+    dEl.textContent = String(days).padStart(2, '0');
+    hEl.textContent = String(hours).padStart(2, '0');
+    mEl.textContent = String(mins).padStart(2, '0');
+    if (ids.wrap) {
+      const wrap = document.getElementById(ids.wrap);
+      if (wrap) {
+        wrap.classList.toggle('hidden', !state.uid);
+        wrap.classList.toggle('is-live', live);
+      }
+    }
+  }
 }
 
 function onSignedOut() {
@@ -502,6 +536,7 @@ function refreshDynamicContent() {
   refreshSaveStatus();
   renderHeaderStats();
   updateCurrentLeagueBadge();
+  renderKickoffHero();
 }
 
 function bindEvents() {

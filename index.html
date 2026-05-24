@@ -4,23 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#05080f">
-  <title>World Cup 2026 Fantasy</title>
-  <meta name="description" content="Predict every group-stage match of the 2026 FIFA World Cup. Friends-league fantasy with live scoring.">
+  <title>Copamigos · World Cup 2026 Friends Pool</title>
+  <meta name="description" content="$30 in, $300 to the winner. Predict every group-stage match of the 2026 FIFA World Cup with friends. Live scoring. Kickoff June 11.">
 
   <!-- Open Graph / link preview (WhatsApp, iMessage, Slack, etc.) -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://copamigos.com/">
-  <meta property="og:title" content="Copamigos · World Cup 2026 Fantasy">
-  <meta property="og:description" content="Predict every group-stage match. Friends-league fantasy with live scoring.">
-  <meta property="og:image" content="https://copamigos.com/og-image.svg">
+  <meta property="og:title" content="Copamigos · World Cup 2026 Friends Pool">
+  <meta property="og:description" content="$30 in, $300 to the winner. Predict every group-stage match. Kickoff June 11, 2026.">
+  <meta property="og:image" content="https://copamigos.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Copamigos">
 
   <!-- Twitter card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Copamigos · World Cup 2026 Fantasy">
-  <meta name="twitter:description" content="Predict every group-stage match. Friends-league fantasy with live scoring.">
-  <meta name="twitter:image" content="https://copamigos.com/og-image.svg">
+  <meta name="twitter:title" content="Copamigos · World Cup 2026 Friends Pool">
+  <meta name="twitter:description" content="$30 in, $300 to the winner. Predict every group-stage match. Kickoff June 11, 2026.">
+  <meta name="twitter:image" content="https://copamigos.com/og-image.png">
 
   <!-- Favicon (inline SVG soccer ball) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='18' fill='%23ffffff' stroke='%23000' stroke-opacity='0.15' stroke-width='0.8'/%3E%3Cpolygon points='20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7' fill='%230a3b1f'/%3E%3Cline x1='20' y1='10' x2='20' y2='3' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='26.5' y1='14.7' x2='33' y2='12.5' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='13.5' y1='14.7' x2='7' y2='12.5' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='24' y1='22.2' x2='28' y2='29' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3Cline x1='16' y1='22.2' x2='12' y2='29' stroke='%230a3b1f' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -32,7 +33,16 @@
   <!-- Auth screen (shown when signed out) -->
   <div id="auth-screen" class="auth-screen">
     <div class="auth-card">
-      <h1 data-i18n="app.title">World Cup 2026 Fantasy</h1>
+      <div class="auth-hero">
+        <div class="auth-hero-label" data-i18n="hero.kickoffLabel">Kickoff in</div>
+        <div class="kickoff-hero-grid">
+          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-days">--</span><span class="kickoff-unit" data-i18n="hero.days">days</span></div>
+          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-hours">--</span><span class="kickoff-unit" data-i18n="hero.hours">hrs</span></div>
+          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-mins">--</span><span class="kickoff-unit" data-i18n="hero.mins">min</span></div>
+        </div>
+        <div class="auth-hero-meta" data-i18n="hero.firstMatch">June 11, 2026 · Mexico City</div>
+      </div>
+      <h1 data-i18n="app.title">Copamigos</h1>
       <p class="auth-subtitle" data-i18n="auth.subtitle">Sign in to make your predictions</p>
 
       <div class="auth-tabs">
@@ -65,26 +75,40 @@
   </div>
 
   <header class="app-header">
+    <div class="host-flag-stripe" aria-hidden="true">
+      <span style="background:#006847"></span>
+      <span style="background:#ffffff"></span>
+      <span style="background:#ce1126"></span>
+      <span style="background:#b22234"></span>
+      <span style="background:#ffffff"></span>
+      <span style="background:#3c3b6e"></span>
+      <span style="background:#d52b1e"></span>
+      <span style="background:#ffffff"></span>
+      <span style="background:#d52b1e"></span>
+    </div>
     <div class="header-content">
       <div class="header-top">
         <div class="brand">
-          <svg class="brand-ball" viewBox="0 0 40 40" aria-hidden="true">
-            <circle cx="20" cy="20" r="18" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="0.8"/>
-            <polygon points="20,10 26.5,14.7 24,22.2 16,22.2 13.5,14.7" fill="#0a3b1f"/>
-            <line x1="20" y1="10" x2="20" y2="3" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="26.5" y1="14.7" x2="33" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="13.5" y1="14.7" x2="7" y2="12.5" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="24" y1="22.2" x2="28" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
-            <line x1="16" y1="22.2" x2="12" y2="29" stroke="#0a3b1f" stroke-width="1.4" stroke-linecap="round"/>
+          <svg class="brand-trophy" viewBox="0 0 64 64" aria-hidden="true">
+            <defs>
+              <linearGradient id="trophyGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffe98a"/>
+                <stop offset="55%" stop-color="#f5c93a"/>
+                <stop offset="100%" stop-color="#b9831e"/>
+              </linearGradient>
+            </defs>
+            <path d="M18 14 L46 14 L43 38 Q43 46 32 47 Q21 46 21 38 Z" fill="url(#trophyGold)" stroke="#7a5410" stroke-width="1.2"/>
+            <rect x="16" y="11" width="32" height="5" rx="1.5" fill="url(#trophyGold)" stroke="#7a5410" stroke-width="1.2"/>
+            <path d="M18 18 Q9 18 9 26 Q9 34 21 36" fill="none" stroke="url(#trophyGold)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M46 18 Q55 18 55 26 Q55 34 43 36" fill="none" stroke="url(#trophyGold)" stroke-width="3" stroke-linecap="round"/>
+            <rect x="29" y="47" width="6" height="6" fill="url(#trophyGold)"/>
+            <rect x="22" y="52" width="20" height="4" rx="1" fill="url(#trophyGold)" stroke="#7a5410" stroke-width="1.2"/>
+            <rect x="18" y="55" width="28" height="4" rx="1" fill="url(#trophyGold)" stroke="#7a5410" stroke-width="1.2"/>
+            <polygon points="32,21 34,27 40,27 35.2,30.5 37,36.5 32,33 27,36.5 28.8,30.5 24,27 30,27" fill="#fff8d5" opacity="0.9"/>
           </svg>
           <div class="brand-text">
-            <h1 class="brand-title" data-i18n="app.title">World Cup 2026 Fantasy</h1>
-            <span class="brand-tagline" data-i18n="app.tagline">Group Stage Predictions</span>
-          </div>
-          <div class="brand-hosts" aria-hidden="true">
-            <span class="host-dot" style="background:#006847"></span>
-            <span class="host-dot" style="background:#ffffff"></span>
-            <span class="host-dot" style="background:#ce1126"></span>
+            <h1 class="brand-title" data-i18n="app.title">Copamigos</h1>
+            <span class="brand-tagline" data-i18n="app.tagline">FIFA World Cup 2026 · Friends Pool</span>
           </div>
         </div>
         <div class="header-utilities">
@@ -147,6 +171,19 @@
         <span id="api-status" class="api-status"></span>
         <button id="btn-refresh" class="btn btn-primary" disabled data-i18n="settings.refresh">Refresh Scores</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Hero kickoff countdown (signed in) -->
+  <div id="kickoff-hero" class="kickoff-hero hidden" aria-live="polite">
+    <div class="kickoff-hero-inner">
+      <div class="kickoff-hero-label" data-i18n="hero.kickoffLabel">Kickoff in</div>
+      <div class="kickoff-hero-grid">
+        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-days">--</span><span class="kickoff-unit" data-i18n="hero.days">days</span></div>
+        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-hours">--</span><span class="kickoff-unit" data-i18n="hero.hours">hrs</span></div>
+        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-mins">--</span><span class="kickoff-unit" data-i18n="hero.mins">min</span></div>
+      </div>
+      <div class="kickoff-hero-meta" data-i18n="hero.firstMatch">June 11, 2026 · Mexico City</div>
     </div>
   </div>
 

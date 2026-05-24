@@ -1,8 +1,13 @@
 const TRANSLATIONS = {
   en: {
-    'app.title': 'World Cup 2026 Fantasy',
-    'app.tagline': 'Group Stage Predictions',
+    'app.title': 'Copamigos',
+    'app.tagline': 'FIFA World Cup 2026 · Friends Pool',
     'app.dateTBD': 'Date TBD',
+    'hero.kickoffLabel': 'Kickoff in',
+    'hero.days': 'days',
+    'hero.hours': 'hrs',
+    'hero.mins': 'min',
+    'hero.firstMatch': 'June 11, 2026 · Mexico City',
     'header.locksIn': 'Predictions lock in {time}',
     'header.tournamentLive': 'Tournament live',
     'header.testMode': 'Test mode',
@@ -196,8 +201,13 @@ const TRANSLATIONS = {
   },
 
   es: {
-    'app.title': 'Mundial 2026 Fantasy',
-    'app.tagline': 'Pronósticos de la Fase de Grupos',
+    'app.title': 'Copamigos',
+    'app.tagline': 'Copa Mundial FIFA 2026 · Polla de Amigos',
+    'hero.kickoffLabel': 'Inicia en',
+    'hero.days': 'días',
+    'hero.hours': 'hrs',
+    'hero.mins': 'min',
+    'hero.firstMatch': '11 de junio de 2026 · Ciudad de México',
     'app.dateTBD': 'Fecha por confirmar',
     'header.locksIn': 'Pronósticos bloquean en {time}',
     'header.tournamentLive': 'Torneo en vivo',
