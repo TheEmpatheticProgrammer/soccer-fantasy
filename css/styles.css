@@ -1194,13 +1194,20 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 /* ── Predict row (three zones: date | fixture | actual) ── */
 .predict-row {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.7rem 1rem 0.85rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "meta meta"
+    "teams scoreboard";
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--border);
   transition: background 0.12s;
 }
+.match-meta-line { grid-area: meta; }
+.match-teams { grid-area: teams; }
+.match-scoreboard { grid-area: scoreboard; }
 .predict-row::before {
   content: '';
   position: absolute;
@@ -1244,8 +1251,8 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .match-teams .team {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  font-size: 1rem;
+  gap: 0.65rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text);
   min-width: 0;
@@ -1258,8 +1265,8 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   min-width: 0;
 }
 .match-teams .team-flag {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   margin: 0;
   border-radius: 50%;
   object-fit: cover;
@@ -1277,11 +1284,11 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .actual-side {
   display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.6rem;
+  gap: 0.55rem;
+  padding: 0.6rem 0.85rem;
   background: var(--surface-2);
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 12px;
   min-width: 0;
   transition: background 0.15s, border-color 0.15s;
 }
@@ -1302,13 +1309,13 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 }
 
 .my-pick-avatar {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 800;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1316,14 +1323,14 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 }
 
 .my-pick .score-input {
-  height: 34px;
-  width: 44px;
+  height: 40px;
+  width: 54px;
   background: transparent;
   border: 1.5px solid rgba(45, 255, 165, 0.4);
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--accent);
   font-weight: 800;
-  font-size: 1rem;
+  font-size: 1.2rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
   padding: 0;
@@ -1372,7 +1379,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 }
 
 .actual-side .actual-num {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -1401,7 +1408,12 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .pts-badge-1 { background: var(--highlight); color: #1a0d00; }
 
 @media (max-width: 720px) {
-  .predict-row { padding: 0.65rem 0.7rem 0.8rem; gap: 0.45rem; }
+  .predict-row {
+    display: flex;
+    flex-direction: column;
+    padding: 0.65rem 0.7rem 0.8rem;
+    gap: 0.45rem;
+  }
   .match-meta-line { font-size: 0.62rem; }
   .match-teams .team { font-size: 0.88rem; gap: 0.4rem; }
   .match-teams .team-flag { width: 22px; height: 22px; }
