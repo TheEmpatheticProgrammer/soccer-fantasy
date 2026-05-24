@@ -1363,13 +1363,17 @@ function exportPredictionsCSV() {
 
   const playerNames = players.map(([, doc]) => doc.displayName || '(unknown)');
 
-  // Pivot layout — one row per match, one column per player + Actual + per-player points
+  const playerScoreHeaders = playerNames.flatMap(name => [`${name} (H)`, `${name} (A)`]);
+
+  // Pivot layout — one row per match, one column per team per player, separate home/away cells.
   const headers = [
     'Group',
     'Date (UTC)',
-    'Match',
-    ...playerNames,
-    'Actual',
+    'Home',
+    'Away',
+    ...playerScoreHeaders,
+    'Actual H',
+    'Actual A',
     ...playerNames.map(name => `${name} (pts)`),
   ];
 
@@ -1382,11 +1386,14 @@ function exportPredictionsCSV() {
 
   for (const match of sortedMatches) {
     const result = state.results[match.id];
-    const actualStr = result ? `${result.home}-${result.away}` : '';
+    const actualHome = result ? result.home : '';
+    const actualAway = result ? result.away : '';
 
-    const playerPreds = players.map(([, doc]) => {
+    const playerScoreCells = players.flatMap(([, doc]) => {
       const pred = doc.predictions?.[match.id];
-      return pred ? `${pred.home}-${pred.away}` : '';
+      return pred
+        ? [pred.home ?? '', pred.away ?? '']
+        : ['', ''];
     });
 
     const playerPts = players.map(([, doc]) => {
@@ -1398,9 +1405,11 @@ function exportPredictionsCSV() {
     const row = [
       match.group,
       match.utcDate || '',
-      `${match.home} vs ${match.away}`,
-      ...playerPreds,
-      actualStr,
+      match.home,
+      match.away,
+      ...playerScoreCells,
+      actualHome,
+      actualAway,
       ...playerPts,
     ];
     lines.push(row.map(csvEscape).join(','));
@@ -1417,7 +1426,12 @@ function exportPredictionsCSV() {
     }
     return total;
   });
-  const totalRow = ['', '', 'TOTAL', ...players.map(() => ''), '', ...totals];
+  const totalRow = [
+    '', '', '', 'TOTAL',
+    ...players.flatMap(() => ['', '']),
+    '', '',
+    ...totals,
+  ];
   lines.push(totalRow.map(csvEscape).join(','));
 
   const csv = lines.join('\r\n');
