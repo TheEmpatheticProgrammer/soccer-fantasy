@@ -1,7 +1,7 @@
 const TRANSLATIONS = {
   en: {
-    'app.title': 'Copamigos',
-    'app.tagline': 'FIFA World Cup 2026 · Friends Pool',
+    'app.title': 'copamigos',
+    'app.tagline': 'Predict · Compete · Win',
     'app.dateTBD': 'Date TBD',
     'hero.kickoffLabel': 'Kickoff in',
     'hero.days': 'days',
@@ -213,8 +213,8 @@ const TRANSLATIONS = {
   },
 
   es: {
-    'app.title': 'Copamigos',
-    'app.tagline': 'Copa Mundial FIFA 2026 · Polla de Amigos',
+    'app.title': 'copamigos',
+    'app.tagline': 'Predice · Compite · Gana',
     'hero.kickoffLabel': 'Inicia en',
     'hero.days': 'días',
     'hero.hours': 'hrs',

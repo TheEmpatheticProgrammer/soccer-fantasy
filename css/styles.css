@@ -625,11 +625,12 @@ body {
   min-width: 0;
 }
 .brand-ball,
-.brand-trophy {
-  width: 42px;
-  height: 42px;
+.brand-trophy,
+.brand-logo {
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 0 12px rgba(45,255,165,0.25));
 }
 .brand-trophy {
   animation: trophyShine 6s ease-in-out infinite;
@@ -653,15 +654,15 @@ body {
 .brand-text { display: flex; flex-direction: column; min-width: 0; }
 .brand-title {
   font-family: 'Russo One', 'Impact', system-ui, sans-serif;
-  font-size: 2rem;
+  font-size: 2.4rem;
   font-weight: 400;
-  letter-spacing: 0.5px;
+  letter-spacing: 0px;
   line-height: 1;
-  text-transform: none;
+  text-transform: lowercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  background: linear-gradient(180deg, #ffffff 0%, var(--accent) 110%);
+  background: linear-gradient(90deg, #2dffa5 0%, #2d9eff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -669,10 +670,10 @@ body {
 }
 .brand-tagline {
   font-size: 0.72rem;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: rgba(255,255,255,0.65);
+  letter-spacing: 1.6px;
+  color: var(--accent);
   margin-top: 2px;
 }
 .brand-hosts {
@@ -2614,6 +2615,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .brand { gap: 0.55rem; min-width: 0; flex: 1; }
   .brand-ball,
   .brand-trophy { width: 34px; height: 34px; flex-shrink: 0; }
+  .brand-logo { width: 38px; height: 38px; flex-shrink: 0; }
   .brand-text { min-width: 0; flex: 1; }
   .brand-title { font-size: 1.4rem; letter-spacing: 0.3px; }
   .brand-tagline { font-size: 0.62rem; letter-spacing: 0.8px; }
