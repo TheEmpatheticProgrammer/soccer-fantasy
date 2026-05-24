@@ -25,6 +25,33 @@ const LEAGUE_NAME_I18N = {
   'Polla Mundial 2026':   { en: 'Polla World Cup 2026', es: 'Polla Mundial 2026' },
   'World Cup 2026 League': { en: 'Polla World Cup 2026', es: 'Polla Mundial 2026' },
 };
+
+const WC2026_VENUES = {
+  'Estadio Azteca':            { en: 'Mexico City, Mexico',     es: 'Ciudad de México, México' },
+  'Estadio Akron':             { en: 'Guadalajara, Mexico',     es: 'Guadalajara, México' },
+  'Estadio BBVA':              { en: 'Monterrey, Mexico',       es: 'Monterrey, México' },
+  'BMO Field':                 { en: 'Toronto, Canada',         es: 'Toronto, Canadá' },
+  'BC Place':                  { en: 'Vancouver, Canada',       es: 'Vancouver, Canadá' },
+  'MetLife Stadium':           { en: 'New York/New Jersey, USA', es: 'Nueva York/Nueva Jersey, EE.UU.' },
+  'SoFi Stadium':              { en: 'Los Angeles, USA',        es: 'Los Ángeles, EE.UU.' },
+  'AT&T Stadium':              { en: 'Dallas, USA',             es: 'Dallas, EE.UU.' },
+  'NRG Stadium':               { en: 'Houston, USA',            es: 'Houston, EE.UU.' },
+  'Arrowhead Stadium':         { en: 'Kansas City, USA',        es: 'Kansas City, EE.UU.' },
+  'GEHA Field at Arrowhead Stadium': { en: 'Kansas City, USA',  es: 'Kansas City, EE.UU.' },
+  'Mercedes-Benz Stadium':     { en: 'Atlanta, USA',            es: 'Atlanta, EE.UU.' },
+  'Hard Rock Stadium':         { en: 'Miami, USA',              es: 'Miami, EE.UU.' },
+  'Levi\'s Stadium':           { en: 'San Francisco Bay, USA',  es: 'Bahía de San Francisco, EE.UU.' },
+  'Lincoln Financial Field':   { en: 'Philadelphia, USA',       es: 'Filadelfia, EE.UU.' },
+  'Lumen Field':               { en: 'Seattle, USA',            es: 'Seattle, EE.UU.' },
+  'Gillette Stadium':          { en: 'Boston, USA',             es: 'Boston, EE.UU.' },
+};
+function displayVenue(venueName) {
+  if (!venueName) return '';
+  const entry = WC2026_VENUES[venueName];
+  if (!entry) return venueName;
+  const lang = getLanguage?.() || 'en';
+  return entry[lang] || entry.en;
+}
 function displayLeagueName(name) {
   const entry = LEAGUE_NAME_I18N[name];
   return entry ? (entry[getLanguage?.()] || entry.en || name) : (name || '');
@@ -960,6 +987,7 @@ function matchCard(match, pred = {}, result) {
       <span class="match-date">
         <span class="match-date-day">${day}</span>
         <span class="match-date-time">${time}</span>
+        ${match.venue ? `<span class="match-venue">${escapeHtml(displayVenue(match.venue))}</span>` : ''}
       </span>
 
       <div class="match-fixture">

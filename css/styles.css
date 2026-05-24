@@ -1185,6 +1185,14 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   font-weight: 600;
   color: var(--text-muted);
 }
+.match-venue {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+  opacity: 0.85;
+  text-transform: none;
+}
 
 .match-fixture {
   display: grid;
