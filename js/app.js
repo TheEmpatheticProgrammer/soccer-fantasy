@@ -1176,7 +1176,7 @@ function renderLeaderboard() {
     };
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
-  const ownerCanRemove = isLeagueOwner();
+  const ownerCanRemove = isLeagueOwner() || isAdmin();
   const isUnlocked = state.currentLeague?.unlocked === true;
   const adminOnly = isAdmin();
 
@@ -1317,7 +1317,7 @@ function renderLeaderboard() {
   const lockBtn = document.getElementById('btn-toggle-lock');
   if (lockBtn) {
     lockBtn.addEventListener('click', async () => {
-      if (!state.leagueId || !isLeagueOwner()) return;
+      if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
       const next = !(state.currentLeague?.unlocked === true);
       lockBtn.disabled = true;
       try {
@@ -1338,7 +1338,7 @@ function renderLeaderboard() {
   const resetBtn = document.getElementById('btn-reset-league');
   if (resetBtn) {
     resetBtn.addEventListener('click', async () => {
-      if (!state.leagueId || !isLeagueOwner()) return;
+      if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
       const leagueName = displayLeagueName(state.currentLeague?.name) || '';
       if (!confirm(t('leaderboard.resetConfirm', { name: leagueName }))) return;
       resetBtn.disabled = true;
@@ -1480,7 +1480,7 @@ async function createLeague(name) {
 }
 
 async function resetLeague() {
-  if (!state.leagueId || !isLeagueOwner()) throw new Error(t('leaderboard.resetDenied'));
+  if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) throw new Error(t('leaderboard.resetDenied'));
 
   const snap = await leaguePredictionsCol(state.leagueId).get();
   const batch = firebase.firestore().batch();
