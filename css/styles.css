@@ -954,7 +954,30 @@ body {
   justify-content: space-between;
 }
 .group-header h2 { font-size: 0.95rem; font-weight: 700; }
-.group-teams { font-size: 0.75rem; color: rgba(255,255,255,0.65); }
+.group-teams {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.65);
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.group-team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.group-team-chip .team-flag {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px var(--border);
+}
+.group-team-sep {
+  color: rgba(255,255,255,0.35);
+  margin: 0 0.05rem;
+}
 
 /* ── Settings panel ── */
 .settings-panel {

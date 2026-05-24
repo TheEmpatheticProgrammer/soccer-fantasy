@@ -1123,7 +1123,7 @@ function renderEveryone() {
       <details class="group-section" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="group-header">
           <h2>${t('match.group', { letter: group })}</h2>
-          <span class="group-teams">${teams.map(tCountry).join(' · ')}</span>
+          <span class="group-teams">${teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
