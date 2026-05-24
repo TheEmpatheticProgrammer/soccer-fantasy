@@ -1116,13 +1116,7 @@ function renderEveryone() {
   const everyoneFirstRender = !state.everyoneRendered;
   state.everyoneRendered = true;
 
-  const everyoneColumnHeader = `
-    <div class="everyone-column-header">
-      <span></span>
-      <span class="column-header-label">${t('match.actualResults')}</span>
-    </div>`;
-
-  container.innerHTML = everyoneColumnHeader + Object.entries(state.groups).map(([group, teams], i) => {
+  container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
     const isOpen = everyoneFirstRender ? i === 0 : openEveryoneGroups.has(group);
     return `
@@ -1150,45 +1144,57 @@ function captureOpenGroups(containerId) {
 function everyoneMatchBlock(match, participants) {
   const result = state.results[match.id];
 
-  let rightCell = '';
-  if (result) {
-    rightCell = `
-      <span class="actual-pill">
-        ${teamFlag(match.home)}
-        <span class="actual-num">${result.home}</span>
-        <span class="actual-dash">−</span>
-        <span class="actual-num">${result.away}</span>
-        ${teamFlag(match.away)}
-      </span>`;
-  } else if (match.status === 'IN_PLAY' || match.status === 'PAUSED') {
-    rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
-  }
+  const headerRight = result
+    ? `<span class="everyone-ft-pill"><span class="ft-label">FT</span> <span class="ft-score">${result.home}<span class="ft-dash">−</span>${result.away}</span></span>`
+    : (match.status === 'IN_PLAY' || match.status === 'PAUSED'
+        ? `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`
+        : '');
 
   const rows = participants.map(([uid, doc]) => {
     const pred = doc.predictions?.[match.id];
     if (!pred) return null;
     const pts = result ? calcPoints(pred, result) : null;
     const isSelf = uid === state.uid;
+    const name = doc.displayName || t('toast.unknown');
+    const initials = getInitials(name);
+    const avatarHue = isSelf ? 145 : hashHue(uid);
+    const ptsBadge = pts !== null
+      ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts} ${t('match.ptShort')}</span>`
+      : '';
     return `
-      <div class="other-prediction-row${isSelf ? ' is-self' : ''}">
-        <span class="other-name">${doc.displayName || t('toast.unknown')}${isSelf ? ' <span class="self-tag">you</span>' : ''}</span>
-        <span class="other-score">${pred.home}–${pred.away}</span>
-        <span class="match-points ${pts !== null ? `points-${pts}` : 'points-none'}">
-          ${pts !== null ? t('match.pts', { n: pts }) : ''}
+      <div class="everyone-player-row${isSelf ? ' is-self' : ''}">
+        <span class="everyone-avatar" style="--avatar-hue:${avatarHue}">${escapeHtml(initials)}</span>
+        <span class="everyone-player-info">
+          <span class="everyone-player-name">${escapeHtml(name)}</span>
+          ${isSelf ? `<span class="everyone-you-tag">${t('match.you')}</span>` : ''}
         </span>
+        <span class="everyone-prediction">${pred.home}<span class="ft-dash">−</span>${pred.away}</span>
+        ${ptsBadge}
       </div>`;
   }).filter(Boolean);
 
   return `
-    <div class="other-match-block">
-      <div class="other-match-header">
-        <span class="other-teams">${teamLabel(match.home)} <span class="vs-small">${t('match.vs')}</span> ${teamLabel(match.away)}</span>
-        ${rightCell}
+    <div class="everyone-match-card">
+      <div class="everyone-match-header">
+        <span class="everyone-match-teams">
+          ${teamFlag(match.home)}
+          <span class="everyone-team-name">${tCountry(match.home)}</span>
+          <span class="everyone-vs">${t('match.vs')}</span>
+          <span class="everyone-team-name">${tCountry(match.away)}</span>
+          ${teamFlag(match.away)}
+        </span>
+        ${headerRight}
       </div>
       ${rows.length > 0
         ? rows.join('')
         : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}
     </div>`;
+}
+
+function hashHue(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
+  return h % 360;
 }
 
 function renderAdminMatches() {

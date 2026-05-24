@@ -189,6 +189,8 @@ const TRANSLATIONS = {
     'match.group': 'Group {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',
+    'match.ptShort': 'PT',
+    'match.you': 'YOU',
     'match.tbd': 'TBD',
 
     'leaderboard.adminToggle': 'Admin: Enter Match Results',
@@ -400,6 +402,8 @@ const TRANSLATIONS = {
     'match.group': 'Grupo {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',
+    'match.ptShort': 'PT',
+    'match.you': 'TÚ',
     'match.tbd': 'TBD',
 
     'leaderboard.adminToggle': 'Admin: Ingresar Resultados',
