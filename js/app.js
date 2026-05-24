@@ -126,6 +126,7 @@ async function onSignedIn(user) {
 
   document.getElementById('auth-screen').classList.add('hidden');
   document.getElementById('player-display').textContent = state.currentPlayer;
+  renderKickoffHero();
   renderProfile();
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin()));
 
