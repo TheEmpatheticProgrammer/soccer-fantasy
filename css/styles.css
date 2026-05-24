@@ -998,12 +998,18 @@ body {
 .match-row {
   display: grid;
   grid-template-columns: 1fr 56px 18px 56px 1fr minmax(80px, auto);
-  align-items: center;
+  align-items: stretch;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
   transition: background 0.12s;
 }
+.match-row .score-input,
+.match-row .vs,
+.match-row .match-row-meta,
+.match-row .match-points,
+.match-row .match-status { align-self: center; }
+.match-row .team { display: inline-flex; align-items: center; gap: 0.45rem; min-width: 0; }
 .match-row:last-child { border-bottom: none; }
 .match-row:hover { background: var(--surface-2); }
 
@@ -1169,9 +1175,11 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .match-fixture {
   display: grid;
   grid-template-columns: 1fr 56px 18px 56px 1fr;
-  align-items: center;
+  align-items: stretch;
   gap: 0.55rem;
 }
+.match-fixture .score-input { align-self: center; }
+.match-fixture .vs { align-self: center; }
 .match-fixture .team {
   display: inline-flex;
   align-items: center;
