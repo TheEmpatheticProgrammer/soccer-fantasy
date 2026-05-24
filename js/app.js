@@ -537,6 +537,9 @@ function refreshDynamicContent() {
   renderHeaderStats();
   updateCurrentLeagueBadge();
   renderKickoffHero();
+  document.querySelectorAll('.nav-btn.requires-league').forEach(btn => {
+    btn.classList.toggle('hidden', !state.leagueId);
+  });
 }
 
 function bindEvents() {
@@ -742,6 +745,9 @@ function formatTimeAgo(ts) {
 }
 
 function switchView(view) {
+  if ((view === 'predictions' || view === 'leaderboard') && !state.leagueId) {
+    view = 'leagues';
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
