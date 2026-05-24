@@ -921,11 +921,26 @@ function renderPredictions() {
     const resetBtn = arePredictionsLocked()
       ? ''
       : `<button type="button" class="group-reset-btn" data-reset-group="${group}" title="${t('predictions.resetGroup')}">${t('predictions.resetGroup')}</button>`;
+    let groupPts = 0;
+    let groupPredicted = 0;
+    for (const m of matches) {
+      const p = preds[m.id];
+      if (p && p.home !== undefined && p.away !== undefined) {
+        groupPredicted++;
+        const actual = state.results[m.id];
+        if (actual) groupPts += calcPoints(p, actual);
+      }
+    }
     return `
       <details class="prediction-group" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="prediction-group-title">
-          <span>${t('match.group', { letter: group })}</span>
-          <span class="prediction-group-actual">${t('match.actualResults')}</span>
+          <span class="group-letter-badge">${group}</span>
+          <span class="group-letter-text">${t('match.group', { letter: group })}</span>
+          <span class="group-stats">
+            <span class="group-stats-pts">${groupPts} ${t('header.points')}</span>
+            <span class="group-stats-sep">·</span>
+            <span class="group-stats-predicted">${groupPredicted}/${matches.length}</span>
+          </span>
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -959,49 +974,69 @@ function refreshSaveStatus() {
 }
 
 function matchCard(match, pred = {}, result) {
-  const pts = (result && pred.home !== undefined && pred.away !== undefined)
-    ? calcPoints(pred, result) : null;
+  const hasPred = pred.home !== undefined && pred.away !== undefined;
+  const pts = (result && hasPred) ? calcPoints(pred, result) : null;
 
   const lockAttr = arePredictionsLocked() ? 'disabled' : '';
   const { day, time } = formatMatchDateParts(match.utcDate);
+  const venue = match.venue ? displayVenue(match.venue) : '';
+  const playerInitial = (state.currentPlayer || '?').trim().charAt(0).toUpperCase() || '?';
 
-  let rightCell = '';
-  if (result) {
-    rightCell = `
-      <span class="actual-pill">
-        ${teamFlag(match.home)}
-        <span class="actual-num">${result.home}</span>
-        <span class="actual-dash">−</span>
-        <span class="actual-num">${result.away}</span>
-        ${teamFlag(match.away)}
-      </span>
-      ${pts !== null
-        ? `<span class="match-points points-${pts}">${t('match.pts', { n: pts })}</span>`
-        : ''}`;
-  } else if (match.status === 'IN_PLAY' || match.status === 'PAUSED') {
-    rightCell = `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`;
-  }
+  const rowClass = pts === 3 ? 'predict-row pts-exact'
+                 : pts === 1 ? 'predict-row pts-partial'
+                 : pts === 0 ? 'predict-row pts-miss'
+                 : 'predict-row';
+
+  const statusIcon = result === undefined || result === null
+    ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
+    : pts === 3
+      ? `<span class="actual-status status-exact" aria-hidden="true">
+           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 7 12 13 4"/></svg>
+         </span>`
+      : pts === 1
+        ? `<span class="actual-status status-partial" aria-hidden="true">−</span>`
+        : `<span class="actual-status status-miss" aria-hidden="true">−</span>`;
+
+  const actualNumsHtml = result
+    ? `<span class="actual-num">${result.home}</span>
+       <span class="actual-dash">−</span>
+       <span class="actual-num">${result.away}</span>`
+    : `<span class="actual-num actual-empty">?</span>
+       <span class="actual-dash">−</span>
+       <span class="actual-num actual-empty">?</span>`;
+
+  const ptsBadge = pts !== null && pts > 0
+    ? `<span class="pts-badge pts-badge-${pts}">+${pts}</span>`
+    : '';
 
   return `
-    <div class="predict-row">
-      <span class="match-date">
-        <span class="match-date-day">${day}</span>
-        <span class="match-date-time">${time}</span>
-        ${match.venue ? `<span class="match-venue">${escapeHtml(displayVenue(match.venue))}</span>` : ''}
-      </span>
+    <div class="${rowClass}">
+      <div class="match-meta-line">
+        <span class="meta-day">${day}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-time">${time}</span>
+        ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+      </div>
 
-      <div class="match-fixture">
+      <div class="match-teams">
         <span class="team home">${teamLabel(match.home, 'left')}</span>
-        <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-               data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
-        <span class="vs">−</span>
-        <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
-               data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
         <span class="team away">${teamLabel(match.away, 'right')}</span>
       </div>
 
-      <div class="match-actual">
-        ${rightCell}
+      <div class="match-scoreboard">
+        <div class="my-pick">
+          <span class="my-pick-avatar">${escapeHtml(playerInitial)}</span>
+          <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+                 data-match="${match.id}" data-side="home" value="${pred.home ?? ''}" ${lockAttr}>
+          <span class="vs">−</span>
+          <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
+                 data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
+        </div>
+        <div class="actual-side">
+          ${statusIcon}
+          ${actualNumsHtml}
+          ${ptsBadge}
+        </div>
       </div>
     </div>`;
 }

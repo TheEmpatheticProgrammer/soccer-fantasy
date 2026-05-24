@@ -188,6 +188,7 @@ const TRANSLATIONS = {
     'match.group': 'Group {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',
+    'match.tbd': 'TBD',
 
     'leaderboard.adminToggle': 'Admin: Enter Match Results',
     'leaderboard.adminNote': 'Results from the API are filled in automatically. Use this to override or enter scores manually.',
@@ -397,6 +398,7 @@ const TRANSLATIONS = {
     'match.group': 'Grupo {letter}',
     'match.vs': 'vs',
     'match.pts': '{n} pt',
+    'match.tbd': 'TBD',
 
     'leaderboard.adminToggle': 'Admin: Ingresar Resultados',
     'leaderboard.adminNote': 'Los resultados de la API se llenan automáticamente. Úsalo para sobrescribir o ingresar resultados manualmente.',
