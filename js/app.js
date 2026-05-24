@@ -565,7 +565,7 @@ function onProfileUpdated() {
 
 function renderPlayerCard() {
   const name = state.currentPlayer || '';
-  const initial = (name.trim()[0] || '·').toUpperCase();
+  const initial = getInitials(name);
   const avatar = document.getElementById('player-avatar');
   if (avatar) avatar.textContent = initial;
   const display = document.getElementById('player-display');
@@ -980,13 +980,7 @@ function matchCard(match, pred = {}, result) {
   const lockAttr = arePredictionsLocked() ? 'disabled' : '';
   const { day, time } = formatMatchDateParts(match.utcDate);
   const venue = match.venue ? displayVenue(match.venue) : '';
-  const playerInitial = (() => {
-    const parts = (state.currentPlayer || '').trim().split(/\s+/).filter(Boolean);
-    if (!parts.length) return '?';
-    const first = parts[0].charAt(0);
-    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
-    return (first + last).toUpperCase() || '?';
-  })();
+  const playerInitial = getInitials(state.currentPlayer);
 
   const rowClass = pts === 3 ? 'predict-row pts-exact'
                  : pts === 1 ? 'predict-row pts-partial'
@@ -1256,7 +1250,7 @@ function renderLeaderboard() {
     const name = doc.displayName || t('leaderboard.memberNoName');
     const email = doc.email || '';
     const picks = doc.predictions ? Object.keys(doc.predictions).length : 0;
-    const initial = (name.trim()[0] || '?').toUpperCase();
+    const initial = getInitials(name);
     const isSelf = uid === state.uid;
     const removeBtn = isSelf ? '' : `
       <button class="member-remove btn-remove-player" data-remove-uid="${uid}" data-remove-name="${escapeHtml(name)}"
@@ -1719,6 +1713,14 @@ function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c =>
     ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]
   );
+}
+
+function getInitials(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  const first = parts[0].charAt(0);
+  const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+  return (first + last).toUpperCase() || '?';
 }
 
 function bindLeaguesViewEvents() {
