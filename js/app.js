@@ -980,7 +980,13 @@ function matchCard(match, pred = {}, result) {
   const lockAttr = arePredictionsLocked() ? 'disabled' : '';
   const { day, time } = formatMatchDateParts(match.utcDate);
   const venue = match.venue ? displayVenue(match.venue) : '';
-  const playerInitial = (state.currentPlayer || '?').trim().charAt(0).toUpperCase() || '?';
+  const playerInitial = (() => {
+    const parts = (state.currentPlayer || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    const first = parts[0].charAt(0);
+    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+    return (first + last).toUpperCase() || '?';
+  })();
 
   const rowClass = pts === 3 ? 'predict-row pts-exact'
                  : pts === 1 ? 'predict-row pts-partial'
@@ -1005,7 +1011,7 @@ function matchCard(match, pred = {}, result) {
        <span class="actual-dash">−</span>
        <span class="actual-num actual-empty">?</span>`;
 
-  const ptsBadge = pts !== null && pts > 0
+  const ptsBadge = pts !== null
     ? `<span class="pts-badge pts-badge-${pts}">+${pts}</span>`
     : '';
 
@@ -1020,6 +1026,7 @@ function matchCard(match, pred = {}, result) {
 
       <div class="match-teams">
         <span class="team home">${teamLabel(match.home, 'left')}</span>
+        <span class="team-vs">${t('match.vs')}</span>
         <span class="team away">${teamLabel(match.away, 'right')}</span>
       </div>
 

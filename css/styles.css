@@ -1244,9 +1244,17 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 
 .match-teams {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem;
+}
+.team-vs {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 0.4rem;
 }
 .match-teams .team {
   display: inline-flex;
@@ -1406,6 +1414,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 }
 .pts-badge-3 { background: var(--accent); color: #04141a; }
 .pts-badge-1 { background: var(--highlight); color: #1a0d00; }
+.pts-badge-0 { background: rgba(255, 90, 95, 0.18); color: #ff8d91; }
 
 @media (max-width: 720px) {
   .predict-row {
