@@ -618,13 +618,20 @@ body {
 .host-flag-stripe span { flex: 1; }
 .brand-text { display: flex; flex-direction: column; min-width: 0; }
 .brand-title {
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  line-height: 1.15;
+  font-family: 'Bebas Neue', 'Impact', system-ui, sans-serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  letter-spacing: 3px;
+  line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background: linear-gradient(180deg, #ffffff 0%, var(--accent) 110%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 28px rgba(45, 255, 165, 0.18);
 }
 .brand-tagline {
   font-size: 0.72rem;
@@ -2411,7 +2418,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .brand-ball,
   .brand-trophy { width: 34px; height: 34px; flex-shrink: 0; }
   .brand-text { min-width: 0; flex: 1; }
-  .brand-title { font-size: 1rem; }
+  .brand-title { font-size: 1.7rem; letter-spacing: 2px; }
   .brand-tagline { font-size: 0.62rem; letter-spacing: 0.8px; }
   .brand-hosts { display: none; }
   .nav-btn {
