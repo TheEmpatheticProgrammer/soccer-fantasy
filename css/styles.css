@@ -114,15 +114,15 @@ html { color-scheme: dark; }
 .player-rank-pill {
   display: inline-flex;
   align-items: center;
-  margin-left: 0.6rem;
-  padding: 0.15rem 0.55rem;
-  background: var(--accent-soft);
+  margin-top: 2px;
+  padding: 0;
+  background: transparent;
   color: var(--accent);
-  border: 1px solid rgba(0, 217, 119, 0.3);
-  border-radius: 999px;
-  font-size: 0.75rem;
+  border: none;
+  border-radius: 0;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -810,18 +810,22 @@ body {
   color: var(--text-muted);
 }
 .player-card-name {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.15;
 }
 .player-card-stats {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   flex-shrink: 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--border);
 }
 .player-card-picks {
   font-size: 1.35rem;
