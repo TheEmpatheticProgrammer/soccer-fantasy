@@ -68,8 +68,8 @@
   </g>
 
   <!-- WORDMARK -->
-  <text x="445" y="200" font-size="118" font-weight="900" fill="#ffffff" letter-spacing="-3">COPAMIGOS</text>
-  <text x="445" y="240" font-size="22" font-weight="600" fill="#00d977" letter-spacing="6">FIFA WORLD CUP 2026 · FRIENDS POOL</text>
+  <text x="430" y="200" font-size="104" font-weight="900" fill="#ffffff" letter-spacing="-2">COPAMIGOS</text>
+  <text x="432" y="240" font-size="22" font-weight="600" fill="#00d977" letter-spacing="6">FIFA WORLD CUP 2026 · FRIENDS POOL</text>
 
   <!-- divider -->
   <line x1="445" y1="270" x2="1090" y2="270" stroke="#2a3445" stroke-width="2"/>
@@ -105,17 +105,16 @@
 
   <!-- HOST FLAGS row -->
   <g transform="translate(445 510)">
-    <text x="0" y="22" font-size="14" font-weight="600" fill="#8b95a7" letter-spacing="2">HOSTED BY</text>
     <!-- Mexico -->
-    <g transform="translate(140 0)">
+    <g transform="translate(0 0)">
       <rect x="0" y="0" width="36" height="24" fill="#006847"/>
       <rect x="12" y="0" width="12" height="24" fill="#ffffff"/>
       <rect x="24" y="0" width="12" height="24" fill="#ce1126"/>
       <rect x="0" y="0" width="36" height="24" fill="none" stroke="#1c2a3e" stroke-width="1"/>
     </g>
-    <text x="186" y="17" font-size="15" font-weight="600" fill="#e6edf3">Mexico</text>
+    <text x="46" y="17" font-size="15" font-weight="600" fill="#e6edf3">Mexico</text>
     <!-- USA -->
-    <g transform="translate(280 0)">
+    <g transform="translate(140 0)">
       <rect x="0" y="0" width="36" height="24" fill="#b22234"/>
       <rect x="0" y="3.4" width="36" height="3.4" fill="#fff"/>
       <rect x="0" y="10.2" width="36" height="3.4" fill="#fff"/>
@@ -123,9 +122,9 @@
       <rect x="0" y="0" width="15" height="13" fill="#3c3b6e"/>
       <rect x="0" y="0" width="36" height="24" fill="none" stroke="#1c2a3e" stroke-width="1"/>
     </g>
-    <text x="326" y="17" font-size="15" font-weight="600" fill="#e6edf3">USA</text>
+    <text x="186" y="17" font-size="15" font-weight="600" fill="#e6edf3">USA</text>
     <!-- Canada -->
-    <g transform="translate(395 0)">
+    <g transform="translate(255 0)">
       <rect x="0" y="0" width="12" height="24" fill="#d52b1e"/>
       <rect x="12" y="0" width="12" height="24" fill="#ffffff"/>
       <rect x="24" y="0" width="12" height="24" fill="#d52b1e"/>
@@ -133,12 +132,12 @@
                fill="#d52b1e"/>
       <rect x="0" y="0" width="36" height="24" fill="none" stroke="#1c2a3e" stroke-width="1"/>
     </g>
-    <text x="441" y="17" font-size="15" font-weight="600" fill="#e6edf3">Canada</text>
+    <text x="301" y="17" font-size="15" font-weight="600" fill="#e6edf3">Canada</text>
   </g>
 
   <!-- URL chip -->
-  <g transform="translate(990 570)">
-    <rect x="-8" y="0" width="120" height="32" rx="6" fill="#00d977"/>
-    <text x="52" y="22" font-size="16" font-weight="800" fill="#03240f" text-anchor="middle">copamigos.com</text>
+  <g transform="translate(960 570)">
+    <rect x="-8" y="0" width="140" height="32" rx="6" fill="#00d977"/>
+    <text x="62" y="22" font-size="16" font-weight="800" fill="#03240f" text-anchor="middle">copamigos.com</text>
   </g>
 </svg>
