@@ -636,7 +636,6 @@ body {
   height: 54px;
   width: auto;
   display: block;
-  mix-blend-mode: screen;
   filter: drop-shadow(0 0 16px rgba(45,255,165,0.18));
 }
 .brand-trophy {
