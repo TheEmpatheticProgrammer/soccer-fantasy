@@ -1273,11 +1273,26 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
   gap: 0.45rem;
   padding: 0.45rem 0.6rem;
   background: var(--surface-2);
+  border: 1px solid transparent;
   border-radius: 10px;
   min-width: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
 .actual-side { justify-content: space-between; }
 .my-pick { justify-content: flex-start; }
+
+.predict-row.pts-exact .actual-side {
+  background: rgba(45, 255, 165, 0.12);
+  border-color: rgba(45, 255, 165, 0.45);
+}
+.predict-row.pts-partial .actual-side {
+  background: rgba(255, 184, 73, 0.12);
+  border-color: rgba(255, 184, 73, 0.45);
+}
+.predict-row.pts-miss .actual-side {
+  background: rgba(255, 90, 79, 0.10);
+  border-color: rgba(255, 90, 79, 0.35);
+}
 
 .my-pick-avatar {
   width: 22px;
@@ -1348,6 +1363,8 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 
 .predict-row.pts-exact .actual-side .actual-num { color: var(--accent); }
 .predict-row.pts-partial .actual-side .actual-num { color: var(--highlight); }
+.predict-row.pts-miss .actual-side .actual-num { color: var(--error); }
+.predict-row.pts-miss .actual-status.status-miss { background: var(--error); color: #1a0000; }
 
 .pts-badge {
   display: inline-flex;
