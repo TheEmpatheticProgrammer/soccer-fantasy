@@ -493,9 +493,15 @@ function subscribeToPredictions() {
       snap.forEach(doc => { state.predictionDocs[doc.id] = doc.data(); });
 
       const myDoc = state.predictionDocs[state.uid];
-      if (myDoc && state.currentPlayer && myDoc.displayName !== state.currentPlayer) {
-        leaguePredictionsCol(leagueId).doc(state.uid)
-          .set({ displayName: state.currentPlayer }, { merge: true });
+      const user = firebase.auth().currentUser;
+      const myEmail = user?.email || '';
+      const nameMismatch = myDoc && state.currentPlayer && myDoc.displayName !== state.currentPlayer;
+      const emailMissing = myDoc && myEmail && !myDoc.email;
+      if (nameMismatch || emailMissing) {
+        const patch = {};
+        if (nameMismatch) patch.displayName = state.currentPlayer;
+        if (emailMissing) patch.email = myEmail;
+        leaguePredictionsCol(leagueId).doc(state.uid).set(patch, { merge: true });
       }
 
       renderLeaderboard();
@@ -658,12 +664,14 @@ async function runAutosave() {
 
   const user = firebase.auth().currentUser;
   const displayName = user?.displayName || user?.email || state.currentPlayer;
+  const email = user?.email || '';
 
   isSaving = true;
   setAutosaveStatus('saving');
   try {
     await leaguePredictionsCol(state.leagueId).doc(state.uid).set({
       displayName,
+      email,
       predictions: cleaned,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -1176,13 +1184,26 @@ function renderLeaderboard() {
   const membersListHtml = adminOnly && memberUids.length > 0 ? memberUids.map(uid => {
     const doc = state.predictionDocs[uid] || {};
     const name = doc.displayName || t('leaderboard.memberNoName');
+    const email = doc.email || '';
     const picks = doc.predictions ? Object.keys(doc.predictions).length : 0;
     const initial = (name.trim()[0] || '?').toUpperCase();
+    const isSelf = uid === state.uid;
+    const removeBtn = isSelf ? '' : `
+      <button class="member-remove btn-remove-player" data-remove-uid="${uid}" data-remove-name="${escapeHtml(name)}"
+              title="${t('leaderboard.removePlayer')}" aria-label="${t('leaderboard.removePlayer')}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>`;
     return `
       <li class="member-item">
         <span class="member-avatar">${escapeHtml(initial)}</span>
-        <span class="member-name">${escapeHtml(name)}</span>
+        <div class="member-info">
+          <span class="member-name">${escapeHtml(name)}</span>
+          ${email ? `<span class="member-email">${escapeHtml(email)}</span>` : ''}
+        </div>
         <span class="member-picks">${t('leaderboard.memberPicksCount', { count: picks })}</span>
+        ${removeBtn}
       </li>`;
   }).join('') : '';
 
@@ -1469,6 +1490,13 @@ async function joinLeague(leagueId) {
     await leagueDocRef(leagueId).update({
       memberUids: firebase.firestore.FieldValue.arrayUnion(state.uid),
     });
+    const user = firebase.auth().currentUser;
+    await leaguePredictionsCol(leagueId).doc(state.uid).set({
+      displayName: user?.displayName || user?.email || '',
+      email: user?.email || '',
+      predictions: {},
+      joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true }).catch(() => {});
   }
   return { id: leagueId, name: displayLeagueName(data.name) };
 }
@@ -1481,7 +1509,7 @@ async function leaveLeague(leagueId) {
 }
 
 async function removePlayerFromLeague(playerUid) {
-  if (!state.leagueId || !isLeagueOwner()) return;
+  if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
   await leaguePredictionsCol(state.leagueId).doc(playerUid).delete().catch(() => {});
   await leagueDocRef(state.leagueId).update({
     memberUids: firebase.firestore.FieldValue.arrayRemove(playerUid),

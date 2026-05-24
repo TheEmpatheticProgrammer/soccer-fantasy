@@ -404,6 +404,41 @@ html { color-scheme: dark; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.member-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.member-info .member-name { flex: none; }
+.member-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.member-remove {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.member-remove svg { width: 14px; height: 14px; }
+.member-remove:hover {
+  color: var(--error);
+  border-color: var(--error);
+  background: rgba(255, 90, 79, 0.08);
+}
 .member-picks {
   font-size: 0.78rem;
   font-weight: 700;
