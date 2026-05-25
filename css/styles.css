@@ -117,7 +117,7 @@ html { color-scheme: dark; }
   margin-top: 2px;
   padding: 0;
   background: transparent;
-  color: var(--accent);
+  color: #397ED9;
   border: none;
   border-radius: 0;
   font-size: 0.78rem;
@@ -739,10 +739,10 @@ body {
   font-size: 2.6rem;
   font-weight: 900;
   line-height: 1;
-  color: #ffe98a;
+  color: #397ED9;
   letter-spacing: -1px;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 2px 12px rgba(245,201,58,0.25);
+  text-shadow: 0 2px 12px rgba(57, 126, 217, 0.3);
 }
 .kickoff-unit {
   font-size: 0.7rem;
