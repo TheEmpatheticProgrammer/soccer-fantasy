@@ -561,6 +561,7 @@ function subscribeToPredictions() {
     snap => {
       state.predictionDocs = {};
       snap.forEach(doc => { state.predictionDocs[doc.id] = doc.data(); });
+      state.predVersion = (state.predVersion || 0) + 1;
 
       const myDoc = state.predictionDocs[state.uid];
       const user = firebase.auth().currentUser;
@@ -588,6 +589,7 @@ function subscribeToResults() {
   unsubResults = firebase.firestore().collection('results').doc('all').onSnapshot(
     doc => {
       state.results = doc.exists ? (doc.data().results || {}) : {};
+      state.resultsVersion = (state.resultsVersion || 0) + 1;
       renderAdminMatches();
       renderLeaderboard();
       renderPredictions();
@@ -627,6 +629,7 @@ function renderPlayerCard() {
 
 function refreshDynamicContent() {
   refreshAuthLabels?.();
+  _standingsCache = null;
   renderAdminMatches();
   renderLeaderboard();
   renderPredictions();
@@ -644,6 +647,8 @@ function refreshDynamicContent() {
 }
 
 function bindEvents() {
+  initLeaderboardDelegation();
+
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.addEventListener('click', () => switchView(btn.dataset.view))
   );
@@ -805,6 +810,7 @@ async function loadFromApi(force = false) {
       // Merge into local state so every user sees fresh scores without
       // waiting for admin to push to Firestore.
       state.results = { ...state.results, ...apiResults };
+      state.resultsVersion = (state.resultsVersion || 0) + 1;
 
       // Admin propagates to Firestore as the canonical source for the league.
       if (isAdmin()) {
@@ -857,6 +863,16 @@ function refreshApiStatus() {
   }
 }
 
+function isViewActive(viewId) {
+  const el = document.getElementById(viewId);
+  return !!el && !el.classList.contains('hidden');
+}
+
+function isSubviewActive(subviewId) {
+  const el = document.getElementById(subviewId);
+  return !!el && !el.classList.contains('hidden');
+}
+
 function formatTimeAgo(ts) {
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 60)   return t('time.justNow');
@@ -883,7 +899,9 @@ function switchView(view) {
   // (5min TTL) prevents hammering; admin's call additionally fans out to
   // Firestore so others' onSnapshot picks up the new results.
   if ((view === 'predictions' || view === 'leaderboard') && hasApiAccess()) {
-    loadFromApi(false).catch(() => { /* errors surface via api-status pill */ });
+    const lastTs = ApiCache.timestamp();
+    const cacheFresh = lastTs && (Date.now() - lastTs < ApiCache.ttl);
+    if (!cacheFresh) loadFromApi(false).catch(() => { /* errors surface via api-status pill */ });
   }
 }
 
@@ -897,6 +915,7 @@ function switchSubview(name) {
     if (shouldShow) playEnterAnimation(s);
   });
   if (name === 'everyone') renderEveryone();
+  if (name === 'mine') renderPredictions();
 }
 
 function playEnterAnimation(el) {
@@ -931,6 +950,7 @@ function skeletonMatchCards(n = 4) {
 
 function renderPredictions() {
   if (!state.uid) return;
+  if (!isViewActive('view-predictions') || !isSubviewActive('subview-mine')) return;
   const container = document.getElementById('matches-container');
   if (!container) return;
 
@@ -1096,6 +1116,7 @@ function formatStatus(status) {
 function renderEveryone() {
   const container = document.getElementById('everyone-container');
   if (!container) return;
+  if (!isViewActive('view-predictions') || !isSubviewActive('subview-everyone')) return;
 
   if (state.matches.length === 0) {
     container.innerHTML = skeletonMatchCards(4);
@@ -1111,6 +1132,16 @@ function renderEveryone() {
   if (participants.length === 0) {
     container.innerHTML = `<div class="empty-state">${t('predictions.noOthers')}</div>`;
     return;
+  }
+
+  // Pre-index participants by match: avoids re-filtering all participants
+  // for each of the 72 group-stage matches inside everyoneMatchBlock.
+  const participantsByMatch = {};
+  for (const entry of participants) {
+    const preds = entry[1].predictions || {};
+    for (const mid of Object.keys(preds)) {
+      (participantsByMatch[mid] ||= []).push(entry);
+    }
   }
 
   const openEveryoneGroups = captureOpenGroups('everyone-container');
@@ -1129,7 +1160,7 @@ function renderEveryone() {
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </summary>
-        ${matches.map(m => everyoneMatchBlock(m, participants)).join('')}
+        ${matches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [])).join('')}
       </details>`;
   }).join('');
 }
@@ -1152,8 +1183,7 @@ function everyoneMatchBlock(match, participants) {
         : '');
 
   const rows = participants.map(([uid, doc]) => {
-    const pred = doc.predictions?.[match.id];
-    if (!pred) return null;
+    const pred = doc.predictions[match.id];
     const pts = result ? calcPoints(pred, result) : null;
     const isSelf = uid === state.uid;
     const name = doc.displayName || t('toast.unknown');
@@ -1172,7 +1202,7 @@ function everyoneMatchBlock(match, participants) {
         <span class="everyone-prediction">${pred.home}<span class="ft-dash">−</span>${pred.away}</span>
         ${ptsBadge}
       </div>`;
-  }).filter(Boolean);
+  });
 
   return `
     <div class="everyone-match-card">
@@ -1269,16 +1299,14 @@ function calcPoints(pred, actual) {
   return predOutcome === actualOutcome ? 1 : 0;
 }
 
-function renderLeaderboard() {
-  const container = document.getElementById('leaderboard-container');
-  const total = state.matches.length;
+let _standingsCache = null;
+let _standingsCacheKey = '';
+
+function computeStandings() {
+  const key = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+  if (_standingsCache && _standingsCacheKey === key) return _standingsCache;
+
   const players = Object.entries(state.predictionDocs);
-
-  if (players.length === 0) {
-    container.innerHTML = `<div class="empty-state">${t('leaderboard.empty')}</div>`;
-    return;
-  }
-
   const standings = players.map(([uid, doc]) => {
     const preds = doc.predictions || {};
     let points = 0, scored = 0;
@@ -1296,6 +1324,24 @@ function renderLeaderboard() {
       predicted: Object.keys(preds).length,
     };
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
+
+  _standingsCacheKey = key;
+  _standingsCache = standings;
+  return standings;
+}
+
+function renderLeaderboard() {
+  if (!isViewActive('view-leaderboard')) return;
+  const container = document.getElementById('leaderboard-container');
+  const total = state.matches.length;
+  const players = Object.entries(state.predictionDocs);
+
+  if (players.length === 0) {
+    container.innerHTML = `<div class="empty-state">${t('leaderboard.empty')}</div>`;
+    return;
+  }
+
+  const standings = computeStandings();
 
   const ownerCanRemove = isLeagueOwner() || isAdmin();
   const isUnlocked = state.currentLeague?.unlocked === true;
@@ -1436,11 +1482,18 @@ function renderLeaderboard() {
         }).join('')}
       </tbody>
     </table>`;
+}
 
-  document.querySelectorAll('.btn-remove-player').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const uid = btn.dataset.removeUid;
-      const name = btn.dataset.removeName;
+function initLeaderboardDelegation() {
+  const container = document.getElementById('leaderboard-container');
+  if (!container || container._delegated) return;
+  container._delegated = true;
+
+  container.addEventListener('click', async (e) => {
+    const removeBtn = e.target.closest('.btn-remove-player');
+    if (removeBtn) {
+      const uid = removeBtn.dataset.removeUid;
+      const name = removeBtn.dataset.removeName;
       const leagueName = displayLeagueName(state.currentLeague?.name) || '';
       if (!confirm(t('leaderboard.removeConfirm', { name, league: leagueName }))) return;
       try {
@@ -1449,12 +1502,11 @@ function renderLeaderboard() {
       } catch (err) {
         showToast(err.message);
       }
-    });
-  });
+      return;
+    }
 
-  const lockBtn = document.getElementById('btn-toggle-lock');
-  if (lockBtn) {
-    lockBtn.addEventListener('click', async () => {
+    const lockBtn = e.target.closest('#btn-toggle-lock');
+    if (lockBtn) {
       if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
       const next = !(state.currentLeague?.unlocked === true);
       lockBtn.disabled = true;
@@ -1465,17 +1517,16 @@ function renderLeaderboard() {
       } finally {
         lockBtn.disabled = false;
       }
-    });
-  }
+      return;
+    }
 
-  const exportBtn = document.getElementById('btn-export-predictions');
-  if (exportBtn) {
-    exportBtn.addEventListener('click', exportPredictionsCSV);
-  }
+    if (e.target.closest('#btn-export-predictions')) {
+      exportPredictionsCSV();
+      return;
+    }
 
-  const resetBtn = document.getElementById('btn-reset-league');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', async () => {
+    const resetBtn = e.target.closest('#btn-reset-league');
+    if (resetBtn) {
       if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
       const leagueName = displayLeagueName(state.currentLeague?.name) || '';
       if (!confirm(t('leaderboard.resetConfirm', { name: leagueName }))) return;
@@ -1488,8 +1539,8 @@ function renderLeaderboard() {
       } finally {
         resetBtn.disabled = false;
       }
-    });
-  }
+    }
+  });
 }
 
 function exportPredictionsCSV() {
