@@ -4,10 +4,6 @@ const arePredictionsLocked = () => {
   if (state.currentLeague?.unlocked === true) return false;
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
 };
-const shouldRevealOthers = () => {
-  if (state.currentLeague?.unlocked === true) return true;
-  return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
-};
 
 const Storage = {
   keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id' },
@@ -1120,11 +1116,6 @@ function renderEveryone() {
 
   if (state.matches.length === 0) {
     container.innerHTML = skeletonMatchCards(4);
-    return;
-  }
-
-  if (!shouldRevealOthers() && !isAdmin() && !isLeagueOwner()) {
-    container.innerHTML = `<div class="lock-banner">${t('predictions.everyoneLocked')}</div>`;
     return;
   }
 
