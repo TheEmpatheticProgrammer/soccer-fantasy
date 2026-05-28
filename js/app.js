@@ -47,7 +47,7 @@ const TEAM_ALIASES = [
   ['Turkey', 'Türkiye', 'Turkiye'],
   ['Korea Republic', 'South Korea', 'Republic of Korea'],
   ['Iran', 'Islamic Republic of Iran', 'IR Iran'],
-  ['Cape Verde', 'Cabo Verde'],
+  ['Cape Verde', 'Cabo Verde', 'Cape Verde Islands'],
   ['Ivory Coast', "Côte d'Ivoire", 'Cote d Ivoire'],
   ['Bosnia and Herzegovina', 'Bosnia-Herzegovina', 'Bosnia'],
   ['Curaçao', 'Curacao'],
