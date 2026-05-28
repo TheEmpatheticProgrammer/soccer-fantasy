@@ -14,6 +14,48 @@ const Storage = {
   clearLastLeagueId() { localStorage.removeItem(this.keys.lastLeagueId); },
 };
 
+// Spanish team names as they appear in the import template → canonical
+// English name (or one English alias; TEAM_ALIASES expands to all forms).
+const SPANISH_TEAM_TO_ENGLISH = {
+  'MEXICO': 'Mexico', 'SUDAFRICA': 'South Africa',
+  'KOREA SUR': 'Korea Republic', 'KOREA': 'Korea Republic', 'COREA DEL SUR': 'Korea Republic',
+  'REP. CHECA': 'Czech Republic', 'REPUBLICA CHECA': 'Czech Republic',
+  'CANADA': 'Canada', 'BOSNIA': 'Bosnia and Herzegovina',
+  'QATAR': 'Qatar', 'CATAR': 'Qatar', 'SUIZA': 'Switzerland',
+  'BRASIL': 'Brazil', 'MARRUECOS': 'Morocco', 'HAITI': 'Haiti', 'ESCOCIA': 'Scotland',
+  'EEUU': 'United States', 'EE.UU.': 'United States', 'ESTADOS UNIDOS': 'United States',
+  'PARAGUAY': 'Paraguay', 'AUSTRALIA': 'Australia', 'TURQUIA': 'Turkey',
+  'ALEMANIA': 'Germany', 'CURAZAO': 'Curaçao',
+  'C. MARFIL': 'Ivory Coast', 'COSTA DE MARFIL': 'Ivory Coast',
+  'ECUADOR': 'Ecuador', 'HOLANDA': 'Netherlands', 'PAISES BAJOS': 'Netherlands',
+  'JAPON': 'Japan', 'SUECIA': 'Sweden', 'TUNEZ': 'Tunisia',
+  'BELGICA': 'Belgium', 'EGYPTO': 'Egypt', 'EGIPTO': 'Egypt',
+  'IRAN': 'Iran', 'N. ZELANDA': 'New Zealand', 'N.ZELANDA': 'New Zealand', 'NUEVA ZELANDA': 'New Zealand',
+  'ESPANA': 'Spain',
+  'ARABIA S.': 'Saudi Arabia', 'ARABIA SAUDI': 'Saudi Arabia', 'ARABIA SAUDITA': 'Saudi Arabia',
+  'URUGUAY': 'Uruguay', 'CABO VERDE': 'Cape Verde',
+  'FRANCIA': 'France', 'SENEGAL': 'Senegal', 'IRAK': 'Iraq', 'NORUEGA': 'Norway',
+  'ARGENTINA': 'Argentina', 'ARGELIA': 'Algeria', 'AUSTRIA': 'Austria', 'JORDANIA': 'Jordan',
+  'PORTUGAL': 'Portugal', 'CONGO': 'DR Congo', 'RD CONGO': 'DR Congo', 'RD DEL CONGO': 'DR Congo',
+  'UZBEKISTAN': 'Uzbekistan', 'COLOMBIA': 'Colombia',
+  'INGLATERRA': 'England', 'CROACIA': 'Croatia', 'GHANA': 'Ghana', 'PANAMA': 'Panama',
+};
+
+// API may return any of these forms; cluster them so import matching is robust.
+const TEAM_ALIASES = [
+  ['Czech Republic', 'Czechia'],
+  ['Turkey', 'Türkiye', 'Turkiye'],
+  ['Korea Republic', 'South Korea', 'Republic of Korea'],
+  ['Iran', 'Islamic Republic of Iran', 'IR Iran'],
+  ['Cape Verde', 'Cabo Verde'],
+  ['Ivory Coast', "Côte d'Ivoire", 'Cote d Ivoire'],
+  ['Bosnia and Herzegovina', 'Bosnia-Herzegovina', 'Bosnia'],
+  ['Curaçao', 'Curacao'],
+  ['DR Congo', 'Democratic Republic of the Congo', 'Congo DR', 'Congo'],
+  ['United States', 'USA', 'United States of America'],
+  ['Saudi Arabia', 'KSA'],
+];
+
 const DEFAULT_LEAGUE_NAME = 'Polla World Cup 2026';
 const LEGACY_DEFAULT_LEAGUE_NAME = 'World Cup 2026 League';
 const LEAGUE_NAME_I18N = {
@@ -691,6 +733,20 @@ function bindEvents() {
     if (arePredictionsLocked()) return;
     scheduleAutosave();
   });
+
+  const importBtn = document.getElementById('btn-import-predictions');
+  const importInput = document.getElementById('import-file-input');
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', () => {
+      if (arePredictionsLocked()) { showToast(t('predictions.importLocked')); return; }
+      importInput.click();
+    });
+    importInput.addEventListener('change', e => {
+      const file = e.target.files && e.target.files[0];
+      if (file) handleImportFile(file);
+      e.target.value = '';
+    });
+  }
 
   document.getElementById('matches-container').addEventListener('click', e => {
     const btn = e.target.closest('.group-reset-btn');
@@ -1619,6 +1675,190 @@ function exportPredictionsCSV() {
   const stamp = new Date().toISOString().slice(0, 10);
   downloadCSV(csv, `${leagueName}_${stamp}.csv`);
   showToast(t('leaderboard.exportDone', { n: sortedMatches.length, p: players.length }));
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Predictions import (Excel/CSV)
+// ───────────────────────────────────────────────────────────────────────────
+
+function normTeamName(s) {
+  return String(s || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function expandTeamAliases(englishName) {
+  const cluster = TEAM_ALIASES.find(c => c.includes(englishName));
+  return cluster || [englishName];
+}
+
+function normalizedFormsForSpanish(spanishName) {
+  const key = String(spanishName || '').trim().toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const english = SPANISH_TEAM_TO_ENGLISH[key];
+  if (!english) return null;
+  return new Set(expandTeamAliases(english).map(normTeamName));
+}
+
+// Returns { match, swap } if a state match pairs these teams, else null.
+function findMatchForRow(homeSp, awaySp) {
+  const homeSet = normalizedFormsForSpanish(homeSp);
+  const awaySet = normalizedFormsForSpanish(awaySp);
+  if (!homeSet || !awaySet) return null;
+  for (const m of state.matches) {
+    const h = normTeamName(m.home);
+    const a = normTeamName(m.away);
+    if (homeSet.has(h) && awaySet.has(a)) return { match: m, swap: false };
+    if (homeSet.has(a) && awaySet.has(h)) return { match: m, swap: true };
+  }
+  return null;
+}
+
+function toIntScore(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = parseInt(String(v).trim(), 10);
+  return Number.isFinite(n) && n >= 0 && n <= 99 ? n : null;
+}
+
+// Walks AoA rows looking for the Excel template's two side-by-side match blocks.
+// Returns an array of { home: <english-ish>, away, hs, as, unrecognized }.
+function extractRowsFromAoA(rows) {
+  const results = [];
+  for (const row of rows) {
+    if (!Array.isArray(row)) continue;
+    for (const offset of [0, 9]) {
+      const num = row[offset];
+      if (!Number.isFinite(typeof num === 'number' ? num : NaN)) continue;
+      const home = row[offset + 3];
+      const hs   = row[offset + 4];
+      const sep  = row[offset + 5];
+      const away = row[offset + 6];
+      const as   = row[offset + 7];
+      if (typeof home !== 'string' || typeof away !== 'string') continue;
+      if (typeof sep === 'string' && !/vs/i.test(sep)) continue;
+      results.push({ home, away, hs, as });
+    }
+  }
+  return results;
+}
+
+// Simple CSV: home,away,home_score,away_score (header optional).
+function extractRowsFromCsv(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const out = [];
+  for (const line of lines) {
+    const cells = parseCsvLine(line);
+    if (cells.length < 4) continue;
+    const [home, away, hs, as] = cells;
+    if (!home || !away) continue;
+    if (/^home$/i.test(home) && /^away$/i.test(away)) continue; // header
+    out.push({ home, away, hs, as });
+  }
+  return out;
+}
+
+function parseCsvLine(line) {
+  const cells = [];
+  let cur = '', inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else cur += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',') { cells.push(cur); cur = ''; }
+    else cur += c;
+  }
+  cells.push(cur);
+  return cells.map(s => s.trim());
+}
+
+let _sheetjsPromise = null;
+function loadSheetJs() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (_sheetjsPromise) return _sheetjsPromise;
+  _sheetjsPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    s.async = true;
+    s.onload = () => resolve(window.XLSX);
+    s.onerror = () => reject(new Error('SheetJS load failed'));
+    document.head.appendChild(s);
+  });
+  return _sheetjsPromise;
+}
+
+async function readFileRows(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name.endsWith('.csv')) {
+    const text = await file.text();
+    return extractRowsFromCsv(text);
+  }
+  // Excel
+  const XLSX = await loadSheetJs();
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: 'array' });
+  let all = [];
+  for (const sheetName of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: null });
+    all = all.concat(extractRowsFromAoA(rows));
+  }
+  return all;
+}
+
+async function handleImportFile(file) {
+  if (!file || !state.uid || !state.leagueId) return;
+  if (arePredictionsLocked()) {
+    showToast(t('predictions.importLocked'));
+    return;
+  }
+
+  let rows;
+  try {
+    rows = await readFileRows(file);
+  } catch (err) {
+    showToast(t('predictions.importParseError', { msg: err.message }));
+    return;
+  }
+
+  if (!rows.length) {
+    showToast(t('predictions.importEmpty'));
+    return;
+  }
+
+  const updates = {};
+  let matched = 0, unknownTeams = 0, missingScores = 0;
+  for (const r of rows) {
+    const found = findMatchForRow(r.home, r.away);
+    if (!found) { unknownTeams++; continue; }
+    let hs = toIntScore(r.hs);
+    let as = toIntScore(r.as);
+    if (hs === null || as === null) { missingScores++; continue; }
+    if (found.swap) { const t1 = hs; hs = as; as = t1; }
+    updates[found.match.id] = { home: hs, away: as };
+    matched++;
+  }
+
+  if (matched === 0) {
+    showToast(t('predictions.importNoMatch'));
+    return;
+  }
+
+  const summary = t('predictions.importConfirm', {
+    matched, skipped: unknownTeams + missingScores,
+  });
+  if (!window.confirm(summary)) return;
+
+  // Push into DOM so existing autosave path persists.
+  for (const [matchId, scores] of Object.entries(updates)) {
+    const hi = document.querySelector(`#view-predictions .score-input[data-match="${matchId}"][data-side="home"]`);
+    const ai = document.querySelector(`#view-predictions .score-input[data-match="${matchId}"][data-side="away"]`);
+    if (hi) hi.value = scores.home;
+    if (ai) ai.value = scores.away;
+  }
+  scheduleAutosave();
+  showToast(t('predictions.importDone', { n: matched }));
 }
 
 function csvEscape(value) {
