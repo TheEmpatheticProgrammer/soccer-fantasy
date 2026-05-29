@@ -1828,16 +1828,25 @@ async function handleImportFile(file) {
   }
 
   const updates = {};
-  let matched = 0, unknownTeams = 0, missingScores = 0;
+  const skipped = { unknownTeams: [], missingScores: [] };
+  let matched = 0;
   for (const r of rows) {
     const found = findMatchForRow(r.home, r.away);
-    if (!found) { unknownTeams++; continue; }
+    if (!found) { skipped.unknownTeams.push(`${r.home} vs ${r.away}`); continue; }
     let hs = toIntScore(r.hs);
     let as = toIntScore(r.as);
-    if (hs === null || as === null) { missingScores++; continue; }
+    if (hs === null || as === null) {
+      skipped.missingScores.push(`${r.home} ${r.hs ?? '∅'} vs ${r.as ?? '∅'} ${r.away}`);
+      continue;
+    }
     if (found.swap) { const t1 = hs; hs = as; as = t1; }
     updates[found.match.id] = { home: hs, away: as };
     matched++;
+  }
+
+  const skippedCount = skipped.unknownTeams.length + skipped.missingScores.length;
+  if (skippedCount) {
+    console.warn('[import] skipped rows:', skipped);
   }
 
   if (matched === 0) {
@@ -1846,7 +1855,7 @@ async function handleImportFile(file) {
   }
 
   const summary = t('predictions.importConfirm', {
-    matched, skipped: unknownTeams + missingScores,
+    matched, skipped: skippedCount,
   });
   if (!window.confirm(summary)) return;
 
