@@ -1591,89 +1591,137 @@ function initLeaderboardDelegation() {
 }
 
 function exportPredictionsCSV() {
-  const players = Object.entries(state.predictionDocs);
-  if (players.length === 0) {
+  exportPredictionsXLSX().catch(err => {
+    console.error('[export] failed:', err);
+    showToast(t('leaderboard.exportError', { msg: err.message }));
+  });
+}
+
+async function exportPredictionsXLSX() {
+  const docsByUid = state.predictionDocs || {};
+  if (!Object.keys(docsByUid).length) {
     showToast(t('leaderboard.exportEmpty'));
     return;
   }
 
-  const playerNames = players.map(([, doc]) => doc.displayName || '(unknown)');
-
-  const playerScoreHeaders = playerNames.flatMap(name => [`${name} (H)`, `${name} (A)`]);
-
-  // Pivot layout — one row per match, one column per team per player, separate home/away cells.
-  const headers = [
-    'Group',
-    'Date (UTC)',
-    'Home',
-    'Away',
-    ...playerScoreHeaders,
-    'Actual H',
-    'Actual A',
-    ...playerNames.map(name => `${name} (pts)`),
-  ];
+  // Order players by leaderboard standings so the export feels familiar.
+  const standings = computeStandings();
+  const players = standings
+    .filter(s => docsByUid[s.uid])
+    .map(s => ({ uid: s.uid, name: s.name, doc: docsByUid[s.uid] }));
+  if (!players.length) {
+    showToast(t('leaderboard.exportEmpty'));
+    return;
+  }
 
   const sortedMatches = [...state.matches].sort((a, b) => {
     if (a.group !== b.group) return a.group.localeCompare(b.group);
     return (a.utcDate || '').localeCompare(b.utcDate || '');
   });
 
-  const lines = [headers.map(csvEscape).join(',')];
+  const XLSX = await loadSheetJs();
+  const wb = XLSX.utils.book_new();
 
-  for (const match of sortedMatches) {
-    const result = state.results[match.id];
-    const actualHome = result ? result.home : '';
-    const actualAway = result ? result.away : '';
+  const PLAYERS_PER_SHEET = 9;
+  const COLS_PER_BLOCK = 4;
+  const FIRST_BLOCK_COL = 6;
 
-    const playerScoreCells = players.flatMap(([, doc]) => {
-      const pred = doc.predictions?.[match.id];
-      return pred
-        ? [pred.home ?? '', pred.away ?? '']
-        : ['', ''];
+  for (let start = 0; start < players.length; start += PLAYERS_PER_SHEET) {
+    const group = players.slice(start, start + PLAYERS_PER_SHEET);
+    const firstNum = start + 1;
+    const lastNum = start + group.length;
+
+    const totalCols = FIRST_BLOCK_COL + group.length * COLS_PER_BLOCK;
+    const blank = () => new Array(totalCols).fill(null);
+
+    // Row 0: title + player numbers
+    const titleRow = blank();
+    titleRow[0] = 'TODOS LOS PRONOSTICOS';
+    group.forEach((_, i) => { titleRow[FIRST_BLOCK_COL + i * COLS_PER_BLOCK] = firstNum + i; });
+
+    // Row 1: player names
+    const nameRow = blank();
+    group.forEach((p, i) => { nameRow[FIRST_BLOCK_COL + i * COLS_PER_BLOCK] = (p.name || '').toUpperCase(); });
+
+    // Row 2: column headers
+    const headerRow = blank();
+    headerRow[0] = 'Juego';
+    headerRow[1] = 'Resultado Oficial';
+    group.forEach((_, i) => {
+      const base = FIRST_BLOCK_COL + i * COLS_PER_BLOCK;
+      headerRow[base] = 'Score';
+      headerRow[base + 2] = 'PTOS.';
     });
 
-    const playerPts = players.map(([, doc]) => {
-      const pred = doc.predictions?.[match.id];
-      if (!pred || !result) return '';
-      return calcPoints(pred, result);
+    const aoa = [titleRow, nameRow, headerRow];
+
+    // Match rows
+    sortedMatches.forEach((match, idx) => {
+      const result = state.results[match.id];
+      const row = blank();
+      row[0] = idx + 1;
+      row[1] = (match.home || '').toUpperCase();
+      row[2] = result ? result.home : null;
+      row[3] = (match.away || '').toUpperCase();
+      row[4] = result ? result.away : null;
+      group.forEach((p, i) => {
+        const base = FIRST_BLOCK_COL + i * COLS_PER_BLOCK;
+        const pred = p.doc.predictions?.[match.id];
+        if (pred) {
+          row[base] = pred.home ?? null;
+          row[base + 1] = pred.away ?? null;
+          if (result) row[base + 2] = calcPoints(pred, result);
+        }
+      });
+      aoa.push(row);
     });
 
-    const row = [
-      match.group,
-      match.utcDate || '',
-      match.home,
-      match.away,
-      ...playerScoreCells,
-      actualHome,
-      actualAway,
-      ...playerPts,
-    ];
-    lines.push(row.map(csvEscape).join(','));
+    // Spacer + totals row
+    aoa.push(blank());
+    const totalsRow = blank();
+    totalsRow[0] = 'TOTAL DE PUNTOS POR APOSTADOR';
+    group.forEach((p, i) => {
+      const preds = p.doc.predictions || {};
+      let total = 0;
+      for (const [matchId, pred] of Object.entries(preds)) {
+        const actual = state.results[matchId];
+        if (actual) total += calcPoints(pred, actual);
+      }
+      totalsRow[FIRST_BLOCK_COL + i * COLS_PER_BLOCK + 2] = total;
+    });
+    aoa.push(totalsRow);
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    // Reasonable column widths
+    ws['!cols'] = new Array(totalCols).fill(null).map((_, c) => {
+      if (c === 0) return { wch: 6 };
+      if (c === 1 || c === 3) return { wch: 16 };
+      if (c === 2 || c === 4) return { wch: 4 };
+      if (c === 5) return { wch: 2 };
+      const inBlock = (c - FIRST_BLOCK_COL) % COLS_PER_BLOCK;
+      if (inBlock === 3) return { wch: 2 };
+      return { wch: 6 };
+    });
+
+    const sheetName = group.length === 1
+      ? `pronosticos ${firstNum}`
+      : `pronosticos ${firstNum} al ${lastNum}`;
+    XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0, 31));
   }
 
-  // Totals row
-  const totals = players.map(([, doc]) => {
-    const preds = doc.predictions || {};
-    let total = 0;
-    for (const [matchId, pred] of Object.entries(preds)) {
-      const actual = state.results[matchId];
-      if (!actual) continue;
-      total += calcPoints(pred, actual);
-    }
-    return total;
-  });
-  const totalRow = [
-    '', '', '', 'TOTAL',
-    ...players.flatMap(() => ['', '']),
-    '', '',
-    ...totals,
-  ];
-  lines.push(totalRow.map(csvEscape).join(','));
-
-  const csv = lines.join('\r\n');
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/octet-stream' });
   const leagueName = (displayLeagueName(state.currentLeague?.name) || 'predictions').replace(/[^\w-]+/g, '_');
   const stamp = new Date().toISOString().slice(0, 10);
-  downloadCSV(csv, `${leagueName}_${stamp}.csv`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${leagueName}_${stamp}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
   showToast(t('leaderboard.exportDone', { n: sortedMatches.length, p: players.length }));
 }
 
