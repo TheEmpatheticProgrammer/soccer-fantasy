@@ -1959,8 +1959,20 @@ async function handleImportFile(file) {
   const user = firebase.auth().currentUser;
   const displayName = user?.displayName || user?.email || state.currentPlayer;
   const email = user?.email || '';
+  // Filter existing predictions to the same shape autosave writes:
+  // only complete {home:int, away:int} entries. Any malformed entry
+  // already in Firestore (e.g. missing a side, or with stray fields)
+  // would otherwise be carried into the write and trip the schema rule.
   const existingPredictions = state.predictionDocs[state.uid]?.predictions || {};
-  const mergedPredictions = { ...existingPredictions };
+  const mergedPredictions = {};
+  for (const [matchId, p] of Object.entries(existingPredictions)) {
+    if (!p || typeof p !== 'object') continue;
+    const h = parseInt(p.home, 10);
+    const a = parseInt(p.away, 10);
+    if (!Number.isInteger(h) || h < 0) continue;
+    if (!Number.isInteger(a) || a < 0) continue;
+    mergedPredictions[matchId] = { home: h, away: a };
+  }
   for (const [matchId, scores] of Object.entries(updates)) {
     mergedPredictions[matchId] = { home: scores.home, away: scores.away };
   }
