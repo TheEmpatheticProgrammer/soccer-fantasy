@@ -190,6 +190,9 @@ const TRANSLATIONS = {
     'predictions.noOthers': 'No other players have joined yet.',
     'predictions.noPredsForMatch': 'No predictions for this match.',
     'predictions.saveFailed': 'Save failed: {msg}',
+    'predictions.saveLocked': 'Predictions are locked — changes not saved.',
+    'predictions.saveLeagueMissing': 'League not loaded yet — please refresh.',
+    'predictions.importSaveFailed': 'Could not save import: {msg}',
 
     'match.yourPick': 'Your pick',
     'match.actual': 'Actual',
@@ -411,6 +414,9 @@ const TRANSLATIONS = {
     'predictions.noOthers': 'Ningún otro jugador se ha unido aún.',
     'predictions.noPredsForMatch': 'Sin pronósticos para este partido.',
     'predictions.saveFailed': 'Error al guardar: {msg}',
+    'predictions.saveLocked': 'Los pronósticos están bloqueados — cambios no guardados.',
+    'predictions.saveLeagueMissing': 'La liga aún no carga — por favor recarga la página.',
+    'predictions.importSaveFailed': 'No se pudo guardar la importación: {msg}',
 
     'match.yourPick': 'Tu pronóstico',
     'match.actual': 'Resultado',

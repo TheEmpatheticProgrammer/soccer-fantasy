@@ -772,8 +772,29 @@ function scheduleAutosave() {
   autosaveTimer = setTimeout(runAutosave, 600);
 }
 
+let autosaveRetries = 0;
+const AUTOSAVE_MAX_RETRIES = 10;
+
 async function runAutosave() {
-  if (!state.uid || !state.leagueId || arePredictionsLocked() || isSaving) return;
+  if (!state.uid || !state.leagueId || isSaving) return;
+
+  // League doc still loading after sign-in — retry briefly before giving up
+  // so users typing immediately after sign-in don't lose their input.
+  if (!state.currentLeague) {
+    if (autosaveRetries++ < AUTOSAVE_MAX_RETRIES) {
+      autosaveTimer = setTimeout(runAutosave, 500);
+      return;
+    }
+    autosaveRetries = 0;
+    setAutosaveStatus('error', t('predictions.saveLeagueMissing'));
+    return;
+  }
+  autosaveRetries = 0;
+
+  if (arePredictionsLocked()) {
+    setAutosaveStatus('error', t('predictions.saveLocked'));
+    return;
+  }
 
   const preds = {};
   document.querySelectorAll('#view-predictions .score-input').forEach(input => {
@@ -788,6 +809,16 @@ async function runAutosave() {
   const cleaned = Object.fromEntries(
     Object.entries(preds).filter(([, p]) => p.home !== undefined && p.away !== undefined)
   );
+
+  // Defensive: if the matches DOM hasn't rendered yet, cleaned will be empty.
+  // A full overwrite would wipe the user's saved predictions — bail instead.
+  const expectedInputs = (state.matches?.length || 0) * 2;
+  const actualInputs = document.querySelectorAll('#view-predictions .score-input').length;
+  if (expectedInputs > 0 && actualInputs < expectedInputs) {
+    console.warn('[autosave] DOM not fully rendered, skipping to avoid wiping data',
+      { expected: expectedInputs, actual: actualInputs });
+    return;
+  }
 
   const user = firebase.auth().currentUser;
   const displayName = user?.displayName || user?.email || state.currentPlayer;
@@ -804,6 +835,7 @@ async function runAutosave() {
     });
     setAutosaveStatus('saved');
   } catch (err) {
+    console.error('[autosave] save failed:', err);
     setAutosaveStatus('error', err.message);
   } finally {
     isSaving = false;
@@ -1907,14 +1939,38 @@ async function handleImportFile(file) {
   });
   if (!window.confirm(summary)) return;
 
-  // Push into DOM so existing autosave path persists.
+  // Source of truth: write directly to Firestore via merge so we don't
+  // race with the DOM autosave path (which can silently drop saves if the
+  // lock check flips, league doc isn't loaded, or DOM isn't fully rendered).
+  const user = firebase.auth().currentUser;
+  const displayName = user?.displayName || user?.email || state.currentPlayer;
+  const email = user?.email || '';
+  const predictionsPayload = {};
+  for (const [matchId, scores] of Object.entries(updates)) {
+    predictionsPayload[matchId] = { home: scores.home, away: scores.away };
+  }
+
+  try {
+    await leaguePredictionsCol(state.leagueId).doc(state.uid).set({
+      displayName,
+      email,
+      predictions: predictionsPayload,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.error('[import] save failed:', err);
+    showToast(t('predictions.importSaveFailed', { msg: err.message }));
+    return;
+  }
+
+  // Update DOM for instant visual feedback. The next render's
+  // captureCurrentInputDraft/restoreInputDraft cycle will preserve these.
   for (const [matchId, scores] of Object.entries(updates)) {
     const hi = document.querySelector(`#view-predictions .score-input[data-match="${matchId}"][data-side="home"]`);
     const ai = document.querySelector(`#view-predictions .score-input[data-match="${matchId}"][data-side="away"]`);
     if (hi) hi.value = scores.home;
     if (ai) ai.value = scores.away;
   }
-  scheduleAutosave();
   showToast(t('predictions.importDone', { n: matched }));
 }
 
