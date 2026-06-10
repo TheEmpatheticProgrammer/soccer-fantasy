@@ -643,11 +643,35 @@ function applyStaticTranslations() {
   document.title = t('app.title');
 }
 
+// Tracks the value each score-input held the last time renderPredictions
+// rendered it directly from state. Used by captureCurrentInputDraft to tell
+// "the user typed this" apart from "this is just stale DOM left over from a
+// previous state render". Without this distinction, a re-render (e.g. caused
+// by the Firestore snapshot firing after an import) would capture the stale
+// pre-import DOM values and restore them on top of the freshly rendered
+// imported values — flashing the new values then reverting to the old ones.
+const _lastStateRender = new Map();
+
+function snapshotStateRender() {
+  _lastStateRender.clear();
+  document.querySelectorAll('#view-predictions .score-input').forEach(input => {
+    const key = `${input.dataset.match}_${input.dataset.side}`;
+    _lastStateRender.set(key, input.value);
+  });
+}
+
+function clearStateRenderSnapshot() {
+  _lastStateRender.clear();
+}
+
 function captureCurrentInputDraft() {
   const draft = {};
   document.querySelectorAll('#view-predictions .score-input').forEach(input => {
-    if (input.value !== '') {
-      const key = `${input.dataset.match}_${input.dataset.side}`;
+    const key = `${input.dataset.match}_${input.dataset.side}`;
+    // No baseline yet (first render after view mount) — nothing to preserve.
+    if (!_lastStateRender.has(key)) return;
+    // Only preserve values the user actually changed since the last state render.
+    if (input.value !== _lastStateRender.get(key)) {
       draft[key] = input.value;
     }
   });

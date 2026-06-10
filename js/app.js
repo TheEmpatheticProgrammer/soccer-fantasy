@@ -1110,6 +1110,7 @@ function renderPredictions() {
       </details>`;
   }).join('');
 
+  snapshotStateRender();
   restoreInputDraft(draft);
   if (focusInfo) {
     const sel = `.score-input[data-match="${focusInfo.match}"][data-side="${focusInfo.side}"]`;
