@@ -1950,24 +1950,28 @@ async function handleImportFile(file) {
   });
   if (!window.confirm(summary)) return;
 
-  // Source of truth: write directly to Firestore via merge so we don't
-  // race with the DOM autosave path (which can silently drop saves if the
-  // lock check flips, league doc isn't loaded, or DOM isn't fully rendered).
+  // Merge in-app against the cached predictions, then full overwrite. Using
+  // Firestore's { merge: true } evaluates rules against the merged document,
+  // which still includes joinedAt (set by joinLeague) for users who haven't
+  // yet had it stripped by an autosave overwrite — Firestore's schema rule
+  // rejects that with "insufficient permissions". A full overwrite matches
+  // the autosave shape that rules already accept.
   const user = firebase.auth().currentUser;
   const displayName = user?.displayName || user?.email || state.currentPlayer;
   const email = user?.email || '';
-  const predictionsPayload = {};
+  const existingPredictions = state.predictionDocs[state.uid]?.predictions || {};
+  const mergedPredictions = { ...existingPredictions };
   for (const [matchId, scores] of Object.entries(updates)) {
-    predictionsPayload[matchId] = { home: scores.home, away: scores.away };
+    mergedPredictions[matchId] = { home: scores.home, away: scores.away };
   }
 
   try {
     await leaguePredictionsCol(state.leagueId).doc(state.uid).set({
       displayName,
       email,
-      predictions: predictionsPayload,
+      predictions: mergedPredictions,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
+    });
   } catch (err) {
     console.error('[import] save failed:', err);
     showToast(t('predictions.importSaveFailed', { msg: err.message }));
