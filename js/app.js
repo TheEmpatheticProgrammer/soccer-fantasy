@@ -454,14 +454,20 @@ function startCountdownInterval() {
 
 function renderKickoffHero() {
   const targets = [
-    { d: 'kickoff-days', h: 'kickoff-hours', m: 'kickoff-mins', wrap: 'kickoff-hero' },
-    { d: 'auth-kickoff-days', h: 'auth-kickoff-hours', m: 'auth-kickoff-mins', wrap: null },
+    { d: 'kickoff-days', h: 'kickoff-hours', m: 'kickoff-mins', wrap: 'kickoff-hero', lockNote: 'kickoff-lock-note', lockCountdown: 'kickoff-lock-countdown' },
+    { d: 'auth-kickoff-days', h: 'auth-kickoff-hours', m: 'auth-kickoff-mins', wrap: null, lockNote: 'auth-lock-note', lockCountdown: 'auth-lock-countdown' },
   ];
   const diff = WORLD_CUP_START.getTime() - Date.now();
   const live = diff <= 0;
   const days  = live ? 0 : Math.floor(diff / 86400000);
   const hours = live ? 0 : Math.floor((diff % 86400000) / 3600000);
   const mins  = live ? 0 : Math.floor((diff % 3600000) / 60000);
+
+  const lockDiff = PREDICTIONS_LOCK_DATE.getTime() - Date.now();
+  const lockOpen = lockDiff > 0;
+  const lockHours = lockOpen ? Math.floor(lockDiff / 3600000) : 0;
+  const lockMins  = lockOpen ? Math.floor((lockDiff % 3600000) / 60000) : 0;
+  const lockText = `${String(lockHours).padStart(2, '0')}h ${String(lockMins).padStart(2, '0')}m`;
 
   for (const ids of targets) {
     const dEl = document.getElementById(ids.d);
@@ -478,6 +484,10 @@ function renderKickoffHero() {
         wrap.classList.toggle('is-live', live);
       }
     }
+    const noteEl = ids.lockNote ? document.getElementById(ids.lockNote) : null;
+    const lockCountdownEl = ids.lockCountdown ? document.getElementById(ids.lockCountdown) : null;
+    if (noteEl) noteEl.classList.toggle('hidden', !lockOpen);
+    if (lockCountdownEl) lockCountdownEl.textContent = lockText;
   }
 }
 

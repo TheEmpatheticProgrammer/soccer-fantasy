@@ -771,6 +771,29 @@ body {
   color: var(--accent);
   letter-spacing: 0.3px;
 }
+.kickoff-lock-note {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(245, 201, 58, 0.12);
+  border: 1px solid rgba(245, 201, 58, 0.35);
+  font-size: 0.78rem;
+  color: var(--text);
+}
+.kickoff-lock-note.hidden { display: none; }
+.lock-note-label {
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+.lock-note-time {
+  font-weight: 700;
+  color: #f5c93a;
+  font-variant-numeric: tabular-nums;
+}
 .auth-hero {
   background: linear-gradient(135deg, rgba(0,217,119,0.08), rgba(245,201,58,0.05));
   border: 1px solid var(--border);
