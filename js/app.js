@@ -165,6 +165,7 @@ const state = {
   matches: [...ALL_MATCHES],
   crests: {},
   apiKey: '',
+  view: null,
 };
 
 function teamLabel(name, flagPos = 'left') {
@@ -225,6 +226,8 @@ function init() {
   renderLeaderboard();
   startCountdownInterval();
   renderKickoffHero();
+
+  document.addEventListener('visibilitychange', maybeAdjustLivePolling);
 
   firebase.auth().onAuthStateChanged(user => {
     if (user) onSignedIn(user);
@@ -510,6 +513,7 @@ function onSignedOut() {
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('settings-panel').classList.add('hidden');
   updateCurrentLeagueBadge();
+  maybeAdjustLivePolling();
 }
 
 function renderProfile() {
@@ -885,14 +889,14 @@ function setAutosaveStatus(stateName, errMsg) {
   }
 }
 
-async function loadFromApi(force = false) {
+async function loadFromApi(force = false, maxAgeMs) {
   if (!hasApiAccess()) { showApiStatus('settings.noKey', 'warn'); return; }
 
   setRefreshing(true);
   showApiStatus('settings.loading', 'info');
 
   try {
-    const data = await loadWorldCupData(state.apiKey, force);
+    const data = await loadWorldCupData(state.apiKey, force, maxAgeMs);
 
     state.groups  = data.groups;
     state.matches = data.matches;
@@ -925,10 +929,38 @@ async function loadFromApi(force = false) {
     renderPredictions();
     renderEveryone();
 
+    maybeAdjustLivePolling();
+
   } catch (err) {
     showApiStatus('settings.error', 'error', { msg: err.message });
   } finally {
     setRefreshing(false);
+  }
+}
+
+// Poll the football-data API every LIVE_POLL_MS while a match is in-play
+// AND the user is looking at predictions/leaderboard AND the tab is visible.
+// Each poll uses a shorter cache TTL so cached data isn't reused past 60s,
+// but still bounds calls (one network hit per minute per client at most).
+const LIVE_POLL_MS = 60 * 1000;
+const LIVE_CACHE_MAX_AGE_MS = 55 * 1000;
+let livePollTimer = null;
+
+function isAnyMatchInPlay() {
+  return state.matches?.some(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
+}
+
+function maybeAdjustLivePolling() {
+  const viewActive = state.view === 'predictions' || state.view === 'leaderboard';
+  const visible = document.visibilityState === 'visible';
+  const shouldPoll = isAnyMatchInPlay() && viewActive && visible && hasApiAccess();
+  if (shouldPoll && !livePollTimer) {
+    livePollTimer = setInterval(() => {
+      loadFromApi(false, LIVE_CACHE_MAX_AGE_MS).catch(() => { /* surfaced via api-status */ });
+    }, LIVE_POLL_MS);
+  } else if (!shouldPoll && livePollTimer) {
+    clearInterval(livePollTimer);
+    livePollTimer = null;
   }
 }
 
@@ -980,6 +1012,7 @@ function switchView(view) {
   if ((view === 'predictions' || view === 'leaderboard') && !state.leagueId) {
     view = 'leagues';
   }
+  state.view = view;
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
@@ -999,6 +1032,8 @@ function switchView(view) {
     const cacheFresh = lastTs && (Date.now() - lastTs < ApiCache.ttl);
     if (!cacheFresh) loadFromApi(false).catch(() => { /* errors surface via api-status pill */ });
   }
+
+  maybeAdjustLivePolling();
 }
 
 function switchSubview(name) {

@@ -4,15 +4,16 @@ const isUsingProxy = () => !!window.LOCAL_CONFIG?.apiBaseUrl;
 
 const ApiCache = {
   key: 'wc2026_api_cache_v3',
-  ttl: 5 * 60 * 1000, // 5 minutes
+  ttl: 5 * 60 * 1000, // 5 minutes (default; callers can pass a shorter maxAge for live windows)
 
   set(data) {
     localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data }));
   },
-  get() {
+  get(maxAgeMs) {
     try {
       const item = JSON.parse(localStorage.getItem(this.key));
-      if (!item || Date.now() - item.ts > this.ttl) return null;
+      const limit = typeof maxAgeMs === 'number' ? maxAgeMs : this.ttl;
+      if (!item || Date.now() - item.ts > limit) return null;
       return item.data;
     } catch { return null; }
   },
@@ -22,9 +23,9 @@ const ApiCache = {
   clear() { localStorage.removeItem(this.key); },
 };
 
-async function loadWorldCupData(apiKey, force = false) {
+async function loadWorldCupData(apiKey, force = false, maxAgeMs) {
   if (!force) {
-    const cached = ApiCache.get();
+    const cached = ApiCache.get(maxAgeMs);
     if (cached) return cached;
   }
 
@@ -75,7 +76,9 @@ function parseWorldCupResponse(json) {
       matchday: m.matchday,
       status: m.status,
       venue: m.venue || null,
-      result: m.status === 'FINISHED' && m.score?.fullTime?.home != null
+      // Capture scores any time football-data reports them, including
+      // IN_PLAY and PAUSED (half-time) — UI uses `status` to badge LIVE/HT/FT.
+      result: m.score?.fullTime?.home != null
         ? { home: m.score.fullTime.home, away: m.score.fullTime.away }
         : null,
     });
