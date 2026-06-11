@@ -1,4 +1,15 @@
-const WORLD_CUP_START = new Date('2026-06-11T16:00:00-06:00');
+const WORLD_CUP_START_FALLBACK = new Date('2026-06-11T16:00:00-06:00');
+// Derive the opener kickoff from loaded match data when available so the
+// countdown banner reflects reality even if the hardcoded constant drifts.
+function getWorldCupStart() {
+  const earliest = state.matches?.reduce((min, m) => {
+    const t = new Date(m.utcDate).getTime();
+    return Number.isFinite(t) && (min === null || t < min) ? t : min;
+  }, null);
+  return earliest !== null && earliest !== undefined
+    ? new Date(earliest)
+    : WORLD_CUP_START_FALLBACK;
+}
 // Predictions are hard-locked — set to epoch so arePredictionsLocked()
 // is always true and the UI never shows a "locks in" countdown.
 const PREDICTIONS_LOCK_DATE = new Date(0);
@@ -456,7 +467,7 @@ function renderKickoffHero() {
     { d: 'kickoff-days', h: 'kickoff-hours', m: 'kickoff-mins', wrap: 'kickoff-hero', lockNote: 'kickoff-lock-note', lockCountdown: 'kickoff-lock-countdown' },
     { d: 'auth-kickoff-days', h: 'auth-kickoff-hours', m: 'auth-kickoff-mins', wrap: null, lockNote: 'auth-lock-note', lockCountdown: 'auth-lock-countdown' },
   ];
-  const diff = WORLD_CUP_START.getTime() - Date.now();
+  const diff = getWorldCupStart().getTime() - Date.now();
   const live = diff <= 0;
   const days  = live ? 0 : Math.floor(diff / 86400000);
   const hours = live ? 0 : Math.floor((diff % 86400000) / 3600000);
