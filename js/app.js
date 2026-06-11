@@ -1,5 +1,7 @@
-const PREDICTIONS_LOCK_DATE = new Date('2026-06-10T23:59:00');
 const WORLD_CUP_START = new Date('2026-06-11T16:00:00-06:00');
+// Lock predictions 1 hour before the opener kicks off (single instant,
+// renders in each user's local time via the Date object).
+const PREDICTIONS_LOCK_DATE = new Date(WORLD_CUP_START.getTime() - 60 * 60 * 1000);
 const arePredictionsLocked = () => {
   if (state.currentLeague?.unlocked === true) return false;
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
