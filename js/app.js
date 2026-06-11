@@ -57,15 +57,41 @@ const SPANISH_TEAM_TO_ENGLISH = {
 const TEAM_ALIASES = [
   ['Czech Republic', 'Czechia'],
   ['Turkey', 'Türkiye', 'Turkiye'],
-  ['Korea Republic', 'South Korea', 'Republic of Korea'],
+  ['Korea Republic', 'South Korea', 'Republic of Korea', 'Korea'],
+  ['Korea DPR', 'North Korea', 'DPR Korea'],
   ['Iran', 'Islamic Republic of Iran', 'IR Iran'],
   ['Cape Verde', 'Cabo Verde', 'Cape Verde Islands'],
-  ['Ivory Coast', "Côte d'Ivoire", 'Cote d Ivoire'],
-  ['Bosnia and Herzegovina', 'Bosnia-Herzegovina', 'Bosnia'],
+  ['Ivory Coast', "Côte d'Ivoire", 'Cote d Ivoire', "Cote d'Ivoire"],
+  ['Bosnia and Herzegovina', 'Bosnia-Herzegovina', 'Bosnia', 'Bosnia & Herzegovina'],
   ['Curaçao', 'Curacao'],
-  ['DR Congo', 'Democratic Republic of the Congo', 'Congo DR', 'Congo'],
-  ['United States', 'USA', 'United States of America'],
+  ['DR Congo', 'Democratic Republic of the Congo', 'Congo DR', 'Congo', 'Congo-Kinshasa'],
+  ['United States', 'USA', 'United States of America', 'US', 'U.S.A.'],
   ['Saudi Arabia', 'KSA'],
+  ['Netherlands', 'Holland', 'The Netherlands'],
+  ['Russia', 'Russian Federation'],
+  ['China PR', 'China', 'PR China'],
+  ['North Macedonia', 'Macedonia', 'FYR Macedonia', 'Republic of North Macedonia'],
+  ['Guinea-Bissau', 'Guinea Bissau'],
+  ['Trinidad and Tobago', 'Trinidad & Tobago', 'Trinidad'],
+  ['Antigua and Barbuda', 'Antigua & Barbuda'],
+  ['Saint Kitts and Nevis', 'St. Kitts and Nevis', 'St Kitts and Nevis'],
+  ['Saint Lucia', 'St. Lucia', 'St Lucia'],
+  ['Saint Vincent and the Grenadines', 'St. Vincent and the Grenadines', 'St Vincent and the Grenadines'],
+  ['São Tomé and Príncipe', 'Sao Tome and Principe', 'Sao Tome & Principe'],
+  ['Equatorial Guinea', 'Eq. Guinea'],
+  ['Central African Republic', 'CAR'],
+  ['United Arab Emirates', 'UAE'],
+  ['Republic of Ireland', 'Ireland', 'Eire'],
+  ['Northern Ireland', 'N. Ireland'],
+  ['New Zealand', 'NZ'],
+  ['Saint Martin', 'Sint Maarten'],
+  ['East Timor', 'Timor-Leste', 'Timor Leste'],
+  ['Vietnam', 'Viet Nam'],
+  ['Brunei', 'Brunei Darussalam'],
+  ['Hong Kong', 'Hong Kong, China'],
+  ['Chinese Taipei', 'Taiwan'],
+  ['Eswatini', 'Swaziland'],
+  ['Myanmar', 'Burma'],
 ];
 
 const DEFAULT_LEAGUE_NAME = 'Polla World Cup 2026';
@@ -987,6 +1013,14 @@ async function pollLiveScores() {
   for (const ev of live) {
     const match = findMatchByLiveTeams(ev.home, ev.away);
     if (!match) { console.warn('[live] no match for', ev.home, 'vs', ev.away); continue; }
+    // Defensive: only apply if the matched fixture's scheduled window
+    // includes 'now'. Guards against ESPN returning a different competition
+    // (e.g. friendly with the same teams) that maps onto a future WC fixture.
+    const start = new Date(match.utcDate).getTime();
+    if (!Number.isFinite(start) || Date.now() < start - 10 * 60 * 1000 || Date.now() > start + LIVE_WINDOW_MS) {
+      console.warn('[live] ignoring out-of-window event for', match.home, 'vs', match.away);
+      continue;
+    }
     const matchHomeKeys = new Set(expandTeamAliases(match.home).map(normTeamName));
     const swap = !matchHomeKeys.has(normTeamName(ev.home));
     const home = swap ? ev.awayScore : ev.homeScore;
