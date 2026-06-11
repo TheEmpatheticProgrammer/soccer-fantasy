@@ -197,6 +197,7 @@ const state = {
   publicLeagues: [],
   predictionDocs: {},
   results: {},
+  matchStatus: {},
   groups:  { ...GROUPS },
   matches: [...ALL_MATCHES],
   crests: {},
@@ -1030,6 +1031,10 @@ async function pollLiveScores() {
       state.results[match.id] = { home, away };
       changed = true;
     }
+    if (state.matchStatus[match.id] !== ev.state) {
+      state.matchStatus[match.id] = ev.state;
+      changed = true;
+    }
   }
   if (changed) {
     state.resultsVersion = (state.resultsVersion || 0) + 1;
@@ -1263,6 +1268,14 @@ function refreshSaveStatus() {
     : '';
 }
 
+function matchLiveState(match) {
+  const live = state.matchStatus[match.id];
+  if (live === 'in') return 'live';
+  if (live === 'post' || match.status === 'FINISHED') return 'ft';
+  if (match.status === 'IN_PLAY' || match.status === 'PAUSED') return 'live';
+  return null;
+}
+
 function matchCard(match, pred = {}, result) {
   const hasPred = pred.home !== undefined && pred.away !== undefined;
   const pts = (result && hasPred) ? calcPoints(pred, result) : null;
@@ -1277,15 +1290,21 @@ function matchCard(match, pred = {}, result) {
                  : pts === 0 ? 'predict-row pts-miss'
                  : 'predict-row';
 
+  const liveState = matchLiveState(match);
+  const statusLabel = liveState === 'live' ? t('match.live')
+                    : liveState === 'ft'   ? t('match.ft')
+                    : t('match.actual');
+  const liveClass = liveState === 'live' ? ' status-live' : '';
+
   const statusIcon = result === undefined || result === null
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
     : pts === 3
-      ? `<span class="actual-status status-label status-exact">${t('match.actual')}</span>`
+      ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
       : pts === 1
-        ? `<span class="actual-status status-label status-partial">${t('match.actual')}</span>`
+        ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
         : pts === 0
-          ? `<span class="actual-status status-label status-miss">${t('match.actual')}</span>`
-          : `<span class="actual-status status-label status-neutral">${t('match.actual')}</span>`;
+          ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
+          : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
 
   const actualNumsHtml = result
     ? `<span class="actual-num">${result.home}</span>
@@ -1396,11 +1415,12 @@ function captureOpenGroups(containerId) {
 
 function everyoneMatchBlock(match, participants) {
   const result = state.results[match.id];
+  const liveState = matchLiveState(match);
 
   const headerRight = result
-    ? `<span class="everyone-ft-pill"><span class="ft-label">FT</span> <span class="ft-score">${result.home}<span class="ft-dash">−</span>${result.away}</span></span>`
-    : (match.status === 'IN_PLAY' || match.status === 'PAUSED'
-        ? `<span class="match-status status-${match.status.toLowerCase()}">${formatStatus(match.status)}</span>`
+    ? `<span class="everyone-ft-pill${liveState === 'live' ? ' is-live' : ''}"><span class="ft-label">${liveState === 'live' ? t('match.live') : t('match.ft')}</span> <span class="ft-score">${result.home}<span class="ft-dash">−</span>${result.away}</span></span>`
+    : (liveState === 'live'
+        ? `<span class="match-status status-in_play">${t('match.live')}</span>`
         : '');
 
   const rows = participants.map(([uid, doc]) => {

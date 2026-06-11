@@ -204,6 +204,8 @@ const TRANSLATIONS = {
     'match.ptShort': 'PT',
     'match.you': 'YOU',
     'match.tbd': 'TBD',
+    'match.live': 'LIVE',
+    'match.ft': 'FT',
 
     'leaderboard.adminToggle': 'Admin: Enter Match Results',
     'leaderboard.adminNote': 'Results from the API are filled in automatically. Use this to override or enter scores manually.',
@@ -429,6 +431,8 @@ const TRANSLATIONS = {
     'match.ptShort': 'PT',
     'match.you': 'TÚ',
     'match.tbd': 'TBD',
+    'match.live': 'EN VIVO',
+    'match.ft': 'FIN',
 
     'leaderboard.adminToggle': 'Admin: Ingresar Resultados',
     'leaderboard.adminNote': 'Los resultados de la API se llenan automáticamente. Úsalo para sobrescribir o ingresar resultados manualmente.',

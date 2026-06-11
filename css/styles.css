@@ -2117,6 +2117,19 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   font-weight: 800;
   color: var(--text);
 }
+.everyone-ft-pill.is-live {
+  border-color: rgba(255, 90, 79, 0.55);
+  background: rgba(255, 90, 79, 0.12);
+}
+.everyone-ft-pill.is-live .ft-label {
+  color: var(--error);
+  animation: pulse 1.5s infinite;
+}
+.actual-status.status-live {
+  background: rgba(255, 90, 79, 0.18);
+  color: var(--error);
+  animation: pulse 1.5s infinite;
+}
 .ft-dash {
   margin: 0 0.15rem;
   color: var(--muted);

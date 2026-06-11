@@ -107,11 +107,11 @@ async function loadLiveScores() {
   for (const ev of events) {
     const comp = ev.competitions?.[0];
     if (!comp) continue;
-    // Skip events that aren't actually in progress — ESPN returns the whole
-    // day's scoreboard with score "0" on pre-match fixtures, which would
-    // otherwise overwrite our state.results with bogus 0-0s.
+    // Skip pre-match fixtures (score is '0' before kickoff). Accept both
+    // 'in' (live) and 'post' (full time) so the final score also propagates
+    // when a match wraps up.
     const state = comp.status?.type?.state;
-    if (state !== 'in') continue;
+    if (state !== 'in' && state !== 'post') continue;
     const home = comp.competitors?.find(c => c.homeAway === 'home');
     const away = comp.competitors?.find(c => c.homeAway === 'away');
     if (!home || !away) continue;
@@ -123,6 +123,7 @@ async function loadLiveScores() {
       away: away.team?.displayName || away.team?.name || '',
       homeScore: hs,
       awayScore: as,
+      state, // 'in' | 'post'
       status: comp.status?.type?.description || state,
     });
   }
