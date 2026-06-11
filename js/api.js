@@ -91,21 +91,35 @@ function parseWorldCupResponse(json) {
   };
 }
 
-// TheSportsDB livescore endpoint — free, no key required, no CORS issues.
-// The v1 livescore endpoint takes a sport (?s=Soccer), not a league ID, and
-// returns every live soccer match worldwide. We filter to WC events
-// (idLeague 4429) client-side. json.events is null when nothing's live.
-async function loadLiveScoresFromSportsDb() {
-  const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/livescore.php?s=Soccer',
-    { cache: 'no-store' });
-  if (!res.ok) throw new Error(`SportsDB HTTP ${res.status}`);
+// ESPN's public scoreboard for the FIFA World Cup — undocumented but free,
+// no auth, no rate limit, updates in near real time. Returns today's events
+// by default; `events[].competitions[].competitors` carries the live score
+// and `status.type.state` ('pre' | 'in' | 'post') tells us if it's live.
+async function loadLiveScores() {
+  const res = await fetch(
+    'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard',
+    { cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
   const json = await res.json();
-  const events = (json?.events || []).filter(e => String(e.idLeague) === '4429');
-  return events.map(e => ({
-    home: e.strHomeTeam,
-    away: e.strAwayTeam,
-    homeScore: parseInt(e.intHomeScore, 10),
-    awayScore: parseInt(e.intAwayScore, 10),
-    status: e.strStatus || e.strProgress || '',
-  })).filter(e => Number.isInteger(e.homeScore) && Number.isInteger(e.awayScore));
+  const events = json?.events || [];
+  const out = [];
+  for (const ev of events) {
+    const comp = ev.competitions?.[0];
+    if (!comp) continue;
+    const home = comp.competitors?.find(c => c.homeAway === 'home');
+    const away = comp.competitors?.find(c => c.homeAway === 'away');
+    if (!home || !away) continue;
+    const hs = parseInt(home.score, 10);
+    const as = parseInt(away.score, 10);
+    if (!Number.isInteger(hs) || !Number.isInteger(as)) continue;
+    out.push({
+      home: home.team?.displayName || home.team?.name || '',
+      away: away.team?.displayName || away.team?.name || '',
+      homeScore: hs,
+      awayScore: as,
+      status: comp.status?.type?.description || comp.status?.type?.state || '',
+    });
+  }
+  return out;
 }

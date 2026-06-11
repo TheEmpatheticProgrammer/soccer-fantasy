@@ -943,11 +943,11 @@ async function loadFromApi(force = false, maxAgeMs) {
   }
 }
 
-// Poll TheSportsDB's livescore endpoint every LIVE_POLL_MS while any match
-// is currently in its live window AND the user is on predictions/leaderboard
-// AND the tab is visible. football-data's free tier doesn't flip IN_PLAY
-// reliably, so we gate on the match's scheduled time instead and read live
-// scores from TheSportsDB. football-data still owns schedule + final scores.
+// Poll ESPN's public WC scoreboard every LIVE_POLL_MS while any match is in
+// its live window AND the user is on predictions/leaderboard AND the tab is
+// visible. football-data's free tier doesn't flip IN_PLAY reliably, so we
+// gate on the match's scheduled time and pull live scores from ESPN.
+// football-data still owns schedule + final scores.
 const LIVE_POLL_MS = 60 * 1000;
 const LIVE_WINDOW_MS = 3 * 60 * 60 * 1000; // ~3h after kickoff covers extra time + delays
 let livePollTimer = null;
@@ -977,9 +977,9 @@ function findMatchByLiveTeams(home, away) {
 async function pollLiveScores() {
   let live;
   try {
-    live = await loadLiveScoresFromSportsDb();
+    live = await loadLiveScores();
   } catch (err) {
-    console.warn('[live] SportsDB fetch failed:', err.message);
+    console.warn('[live] ESPN fetch failed:', err.message);
     return;
   }
   if (!live.length) return;
