@@ -92,15 +92,15 @@ function parseWorldCupResponse(json) {
 }
 
 // TheSportsDB livescore endpoint — free, no key required, no CORS issues.
-// League 4429 = FIFA World Cup. Returns events currently in play (json.events
-// is null when nothing is live). We pull just the fields needed to update
-// state.results; the football-data pipeline still owns schedule + finals.
+// The v1 livescore endpoint takes a sport (?s=Soccer), not a league ID, and
+// returns every live soccer match worldwide. We filter to WC events
+// (idLeague 4429) client-side. json.events is null when nothing's live.
 async function loadLiveScoresFromSportsDb() {
-  const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/livescore.php?l=4429',
+  const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/livescore.php?s=Soccer',
     { cache: 'no-store' });
   if (!res.ok) throw new Error(`SportsDB HTTP ${res.status}`);
   const json = await res.json();
-  const events = json?.events || [];
+  const events = (json?.events || []).filter(e => String(e.idLeague) === '4429');
   return events.map(e => ({
     home: e.strHomeTeam,
     away: e.strAwayTeam,
