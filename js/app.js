@@ -3,7 +3,6 @@ const WORLD_CUP_START = new Date('2026-06-11T16:00:00-06:00');
 // renders in each user's local time via the Date object).
 const PREDICTIONS_LOCK_DATE = new Date(WORLD_CUP_START.getTime() - 60 * 60 * 1000);
 const arePredictionsLocked = () => {
-  if (state.currentLeague?.unlocked === true) return false;
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
 };
 
@@ -430,18 +429,13 @@ function renderHeaderStats() {
   }
 
   let label, kind;
-  if (state.currentLeague.unlocked === true) {
-    countdownEl.classList.add('hidden');
-    return;
+  const remaining = formatCountdown(PREDICTIONS_LOCK_DATE.getTime());
+  if (!remaining) {
+    label = t('header.tournamentLive');
+    kind = 'live';
   } else {
-    const remaining = formatCountdown(PREDICTIONS_LOCK_DATE.getTime());
-    if (!remaining) {
-      label = t('header.tournamentLive');
-      kind = 'live';
-    } else {
-      label = t('header.locksIn', { time: remaining });
-      kind = 'pending';
-    }
+    label = t('header.locksIn', { time: remaining });
+    kind = 'pending';
   }
   countdownEl.textContent = label;
   countdownEl.dataset.kind = kind;
@@ -1471,7 +1465,6 @@ function renderLeaderboard() {
   const standings = computeStandings();
 
   const ownerCanRemove = isLeagueOwner() || isAdmin();
-  const isUnlocked = state.currentLeague?.unlocked === true;
   const adminOnly = isAdmin();
 
   const memberUids = state.currentLeague?.memberUids || [];
@@ -1519,17 +1512,6 @@ function renderLeaderboard() {
 
   const ownerToolsHtml = ownerCanRemove ? `
     <div class="league-owner-tools">
-      <div class="owner-tool-card">
-        <div class="owner-tool-text">
-          <div class="owner-tool-title">${t('leaderboard.lockToggleTitle')}</div>
-          <div class="owner-tool-hint">${t('leaderboard.lockToggleHint')}</div>
-        </div>
-        <button id="btn-toggle-lock" class="lock-toggle-btn ${isUnlocked ? 'is-unlocked' : ''}"
-                aria-pressed="${isUnlocked}">
-          <span class="lock-toggle-icon" aria-hidden="true">${isUnlocked ? '🔓' : '🔒'}</span>
-          <span class="lock-toggle-label">${isUnlocked ? t('leaderboard.unlocked') : t('leaderboard.locked')}</span>
-        </button>
-      </div>
       <div class="owner-tool-card">
         <div class="owner-tool-text">
           <div class="owner-tool-title">${t('leaderboard.exportTitle')}</div>
@@ -1628,21 +1610,6 @@ function initLeaderboardDelegation() {
         showToast(t('leaderboard.removed', { name }));
       } catch (err) {
         showToast(err.message);
-      }
-      return;
-    }
-
-    const lockBtn = e.target.closest('#btn-toggle-lock');
-    if (lockBtn) {
-      if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
-      const next = !(state.currentLeague?.unlocked === true);
-      lockBtn.disabled = true;
-      try {
-        await leagueDocRef(state.leagueId).update({ unlocked: next });
-      } catch (err) {
-        showToast(err.message);
-      } finally {
-        lockBtn.disabled = false;
       }
       return;
     }
