@@ -1,7 +1,7 @@
 const WORLD_CUP_START = new Date('2026-06-11T16:00:00-06:00');
-// Lock predictions 1 hour before the opener kicks off (single instant,
-// renders in each user's local time via the Date object).
-const PREDICTIONS_LOCK_DATE = new Date(WORLD_CUP_START.getTime() - 60 * 60 * 1000);
+// Predictions are hard-locked — set to epoch so arePredictionsLocked()
+// is always true and the UI never shows a "locks in" countdown.
+const PREDICTIONS_LOCK_DATE = new Date(0);
 const arePredictionsLocked = () => {
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
 };
