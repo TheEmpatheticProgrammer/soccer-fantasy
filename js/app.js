@@ -932,26 +932,81 @@ async function loadFromApi(force = false, maxAgeMs) {
   }
 }
 
-// Poll the football-data API every LIVE_POLL_MS while a match is in-play
-// AND the user is looking at predictions/leaderboard AND the tab is visible.
-// Each poll uses a shorter cache TTL so cached data isn't reused past 60s,
-// but still bounds calls (one network hit per minute per client at most).
+// Poll TheSportsDB's livescore endpoint every LIVE_POLL_MS while any match
+// is currently in its live window AND the user is on predictions/leaderboard
+// AND the tab is visible. football-data's free tier doesn't flip IN_PLAY
+// reliably, so we gate on the match's scheduled time instead and read live
+// scores from TheSportsDB. football-data still owns schedule + final scores.
 const LIVE_POLL_MS = 60 * 1000;
-const LIVE_CACHE_MAX_AGE_MS = 55 * 1000;
+const LIVE_WINDOW_MS = 3 * 60 * 60 * 1000; // ~3h after kickoff covers extra time + delays
 let livePollTimer = null;
 
-function isAnyMatchInPlay() {
-  return state.matches?.some(m => m.status === 'IN_PLAY' || m.status === 'PAUSED');
+function isAnyMatchInLiveWindow() {
+  if (!state.matches?.length) return false;
+  const now = Date.now();
+  return state.matches.some(m => {
+    if (m.status === 'FINISHED') return false;
+    const start = new Date(m.utcDate).getTime();
+    return Number.isFinite(start) && start <= now && now <= start + LIVE_WINDOW_MS;
+  });
+}
+
+function findMatchByLiveTeams(home, away) {
+  const h = normTeamName(home);
+  const a = normTeamName(away);
+  if (!h || !a) return null;
+  // Build normalized alias sets so e.g. "USA" vs "United States" matches.
+  return state.matches.find(m => {
+    const mh = new Set(expandTeamAliases(m.home).map(normTeamName));
+    const ma = new Set(expandTeamAliases(m.away).map(normTeamName));
+    return (mh.has(h) && ma.has(a)) || (mh.has(a) && ma.has(h));
+  }) || null;
+}
+
+async function pollLiveScores() {
+  let live;
+  try {
+    live = await loadLiveScoresFromSportsDb();
+  } catch (err) {
+    console.warn('[live] SportsDB fetch failed:', err.message);
+    return;
+  }
+  if (!live.length) return;
+  let changed = false;
+  for (const ev of live) {
+    const match = findMatchByLiveTeams(ev.home, ev.away);
+    if (!match) { console.warn('[live] no match for', ev.home, 'vs', ev.away); continue; }
+    const matchHomeKeys = new Set(expandTeamAliases(match.home).map(normTeamName));
+    const swap = !matchHomeKeys.has(normTeamName(ev.home));
+    const home = swap ? ev.awayScore : ev.homeScore;
+    const away = swap ? ev.homeScore : ev.awayScore;
+    const cur = state.results[match.id];
+    if (!cur || cur.home !== home || cur.away !== away) {
+      state.results[match.id] = { home, away };
+      changed = true;
+    }
+  }
+  if (changed) {
+    state.resultsVersion = (state.resultsVersion || 0) + 1;
+    renderLeaderboard();
+    renderPredictions();
+    renderEveryone();
+    if (isAdmin()) {
+      firebase.firestore().collection('results').doc('all').set({
+        results: state.results,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true }).catch(err => console.warn('[live] fanout failed:', err.message));
+    }
+  }
 }
 
 function maybeAdjustLivePolling() {
   const viewActive = state.view === 'predictions' || state.view === 'leaderboard';
   const visible = document.visibilityState === 'visible';
-  const shouldPoll = isAnyMatchInPlay() && viewActive && visible && hasApiAccess();
+  const shouldPoll = isAnyMatchInLiveWindow() && viewActive && visible && !!state.uid;
   if (shouldPoll && !livePollTimer) {
-    livePollTimer = setInterval(() => {
-      loadFromApi(false, LIVE_CACHE_MAX_AGE_MS).catch(() => { /* surfaced via api-status */ });
-    }, LIVE_POLL_MS);
+    pollLiveScores(); // fire immediately so users don't wait 60s for first tick
+    livePollTimer = setInterval(pollLiveScores, LIVE_POLL_MS);
   } else if (!shouldPoll && livePollTimer) {
     clearInterval(livePollTimer);
     livePollTimer = null;

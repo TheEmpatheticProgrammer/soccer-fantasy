@@ -90,3 +90,22 @@ function parseWorldCupResponse(json) {
     crests,
   };
 }
+
+// TheSportsDB livescore endpoint — free, no key required, no CORS issues.
+// League 4429 = FIFA World Cup. Returns events currently in play (json.events
+// is null when nothing is live). We pull just the fields needed to update
+// state.results; the football-data pipeline still owns schedule + finals.
+async function loadLiveScoresFromSportsDb() {
+  const res = await fetch('https://www.thesportsdb.com/api/v1/json/3/livescore.php?l=4429',
+    { cache: 'no-store' });
+  if (!res.ok) throw new Error(`SportsDB HTTP ${res.status}`);
+  const json = await res.json();
+  const events = json?.events || [];
+  return events.map(e => ({
+    home: e.strHomeTeam,
+    away: e.strAwayTeam,
+    homeScore: parseInt(e.intHomeScore, 10),
+    awayScore: parseInt(e.intAwayScore, 10),
+    status: e.strStatus || e.strProgress || '',
+  })).filter(e => Number.isInteger(e.homeScore) && Number.isInteger(e.awayScore));
+}
