@@ -216,6 +216,9 @@ const TRANSLATIONS = {
     'leaderboard.points': 'Points',
     'leaderboard.matchesScored': 'Matches Scored',
     'leaderboard.predictionsMade': 'Predictions Made',
+    'leaderboard.rankDeltaUp': 'Up {n} from last match',
+    'leaderboard.rankDeltaDown': 'Down {n} from last match',
+    'leaderboard.rankDeltaFlat': 'No change since last match',
 
     'time.justNow': 'just now',
     'time.minutes': '{n}m ago',
@@ -443,6 +446,9 @@ const TRANSLATIONS = {
     'leaderboard.points': 'Puntos',
     'leaderboard.matchesScored': 'Partidos Calificados',
     'leaderboard.predictionsMade': 'Pronósticos Hechos',
+    'leaderboard.rankDeltaUp': 'Subió {n} desde el último partido',
+    'leaderboard.rankDeltaDown': 'Bajó {n} desde el último partido',
+    'leaderboard.rankDeltaFlat': 'Sin cambios desde el último partido',
 
     'time.justNow': 'ahora mismo',
     'time.minutes': 'hace {n}m',

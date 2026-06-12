@@ -1799,6 +1799,21 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .rank-3 { background: #CD7F32; color: #5a2d00; }
 .rank-other { background: var(--gray-200); color: var(--gray-600); }
 
+.rank-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.rank-delta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.rank-delta-up   { color: #2bbf6a; }
+.rank-delta-down { color: var(--error); }
+.rank-delta-flat { color: var(--muted); font-weight: 500; }
+
 .points-display { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
 
 /* ── Toast ── */

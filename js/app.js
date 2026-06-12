@@ -1543,16 +1543,20 @@ function calcPoints(pred, actual) {
 let _standingsCache = null;
 let _standingsCacheKey = '';
 
-function computeStandings() {
-  const key = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
-  if (_standingsCache && _standingsCacheKey === key) return _standingsCache;
+function computeStandings(resultsOverride) {
+  const useCustom = !!resultsOverride;
+  if (!useCustom) {
+    const key = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+    if (_standingsCache && _standingsCacheKey === key) return _standingsCache;
+  }
 
+  const results = resultsOverride || state.results;
   const players = Object.entries(state.predictionDocs);
   const standings = players.map(([uid, doc]) => {
     const preds = doc.predictions || {};
     let points = 0, scored = 0;
     for (const [matchId, pred] of Object.entries(preds)) {
-      const actual = state.results[matchId];
+      const actual = results[matchId];
       if (!actual) continue;
       points += calcPoints(pred, actual);
       scored++;
@@ -1566,9 +1570,20 @@ function computeStandings() {
     };
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
-  _standingsCacheKey = key;
-  _standingsCache = standings;
+  if (!useCustom) {
+    _standingsCacheKey = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+    _standingsCache = standings;
+  }
   return standings;
+}
+
+function latestScoredMatch() {
+  let latest = null;
+  for (const m of state.matches) {
+    if (!state.results[m.id]) continue;
+    if (!latest || new Date(m.utcDate) > new Date(latest.utcDate)) latest = m;
+  }
+  return latest;
 }
 
 function renderLeaderboard() {
@@ -1583,6 +1598,18 @@ function renderLeaderboard() {
   }
 
   const standings = computeStandings();
+
+  const previousRanks = (() => {
+    const latest = latestScoredMatch();
+    if (!latest) return null;
+    const prevResults = { ...state.results };
+    delete prevResults[latest.id];
+    if (Object.keys(prevResults).length === 0) return null;
+    const prev = computeStandings(prevResults);
+    const map = {};
+    prev.forEach((p, i) => { map[p.uid] = i; });
+    return map;
+  })();
 
   const ownerCanRemove = isLeagueOwner() || isAdmin();
   const adminOnly = isAdmin();
@@ -1684,7 +1711,6 @@ function renderLeaderboard() {
           <th>${t('leaderboard.player')}</th>
           <th>${t('leaderboard.points')}</th>
           <th>${t('leaderboard.matchesScored')}</th>
-          <th>${t('leaderboard.predictionsMade')}</th>
           ${ownerCanRemove ? '<th></th>' : ''}
         </tr>
       </thead>
@@ -1699,13 +1725,25 @@ function renderLeaderboard() {
                  </svg>
                </button></td>`
             : (ownerCanRemove ? '<td></td>' : '');
+          let deltaHtml = '';
+          if (previousRanks) {
+            const prev = previousRanks[player.uid];
+            if (prev !== undefined) {
+              const delta = prev - i;
+              if (delta === 0) {
+                deltaHtml = `<span class="rank-delta rank-delta-flat" title="${t('leaderboard.rankDeltaFlat')}">—</span>`;
+              } else {
+                const up = delta > 0;
+                deltaHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${t(up ? 'leaderboard.rankDeltaUp' : 'leaderboard.rankDeltaDown', { n: Math.abs(delta) })}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
+              }
+            }
+          }
           return `
             <tr${player.uid === state.uid ? ' class="current-player"' : ''}>
-              <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+              <td><span class="rank-cell"><span class="rank-badge ${rankClass}">${rank}</span>${deltaHtml}</span></td>
               <td>${player.name}</td>
               <td><span class="points-display">${player.points}</span></td>
               <td>${player.scored} / ${total}</td>
-              <td>${player.predicted} / ${total}</td>
               ${removeCell}
             </tr>`;
         }).join('')}
