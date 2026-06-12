@@ -1727,20 +1727,19 @@ function renderLeaderboard() {
             const prevPts = previous.points[player.uid] ?? 0;
             const ptsGained = player.points - prevPts;
             const ptsClass = ptsGained > 0 ? 'pts-delta-pos' : 'pts-delta-zero';
-            const liveSuffix = previous.live ? ` — ${t('leaderboard.lastMatchTentative')}` : '';
-            const ptsTitle = (ptsGained > 0
+            const ptsTitle = ptsGained > 0
               ? t('leaderboard.ptsDeltaGained', { n: ptsGained })
-              : t('leaderboard.ptsDeltaZero')) + liveSuffix;
+              : t('leaderboard.ptsDeltaZero');
             const ptsHtml = `<span class="pts-delta ${ptsClass}" title="${escapeHtml(ptsTitle)}">+${ptsGained}</span>`;
             let rankHtml = '';
             if (prevRank !== undefined) {
               const delta = prevRank - i;
               if (delta === 0) {
-                rankHtml = `<span class="rank-delta rank-delta-flat" title="${escapeHtml(t('leaderboard.rankDeltaFlat') + liveSuffix)}">—</span>`;
+                rankHtml = `<span class="rank-delta rank-delta-flat" title="${escapeHtml(t('leaderboard.rankDeltaFlat'))}">—</span>`;
               } else {
                 const up = delta > 0;
                 const baseTitle = t(up ? 'leaderboard.rankDeltaUp' : 'leaderboard.rankDeltaDown', { n: Math.abs(delta) });
-                rankHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${escapeHtml(baseTitle + liveSuffix)}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
+                rankHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${escapeHtml(baseTitle)}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
               }
             }
             lastMatchCell = `<td class="last-match-cell${previous.live ? ' is-live' : ''}">${ptsHtml}${rankHtml}</td>`;
