@@ -1540,8 +1540,9 @@ function computeStandings(resultsOverride) {
     for (const [matchId, pred] of Object.entries(preds)) {
       const actual = results[matchId];
       if (!actual) continue;
-      points += calcPoints(pred, actual);
-      scored++;
+      const pts = calcPoints(pred, actual);
+      points += pts;
+      if (pts === 3) scored++;
     }
     return {
       uid,
@@ -1728,7 +1729,24 @@ function renderLeaderboard() {
           <th>#</th>
           <th>${t('leaderboard.player')}</th>
           <th>${t('leaderboard.points')}</th>
-          <th>${t('leaderboard.matchesScored')}</th>
+          <th class="col-info-th">
+            <span class="col-info-th-label">${t('leaderboard.matchesScored')}</span>
+            <button type="button" class="col-info-btn" id="matches-scored-info-btn"
+                    aria-expanded="false"
+                    aria-controls="matches-scored-info-pop"
+                    aria-label="${t('leaderboard.matchesScoredInfoTitle')}"
+                    title="${t('leaderboard.matchesScoredInfoTitle')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="11" x2="12" y2="17"/>
+                <line x1="12" y1="7.5" x2="12" y2="7.6"/>
+              </svg>
+            </button>
+            <div id="matches-scored-info-pop" class="col-info-pop hidden" role="tooltip">
+              <div class="col-info-pop-title">${t('leaderboard.matchesScoredInfoTitle')}</div>
+              <div class="col-info-pop-body">${t('leaderboard.matchesScoredInfoBody')}</div>
+            </div>
+          </th>
           ${previous ? `<th class="last-match-th${previous.live ? ' is-live' : ''}">
             <span class="last-match-th-label">${t('leaderboard.lastMatch')}</span>
             ${previous.live ? `<span class="last-match-live-pill" title="${escapeHtml(t('leaderboard.lastMatchLiveTooltip', { match: previous.label }))}">
@@ -1838,10 +1856,12 @@ function initLeaderboardDelegation() {
       return;
     }
 
-    const infoBtn = e.target.closest('#last-match-info-btn');
+    const infoBtn = e.target.closest('#last-match-info-btn, .col-info-btn');
     if (infoBtn) {
       e.stopPropagation();
-      const pop = document.getElementById('last-match-info-pop');
+      const popId = infoBtn.getAttribute('aria-controls')
+        || (infoBtn.id === 'last-match-info-btn' ? 'last-match-info-pop' : null);
+      const pop = popId ? document.getElementById(popId) : null;
       if (pop) {
         const open = pop.classList.toggle('hidden');
         infoBtn.setAttribute('aria-expanded', String(!open));
@@ -1884,14 +1904,17 @@ function initLeaderboardDelegation() {
     openPlayerPredictionsModal(uid, rank);
   });
 
-  // Dismiss the Last-match info popover when clicking outside it
+  // Dismiss any column info popover when clicking outside it
   document.addEventListener('click', (e) => {
-    const pop = document.getElementById('last-match-info-pop');
-    if (!pop || pop.classList.contains('hidden')) return;
-    if (e.target.closest('#last-match-info-btn') || e.target.closest('#last-match-info-pop')) return;
-    pop.classList.add('hidden');
-    const btn = document.getElementById('last-match-info-btn');
-    if (btn) btn.setAttribute('aria-expanded', 'false');
+    const pops = document.querySelectorAll('#last-match-info-pop:not(.hidden), .col-info-pop:not(.hidden)');
+    if (!pops.length) return;
+    if (e.target.closest('#last-match-info-btn, .col-info-btn, #last-match-info-pop, .col-info-pop')) return;
+    pops.forEach((pop) => {
+      pop.classList.add('hidden');
+      const btn = document.querySelector(`[aria-controls="${pop.id}"]`)
+        || (pop.id === 'last-match-info-pop' ? document.getElementById('last-match-info-btn') : null);
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
   });
 }
 

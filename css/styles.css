@@ -2671,11 +2671,14 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 
 /* "Last match" info popover */
-.last-match-th {
+.last-match-th,
+.col-info-th {
   position: relative;
 }
-.last-match-th-label { vertical-align: middle; }
-.last-match-info-btn {
+.last-match-th-label,
+.col-info-th-label { vertical-align: middle; }
+.last-match-info-btn,
+.col-info-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2689,13 +2692,17 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   cursor: pointer;
   vertical-align: middle;
 }
-.last-match-info-btn svg { width: 14px; height: 14px; }
+.last-match-info-btn svg,
+.col-info-btn svg { width: 14px; height: 14px; }
 .last-match-info-btn:hover,
-.last-match-info-btn[aria-expanded="true"] {
+.last-match-info-btn[aria-expanded="true"],
+.col-info-btn:hover,
+.col-info-btn[aria-expanded="true"] {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
 }
-.last-match-info-pop {
+.last-match-info-pop,
+.col-info-pop {
   position: absolute;
   z-index: 30;
   top: calc(100% + 6px);
@@ -2712,14 +2719,17 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   text-align: left;
   white-space: normal;
 }
-.last-match-info-pop.hidden { display: none; }
-.last-match-info-title {
+.last-match-info-pop.hidden,
+.col-info-pop.hidden { display: none; }
+.last-match-info-title,
+.col-info-pop-title {
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 0.25rem;
 }
-.last-match-info-body {
+.last-match-info-body,
+.col-info-pop-body {
   font-size: 0.78rem;
   line-height: 1.4;
   color: var(--text-muted);
@@ -2907,7 +2917,8 @@ body.modal-open { overflow: hidden; }
   .player-pred-modal-avatar { width: 36px; height: 36px; font-size: 0.85rem; }
   .player-pred-modal-name { font-size: 0.98rem; }
   .player-pred-modal-body { padding: 0.4rem 0.7rem 0.9rem; }
-  .last-match-info-pop { right: -8px; }
+  .last-match-info-pop,
+  .col-info-pop { right: -8px; }
 
   /* Keep the LIVE column-header indicator from getting clipped. */
   .last-match-th {
@@ -2923,6 +2934,7 @@ body.modal-open { overflow: hidden; }
     width: 7px; height: 7px;
     margin: 0;
   }
-  .last-match-info-btn { margin-left: 0.25rem; }
+  .last-match-info-btn,
+  .col-info-btn { margin-left: 0.25rem; }
 }
 
