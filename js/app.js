@@ -1119,12 +1119,13 @@ function switchView(view) {
   state.view = view;
   Storage.setLastView(view);
   const htmlEl = document.documentElement;
+  const wasPrepainted = htmlEl.classList.contains('preview-view-' + view);
   htmlEl.classList.remove('auth-prepaint-signed-in');
   htmlEl.className = htmlEl.className.replace(/\bpreview-view-\S+/g, '').trim();
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
-  playEnterAnimation(target);
+  if (!wasPrepainted) playEnterAnimation(target);
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.view === view)
   );
