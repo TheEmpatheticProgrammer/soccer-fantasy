@@ -1822,7 +1822,7 @@ function renderLeaderboard() {
                 rankHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${escapeHtml(baseTitle)}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
               }
             }
-            lastMatchCell = `<td class="this-match-cell${previous.live ? ' is-live' : ''}">${ptsHtml}</td><td class="rank-move-cell${previous.live ? ' is-live' : ''}">${rankHtml}</td>`;
+            lastMatchCell = `<td class="this-match-cell${previous.live ? ' is-live' : ''}">${previous.live ? `<span class="row-live-dot" aria-hidden="true" title="${escapeHtml(t('leaderboard.lastMatchLiveTooltip', { match: previous.label }))}"></span>` : ''}${ptsHtml}</td><td class="rank-move-cell${previous.live ? ' is-live' : ''}">${rankHtml}</td>`;
           }
           const rowClasses = ['leaderboard-row'];
           if (player.uid === state.uid) rowClasses.push('current-player');

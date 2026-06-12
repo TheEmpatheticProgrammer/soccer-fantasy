@@ -1268,7 +1268,7 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 
 .match-teams {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 0.5rem;
 }
@@ -1292,9 +1292,10 @@ details[open] > summary .group-chevron { transform: rotate(180deg); }
 .match-teams .team.home { justify-content: flex-start; text-align: left; }
 .match-teams .team.away { justify-content: flex-end; text-align: right; }
 .match-teams .team .team-name {
-  overflow-wrap: break-word;
-  hyphens: auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .match-teams .team-flag {
   width: 34px;
@@ -2779,6 +2780,16 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .rank-move-cell.is-live .rank-delta {
   opacity: 0.7;
 }
+.row-live-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: #ff5a4f;
+  box-shadow: 0 0 0 0 rgba(255, 90, 79, 0.6);
+  animation: lastMatchPulse 1.4s infinite;
+  vertical-align: middle;
+}
 
 /* Player predictions modal */
 body.modal-open { overflow: hidden; }
@@ -2787,8 +2798,9 @@ body.modal-open { overflow: hidden; }
   inset: 0;
   z-index: 100;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
+  padding: 1.75rem;
 }
 .player-pred-modal.hidden { display: none; }
 .player-pred-modal-backdrop {
@@ -2800,8 +2812,9 @@ body.modal-open { overflow: hidden; }
 .player-pred-modal-panel {
   position: relative;
   margin: auto;
-  width: min(720px, 100%);
-  max-height: min(92vh, 920px);
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 3.5rem);
   display: flex;
   flex-direction: column;
   background: var(--bg);
