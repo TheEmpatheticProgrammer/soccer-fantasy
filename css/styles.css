@@ -2685,19 +2685,51 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .leagues-form-card { padding: 1rem 1.1rem; }
 }
 
-/* Clickable leaderboard rows */
-.leaderboard-table tbody tr.leaderboard-row {
-  cursor: pointer;
-  transition: background 0.12s ease;
-}
-.leaderboard-table tbody tr.leaderboard-row:hover,
-.leaderboard-table tbody tr.leaderboard-row:focus-visible {
+/* Clickable player-name pill — the dedicated affordance for opening a
+   player's predictions modal. The row itself is no longer clickable. */
+.player-name-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.25rem 0.55rem 0.25rem 0.7rem;
+  font: inherit;
+  color: var(--text);
   background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.player-name-pill:hover,
+.player-name-pill:focus-visible {
+  background: rgba(45, 255, 165, 0.10);
+  border-color: rgba(45, 255, 165, 0.45);
+  color: var(--text);
   outline: none;
 }
-.leaderboard-table tbody tr.leaderboard-row.current-player:hover,
-.leaderboard-table tbody tr.leaderboard-row.current-player:focus-visible {
-  background: rgba(0, 217, 119, 0.08);
+.player-name-pill-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.player-name-pill-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.player-name-pill:hover .player-name-pill-icon,
+.player-name-pill:focus-visible .player-name-pill-icon {
+  opacity: 1;
+  transform: translateX(1px);
+}
+.leaderboard-table tr.current-player .player-name-pill {
+  background: rgba(45, 255, 165, 0.12);
+  border-color: rgba(45, 255, 165, 0.45);
+  color: var(--text);
 }
 .leaderboard-table tbody tr.leaderboard-row .btn-remove-player {
   cursor: pointer;

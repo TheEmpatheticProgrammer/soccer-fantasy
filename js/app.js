@@ -1834,9 +1834,14 @@ function renderLeaderboard() {
           const rowClasses = ['leaderboard-row'];
           if (player.uid === state.uid) rowClasses.push('current-player');
           return `
-            <tr class="${rowClasses.join(' ')}" data-player-uid="${player.uid}" data-player-rank="${rank}" tabindex="0" role="button" aria-label="${t('leaderboard.viewPlayer', { name: player.name })}">
+            <tr class="${rowClasses.join(' ')}">
               <td><span class="rank-badge ${rankClass}">${rank}</span></td>
-              <td>${player.name}</td>
+              <td><button type="button" class="player-name-pill" data-player-uid="${player.uid}" data-player-rank="${rank}" aria-label="${t('leaderboard.viewPlayer', { name: player.name })}" title="${t('leaderboard.viewPlayer', { name: player.name })}">
+                <span class="player-name-pill-text">${player.name}</span>
+                <svg class="player-name-pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </button></td>
               <td><span class="points-display">${player.points}</span></td>
               <td>${player.scored} / ${total}</td>
               ${lastMatchCell}
@@ -1854,16 +1859,15 @@ function renderLeaderboard() {
     }
   } catch (e) { /* quota or storage disabled — skip cache */ }
 
-  // Attach click handlers directly to each row as a mobile-Safari-safe
-  // fallback for event delegation (some touch contexts swallow taps on
-  // <tr> elements before they bubble to the container).
-  container.querySelectorAll('tr.leaderboard-row[data-player-uid]').forEach((row) => {
-    if (row._directClickBound) return;
-    row._directClickBound = true;
-    row.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-remove-player, .col-info-btn, button')) return;
-      const uid = row.dataset.playerUid;
-      const rank = parseInt(row.dataset.playerRank, 10) || 0;
+  // Attach click handlers directly to each pill as a mobile-Safari-safe
+  // fallback for event delegation.
+  container.querySelectorAll('.player-name-pill[data-player-uid]').forEach((pill) => {
+    if (pill._directClickBound) return;
+    pill._directClickBound = true;
+    pill.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const uid = pill.dataset.playerUid;
+      const rank = parseInt(pill.dataset.playerRank, 10) || 0;
       openPlayerPredictionsModal(uid, rank);
     });
   });
@@ -1925,21 +1929,21 @@ function initLeaderboardDelegation() {
       return;
     }
 
-    const playerRow = e.target.closest('tr.leaderboard-row[data-player-uid]');
-    if (playerRow) {
-      const uid = playerRow.dataset.playerUid;
-      const rank = parseInt(playerRow.dataset.playerRank, 10) || 0;
+    const playerPill = e.target.closest('.player-name-pill[data-player-uid]');
+    if (playerPill) {
+      const uid = playerPill.dataset.playerUid;
+      const rank = parseInt(playerPill.dataset.playerRank, 10) || 0;
       openPlayerPredictionsModal(uid, rank);
     }
   });
 
   container.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    const playerRow = e.target.closest('tr.leaderboard-row[data-player-uid]');
-    if (!playerRow) return;
+    const playerPill = e.target.closest('.player-name-pill[data-player-uid]');
+    if (!playerPill) return;
     e.preventDefault();
-    const uid = playerRow.dataset.playerUid;
-    const rank = parseInt(playerRow.dataset.playerRank, 10) || 0;
+    const uid = playerPill.dataset.playerUid;
+    const rank = parseInt(playerPill.dataset.playerRank, 10) || 0;
     openPlayerPredictionsModal(uid, rank);
   });
 
