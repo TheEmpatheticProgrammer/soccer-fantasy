@@ -218,6 +218,9 @@ const TRANSLATIONS = {
     'leaderboard.lastMatch': 'Last match',
     'leaderboard.lastMatchInfoTitle': 'How to read this column',
     'leaderboard.lastMatchInfoBody': 'Points earned from the most recent finished match, plus the rank change since (▲ moved up, ▼ moved down).',
+    'leaderboard.lastMatchLiveTooltip': '{match} is in progress — values update live.',
+    'leaderboard.lastMatchLiveNote': 'Tentative — {match} is still in progress and these values will update as the match progresses.',
+    'leaderboard.lastMatchTentative': 'tentative, match in progress',
     'leaderboard.viewPlayer': "View {name}'s predictions",
 
     'playerModal.close': 'Close',
@@ -454,6 +457,9 @@ const TRANSLATIONS = {
     'leaderboard.lastMatch': 'Último partido',
     'leaderboard.lastMatchInfoTitle': 'Cómo leer esta columna',
     'leaderboard.lastMatchInfoBody': 'Puntos ganados en el último partido terminado, más el cambio de posición (▲ subió, ▼ bajó).',
+    'leaderboard.lastMatchLiveTooltip': '{match} en curso — los valores se actualizan en vivo.',
+    'leaderboard.lastMatchLiveNote': 'Tentativo — {match} sigue en curso y estos valores cambiarán mientras avanza el partido.',
+    'leaderboard.lastMatchTentative': 'tentativo, partido en curso',
     'leaderboard.viewPlayer': 'Ver pronósticos de {name}',
 
     'playerModal.close': 'Cerrar',
