@@ -279,6 +279,7 @@ async function onSignedIn(user) {
   state.currentPlayer = user.displayName || user.email;
 
   document.getElementById('auth-screen').classList.add('hidden');
+  try { localStorage.setItem('wc2026_signed_in', '1'); } catch (e) {}
   document.getElementById('player-display').textContent = state.currentPlayer;
   renderKickoffHero();
   renderProfile();
@@ -549,6 +550,7 @@ function onSignedOut() {
   document.documentElement.classList.remove('auth-prepaint-signed-in');
   document.getElementById('auth-screen').classList.remove('hidden');
   try { localStorage.removeItem('wc2026_lb_html'); } catch (e) {}
+  try { localStorage.removeItem('wc2026_signed_in'); } catch (e) {}
   document.getElementById('settings-panel').classList.add('hidden');
   updateCurrentLeagueBadge();
   maybeAdjustLivePolling();

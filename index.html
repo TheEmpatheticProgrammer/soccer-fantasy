@@ -35,17 +35,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap">
 
   <script>
-    // Pre-paint: if Firebase has a persisted user, suppress the auth screen
-    // and pre-select the saved view so returning visitors don't see the
-    // default predictions view flash before switchView() resolves.
+    // Pre-paint: when our own signed-in marker is present, suppress the auth
+    // screen and pre-select the saved view so returning visitors don't see
+    // predictions flash before switchView() resolves. We can't probe
+    // Firebase's auth storage directly because v9+ uses IndexedDB, which is
+    // async — so we rely on a localStorage flag we set in onSignedIn.
     (function () {
       try {
-        var signedIn = false;
-        for (var i = 0; i < localStorage.length; i++) {
-          var k = localStorage.key(i);
-          if (k && k.indexOf('firebase:authUser:') === 0) { signedIn = true; break; }
-        }
-        if (!signedIn) return;
+        if (localStorage.getItem('wc2026_signed_in') !== '1') return;
         var html = document.documentElement;
         html.classList.add('auth-prepaint-signed-in');
         var lastView = localStorage.getItem('wc2026_last_view');
@@ -56,13 +53,13 @@
     })();
   </script>
   <style>
-    html.auth-prepaint-signed-in #auth-screen { display: none; }
-    html.auth-prepaint-signed-in .view { display: none; }
+    html.auth-prepaint-signed-in #auth-screen { display: none !important; }
+    html.auth-prepaint-signed-in .view { display: none !important; }
     html.auth-prepaint-signed-in.preview-view-predictions #view-predictions,
     html.auth-prepaint-signed-in.preview-view-leaderboard #view-leaderboard,
     html.auth-prepaint-signed-in.preview-view-leagues     #view-leagues,
     html.auth-prepaint-signed-in.preview-view-profile     #view-profile,
-    html.auth-prepaint-signed-in.preview-view-rules       #view-rules { display: block; }
+    html.auth-prepaint-signed-in.preview-view-rules       #view-rules { display: block !important; }
   </style>
 
   <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
