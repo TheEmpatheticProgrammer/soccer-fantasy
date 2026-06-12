@@ -385,8 +385,13 @@
         (function () {
           try {
             if (!document.documentElement.classList.contains('preview-view-leaderboard')) return;
-            var raw = localStorage.getItem('wc2026_lb_html');
-            if (!raw) return;
+            var raw = localStorage.getItem('wc2026_lb_html_v2');
+            if (!raw) {
+              // Old cache (pre-pill) is no longer compatible — clear it so
+              // we never paint a non-clickable leaderboard.
+              try { localStorage.removeItem('wc2026_lb_html'); } catch (e) {}
+              return;
+            }
             var entry = JSON.parse(raw);
             if (!entry || !entry.html || !entry.uid || !entry.leagueId) return;
             var lastLeague = localStorage.getItem('wc2026_last_league_id');

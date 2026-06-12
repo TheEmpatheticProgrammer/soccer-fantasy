@@ -508,6 +508,7 @@ function onSignedOut() {
   document.documentElement.classList.remove('auth-prepaint-signed-in');
   document.getElementById('auth-screen').classList.remove('hidden');
   try { localStorage.removeItem('wc2026_lb_html'); } catch (e) {}
+  try { localStorage.removeItem('wc2026_lb_html_v2'); } catch (e) {}
   try { localStorage.removeItem('wc2026_signed_in'); } catch (e) {}
   document.getElementById('settings-panel').classList.add('hidden');
   updateCurrentLeagueBadge();
@@ -1853,9 +1854,10 @@ function renderLeaderboard() {
 
   try {
     if (state.uid && state.leagueId) {
-      localStorage.setItem('wc2026_lb_html', JSON.stringify({
+      localStorage.setItem('wc2026_lb_html_v2', JSON.stringify({
         uid: state.uid, leagueId: state.leagueId, html: container.innerHTML, ts: Date.now(),
       }));
+      localStorage.removeItem('wc2026_lb_html');
     }
   } catch (e) { /* quota or storage disabled — skip cache */ }
 
