@@ -407,6 +407,34 @@
       <div id="leaderboard-container" class="leaderboard-container">
         <div class="empty-state" data-i18n="leaderboard.empty">No players have submitted predictions yet.</div>
       </div>
+      <script>
+        // Pre-paint hydration: if the user just landed on the leaderboard
+        // (preview-view-leaderboard class set in <head>) and we have a
+        // cached render from their last visit, inject it now so the table
+        // is visible instantly instead of an empty container that pops in
+        // once Firebase + league data resolve.
+        (function () {
+          try {
+            if (!document.documentElement.classList.contains('preview-view-leaderboard')) return;
+            var raw = localStorage.getItem('wc2026_lb_html');
+            if (!raw) return;
+            var entry = JSON.parse(raw);
+            if (!entry || !entry.html || !entry.uid || !entry.leagueId) return;
+            var lastLeague = localStorage.getItem('wc2026_last_league_id');
+            if (lastLeague && entry.leagueId !== lastLeague) return;
+            var fbUid = null;
+            for (var i = 0; i < localStorage.length; i++) {
+              var k = localStorage.key(i);
+              if (k && k.indexOf('firebase:authUser:') === 0) {
+                try { fbUid = (JSON.parse(localStorage.getItem(k)) || {}).uid || null; } catch (e) {}
+                break;
+              }
+            }
+            if (fbUid && entry.uid !== fbUid) return;
+            document.getElementById('leaderboard-container').innerHTML = entry.html;
+          } catch (e) { /* malformed cache — ignore */ }
+        })();
+      </script>
 
     </div>
 

@@ -548,6 +548,7 @@ function onSignedOut() {
 
   document.documentElement.classList.remove('auth-prepaint-signed-in');
   document.getElementById('auth-screen').classList.remove('hidden');
+  try { localStorage.removeItem('wc2026_lb_html'); } catch (e) {}
   document.getElementById('settings-panel').classList.add('hidden');
   updateCurrentLeagueBadge();
   maybeAdjustLivePolling();
@@ -1767,6 +1768,14 @@ function renderLeaderboard() {
         }).join('')}
       </tbody>
     </table>`;
+
+  try {
+    if (state.uid && state.leagueId) {
+      localStorage.setItem('wc2026_lb_html', JSON.stringify({
+        uid: state.uid, leagueId: state.leagueId, html: container.innerHTML, ts: Date.now(),
+      }));
+    }
+  } catch (e) { /* quota or storage disabled — skip cache */ }
 }
 
 function initLeaderboardDelegation() {
