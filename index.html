@@ -36,22 +36,33 @@
 
   <script>
     // Pre-paint: if Firebase has a persisted user, suppress the auth screen
-    // so returning visitors don't see it flash before onAuthStateChanged fires.
-    // If the resolved auth turns out to be signed-out, onSignedOut() reveals it.
+    // and pre-select the saved view so returning visitors don't see the
+    // default predictions view flash before switchView() resolves.
     (function () {
       try {
+        var signedIn = false;
         for (var i = 0; i < localStorage.length; i++) {
           var k = localStorage.key(i);
-          if (k && k.indexOf('firebase:authUser:') === 0) {
-            document.documentElement.classList.add('auth-prepaint-signed-in');
-            return;
-          }
+          if (k && k.indexOf('firebase:authUser:') === 0) { signedIn = true; break; }
         }
+        if (!signedIn) return;
+        var html = document.documentElement;
+        html.classList.add('auth-prepaint-signed-in');
+        var lastView = localStorage.getItem('wc2026_last_view');
+        var allowed = { predictions: 1, leaderboard: 1, leagues: 1, profile: 1, rules: 1 };
+        if (lastView && allowed[lastView]) html.classList.add('preview-view-' + lastView);
+        else                               html.classList.add('preview-view-predictions');
       } catch (e) { /* localStorage blocked — fall back to default */ }
     })();
   </script>
   <style>
     html.auth-prepaint-signed-in #auth-screen { display: none; }
+    html.auth-prepaint-signed-in .view { display: none; }
+    html.auth-prepaint-signed-in.preview-view-predictions #view-predictions,
+    html.auth-prepaint-signed-in.preview-view-leaderboard #view-leaderboard,
+    html.auth-prepaint-signed-in.preview-view-leagues     #view-leagues,
+    html.auth-prepaint-signed-in.preview-view-profile     #view-profile,
+    html.auth-prepaint-signed-in.preview-view-rules       #view-rules { display: block; }
   </style>
 
   <script defer src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>

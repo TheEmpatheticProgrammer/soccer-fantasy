@@ -1118,6 +1118,9 @@ function switchView(view) {
   }
   state.view = view;
   Storage.setLastView(view);
+  const htmlEl = document.documentElement;
+  htmlEl.classList.remove('auth-prepaint-signed-in');
+  htmlEl.className = htmlEl.className.replace(/\bpreview-view-\S+/g, '').trim();
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
