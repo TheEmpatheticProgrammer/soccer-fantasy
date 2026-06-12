@@ -1693,23 +1693,24 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .rank-3 { background: #CD7F32; color: #5a2d00; }
 .rank-other { background: var(--gray-200); color: var(--gray-600); }
 
-.last-match-th { text-align: left; white-space: nowrap; }
-.last-match-cell {
+.this-match-th,
+.rank-move-th { text-align: left; white-space: nowrap; }
+.this-match-cell,
+.rank-move-cell {
   text-align: left;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.last-match-cell .pts-delta,
-.last-match-cell .rank-delta {
+.this-match-cell .pts-delta,
+.rank-move-cell .rank-delta {
   display: inline-block;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
-.last-match-cell .pts-delta {
+.this-match-cell .pts-delta {
   min-width: 2.2rem;
   text-align: left;
-  margin-right: 0.5rem;
 }
 
 .leaderboard-table th:last-child,
@@ -2672,6 +2673,8 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 
 /* "Last match" info popover */
 .last-match-th,
+.this-match-th,
+.rank-move-th,
 .col-info-th {
   position: relative;
 }
@@ -2772,8 +2775,8 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   70%  { box-shadow: 0 0 0 6px rgba(255, 90, 79, 0);  }
   100% { box-shadow: 0 0 0 0 rgba(255, 90, 79, 0);    }
 }
-.last-match-cell.is-live .pts-delta,
-.last-match-cell.is-live .rank-delta {
+.this-match-cell.is-live .pts-delta,
+.rank-move-cell.is-live .rank-delta {
   opacity: 0.7;
 }
 
@@ -2921,7 +2924,9 @@ body.modal-open { overflow: hidden; }
   .col-info-pop { right: -8px; }
 
   /* Keep the LIVE column-header indicator from getting clipped. */
-  .last-match-th {
+  .last-match-th,
+  .this-match-th,
+  .rank-move-th {
     white-space: normal;
     line-height: 1.15;
   }

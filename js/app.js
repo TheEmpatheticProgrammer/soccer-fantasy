@@ -1747,12 +1747,12 @@ function renderLeaderboard() {
               <div class="col-info-pop-body">${t('leaderboard.matchesScoredInfoBody')}</div>
             </div>
           </th>
-          ${previous ? `<th class="last-match-th${previous.live ? ' is-live' : ''}">
-            <span class="last-match-th-label">${t('leaderboard.lastMatch')}</span>
+          ${previous ? `<th class="this-match-th col-info-th${previous.live ? ' is-live' : ''}">
+            <span class="col-info-th-label">${t('leaderboard.lastMatch')}</span>
             ${previous.live ? `<span class="last-match-live-pill" title="${escapeHtml(t('leaderboard.lastMatchLiveTooltip', { match: previous.label }))}">
               <span class="last-match-live-dot" aria-hidden="true"></span>${t('match.live')}
             </span>` : ''}
-            <button type="button" class="last-match-info-btn" id="last-match-info-btn"
+            <button type="button" class="col-info-btn" id="last-match-info-btn"
                     aria-expanded="false"
                     aria-controls="last-match-info-pop"
                     aria-label="${t('leaderboard.lastMatchInfoTitle')}"
@@ -1763,10 +1763,28 @@ function renderLeaderboard() {
                 <line x1="12" y1="7.5" x2="12" y2="7.6"/>
               </svg>
             </button>
-            <div id="last-match-info-pop" class="last-match-info-pop hidden" role="tooltip">
-              <div class="last-match-info-title">${t('leaderboard.lastMatchInfoTitle')}</div>
-              <div class="last-match-info-body">${t('leaderboard.lastMatchInfoBody')}</div>
+            <div id="last-match-info-pop" class="col-info-pop hidden" role="tooltip">
+              <div class="col-info-pop-title">${t('leaderboard.lastMatchInfoTitle')}</div>
+              <div class="col-info-pop-body">${t('leaderboard.lastMatchInfoBody')}</div>
               ${previous.live ? `<div class="last-match-info-live">${t('leaderboard.lastMatchLiveNote', { match: previous.label })}</div>` : ''}
+            </div>
+          </th>
+          <th class="rank-move-th col-info-th${previous.live ? ' is-live' : ''}">
+            <span class="col-info-th-label">${t('leaderboard.rankMove')}</span>
+            <button type="button" class="col-info-btn" id="rank-move-info-btn"
+                    aria-expanded="false"
+                    aria-controls="rank-move-info-pop"
+                    aria-label="${t('leaderboard.rankMoveInfoTitle')}"
+                    title="${t('leaderboard.rankMoveInfoTitle')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="11" x2="12" y2="17"/>
+                <line x1="12" y1="7.5" x2="12" y2="7.6"/>
+              </svg>
+            </button>
+            <div id="rank-move-info-pop" class="col-info-pop hidden" role="tooltip">
+              <div class="col-info-pop-title">${t('leaderboard.rankMoveInfoTitle')}</div>
+              <div class="col-info-pop-body">${t('leaderboard.rankMoveInfoBody')}</div>
             </div>
           </th>` : ''}
           ${ownerCanRemove ? '<th></th>' : ''}
@@ -1788,23 +1806,23 @@ function renderLeaderboard() {
             const prevRank = previous.ranks[player.uid];
             const prevPts = previous.points[player.uid] ?? 0;
             const ptsGained = player.points - prevPts;
-            const ptsClass = ptsGained > 0 ? 'pts-delta-pos' : 'pts-delta-zero';
-            const ptsTitle = ptsGained > 0
-              ? t('leaderboard.ptsDeltaGained', { n: ptsGained })
-              : t('leaderboard.ptsDeltaZero');
-            const ptsHtml = `<span class="pts-delta ${ptsClass}" title="${escapeHtml(ptsTitle)}">+${ptsGained}</span>`;
-            let rankHtml = '';
+            let ptsHtml;
+            if (ptsGained > 0) {
+              const ptsTitle = t('leaderboard.ptsDeltaGained', { n: ptsGained });
+              ptsHtml = `<span class="pts-delta pts-delta-pos" title="${escapeHtml(ptsTitle)}">+${ptsGained}</span>`;
+            } else {
+              ptsHtml = `<span class="pts-delta pts-delta-zero" title="${escapeHtml(t('leaderboard.ptsDeltaZero'))}">—</span>`;
+            }
+            let rankHtml = `<span class="rank-delta rank-delta-flat" title="${escapeHtml(t('leaderboard.rankDeltaFlat'))}">—</span>`;
             if (prevRank !== undefined) {
               const delta = prevRank - i;
-              if (delta === 0) {
-                rankHtml = `<span class="rank-delta rank-delta-flat" title="${escapeHtml(t('leaderboard.rankDeltaFlat'))}">—</span>`;
-              } else {
+              if (delta !== 0) {
                 const up = delta > 0;
                 const baseTitle = t(up ? 'leaderboard.rankDeltaUp' : 'leaderboard.rankDeltaDown', { n: Math.abs(delta) });
                 rankHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${escapeHtml(baseTitle)}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
               }
             }
-            lastMatchCell = `<td class="last-match-cell${previous.live ? ' is-live' : ''}">${ptsHtml}${rankHtml}</td>`;
+            lastMatchCell = `<td class="this-match-cell${previous.live ? ' is-live' : ''}">${ptsHtml}</td><td class="rank-move-cell${previous.live ? ' is-live' : ''}">${rankHtml}</td>`;
           }
           const rowClasses = ['leaderboard-row'];
           if (player.uid === state.uid) rowClasses.push('current-player');
