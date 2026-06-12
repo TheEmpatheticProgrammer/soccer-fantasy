@@ -1599,16 +1599,16 @@ function renderLeaderboard() {
 
   const standings = computeStandings();
 
-  const previousRanks = (() => {
+  const previous = (() => {
     const latest = latestScoredMatch();
     if (!latest) return null;
     const prevResults = { ...state.results };
     delete prevResults[latest.id];
     if (Object.keys(prevResults).length === 0) return null;
     const prev = computeStandings(prevResults);
-    const map = {};
-    prev.forEach((p, i) => { map[p.uid] = i; });
-    return map;
+    const ranks = {}, points = {};
+    prev.forEach((p, i) => { ranks[p.uid] = i; points[p.uid] = p.points; });
+    return { ranks, points };
   })();
 
   const ownerCanRemove = isLeagueOwner() || isAdmin();
@@ -1711,6 +1711,7 @@ function renderLeaderboard() {
           <th>${t('leaderboard.player')}</th>
           <th>${t('leaderboard.points')}</th>
           <th>${t('leaderboard.matchesScored')}</th>
+          ${previous ? `<th class="last-match-th">${t('leaderboard.lastMatch')}</th>` : ''}
           ${ownerCanRemove ? '<th></th>' : ''}
         </tr>
       </thead>
@@ -1725,25 +1726,32 @@ function renderLeaderboard() {
                  </svg>
                </button></td>`
             : (ownerCanRemove ? '<td></td>' : '');
-          let deltaHtml = '';
-          if (previousRanks) {
-            const prev = previousRanks[player.uid];
-            if (prev !== undefined) {
-              const delta = prev - i;
+          let lastMatchCell = '';
+          if (previous) {
+            const prevRank = previous.ranks[player.uid];
+            const prevPts = previous.points[player.uid] ?? 0;
+            const ptsGained = player.points - prevPts;
+            const ptsClass = ptsGained > 0 ? 'pts-delta-pos' : 'pts-delta-zero';
+            const ptsHtml = `<span class="pts-delta ${ptsClass}">+${ptsGained}</span>`;
+            let rankHtml = '';
+            if (prevRank !== undefined) {
+              const delta = prevRank - i;
               if (delta === 0) {
-                deltaHtml = `<span class="rank-delta rank-delta-flat" title="${t('leaderboard.rankDeltaFlat')}">—</span>`;
+                rankHtml = `<span class="rank-delta rank-delta-flat" title="${t('leaderboard.rankDeltaFlat')}">—</span>`;
               } else {
                 const up = delta > 0;
-                deltaHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${t(up ? 'leaderboard.rankDeltaUp' : 'leaderboard.rankDeltaDown', { n: Math.abs(delta) })}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
+                rankHtml = `<span class="rank-delta ${up ? 'rank-delta-up' : 'rank-delta-down'}" title="${t(up ? 'leaderboard.rankDeltaUp' : 'leaderboard.rankDeltaDown', { n: Math.abs(delta) })}">${up ? '▲' : '▼'}${Math.abs(delta)}</span>`;
               }
             }
+            lastMatchCell = `<td class="last-match-cell">${ptsHtml}${rankHtml}</td>`;
           }
           return `
             <tr${player.uid === state.uid ? ' class="current-player"' : ''}>
-              <td><span class="rank-cell"><span class="rank-badge ${rankClass}">${rank}</span>${deltaHtml}</span></td>
+              <td><span class="rank-badge ${rankClass}">${rank}</span></td>
               <td>${player.name}</td>
               <td><span class="points-display">${player.points}</span></td>
               <td>${player.scored} / ${total}</td>
+              ${lastMatchCell}
               ${removeCell}
             </tr>`;
         }).join('')}

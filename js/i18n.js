@@ -219,6 +219,7 @@ const TRANSLATIONS = {
     'leaderboard.rankDeltaUp': 'Up {n} from last match',
     'leaderboard.rankDeltaDown': 'Down {n} from last match',
     'leaderboard.rankDeltaFlat': 'No change since last match',
+    'leaderboard.lastMatch': 'Last match',
 
     'time.justNow': 'just now',
     'time.minutes': '{n}m ago',
@@ -449,6 +450,7 @@ const TRANSLATIONS = {
     'leaderboard.rankDeltaUp': 'Subió {n} desde el último partido',
     'leaderboard.rankDeltaDown': 'Bajó {n} desde el último partido',
     'leaderboard.rankDeltaFlat': 'Sin cambios desde el último partido',
+    'leaderboard.lastMatch': 'Último partido',
 
     'time.justNow': 'ahora mismo',
     'time.minutes': 'hace {n}m',
