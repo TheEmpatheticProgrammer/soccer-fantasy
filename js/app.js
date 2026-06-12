@@ -18,12 +18,14 @@ const arePredictionsLocked = () => {
 };
 
 const Storage = {
-  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id' },
+  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id', lastView: 'wc2026_last_view' },
   getApiKey()         { return localStorage.getItem(this.keys.apiKey) || ''; },
   setApiKey(k)        { localStorage.setItem(this.keys.apiKey, k); },
   getLastLeagueId()   { return localStorage.getItem(this.keys.lastLeagueId) || ''; },
   setLastLeagueId(id) { localStorage.setItem(this.keys.lastLeagueId, id); },
   clearLastLeagueId() { localStorage.removeItem(this.keys.lastLeagueId); },
+  getLastView()       { return localStorage.getItem(this.keys.lastView) || ''; },
+  setLastView(v)      { localStorage.setItem(this.keys.lastView, v); },
 };
 
 // Spanish team names as they appear in the import template → canonical
@@ -335,7 +337,9 @@ async function routeAfterSignIn() {
   const lastId = Storage.getLastLeagueId();
   const chosen = state.myLeagues.find(l => l.id === lastId) || state.myLeagues[0];
   await enterLeague(chosen.id);
-  switchView('predictions');
+  const lastView = Storage.getLastView();
+  const allowed = new Set(['predictions', 'leaderboard', 'leagues', 'profile', 'rules']);
+  switchView(allowed.has(lastView) ? lastView : 'predictions');
 }
 
 async function enterLeague(leagueId) {
@@ -542,6 +546,7 @@ function onSignedOut() {
   if (unsubResults)     { unsubResults();     unsubResults = null; }
   if (unsubLeague)      { unsubLeague();      unsubLeague = null; }
 
+  document.documentElement.classList.remove('auth-prepaint-signed-in');
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('settings-panel').classList.add('hidden');
   updateCurrentLeagueBadge();
@@ -1112,6 +1117,7 @@ function switchView(view) {
     view = 'leagues';
   }
   state.view = view;
+  Storage.setLastView(view);
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
