@@ -369,6 +369,7 @@ async function enterLeague(leagueId) {
   updateCurrentLeagueBadge();
   subscribeToPredictions();
   subscribeToLeague();
+  renderProfileLeagues();
 }
 
 function subscribeToLeague() {
@@ -381,9 +382,7 @@ function subscribeToLeague() {
       document.querySelectorAll('.league-owner-only').forEach(el =>
         el.classList.toggle('hidden', !isLeagueOwner())
       );
-      renderPredictions();
-      renderEveryone();
-      renderLeaderboard();
+      scheduleRenderAll();
     },
     err => console.error('league subscription error', err)
   );
@@ -520,6 +519,7 @@ function renderProfile() {
   if (!user) return;
   document.getElementById('profile-email').textContent = user.email;
   document.getElementById('profile-name-input').value = user.displayName || '';
+  renderProfileLeagues();
 }
 
 async function updateDisplayName() {
@@ -628,11 +628,8 @@ function subscribeToPredictions() {
         leaguePredictionsCol(leagueId).doc(state.uid).set(patch, { merge: true });
       }
 
-      renderLeaderboard();
-      renderPredictions();
-      renderEveryone();
-      renderHeaderStats();
       renderPlayerCard();
+      scheduleRenderAll();
     },
     err => showToast(t('toast.predLoadFail', { msg: err.message }))
   );
@@ -643,11 +640,7 @@ function subscribeToResults() {
     doc => {
       state.results = doc.exists ? (doc.data().results || {}) : {};
       state.resultsVersion = (state.resultsVersion || 0) + 1;
-      renderAdminMatches();
-      renderLeaderboard();
-      renderPredictions();
-      renderEveryone();
-      renderHeaderStats();
+      scheduleRenderAll();
     },
     err => showToast(t('toast.resultsLoadFail', { msg: err.message }))
   );
@@ -678,6 +671,19 @@ function renderPlayerCard() {
   const totalEl = document.getElementById('picks-total');
   if (countEl) countEl.textContent = count;
   if (totalEl) totalEl.textContent = total;
+}
+
+let _renderRafId = null;
+function scheduleRenderAll() {
+  if (_renderRafId) return;
+  _renderRafId = requestAnimationFrame(() => {
+    _renderRafId = null;
+    renderAdminMatches();
+    renderLeaderboard();
+    renderPredictions();
+    renderEveryone();
+    renderHeaderStats();
+  });
 }
 
 function refreshDynamicContent() {
@@ -1005,9 +1011,7 @@ async function pollLiveScores() {
   }
   if (changed) {
     state.resultsVersion = (state.resultsVersion || 0) + 1;
-    renderLeaderboard();
-    renderPredictions();
-    renderEveryone();
+    scheduleRenderAll();
     if (isAdmin()) {
       firebase.firestore().collection('results').doc('all').set({
         results: state.results,
@@ -1083,11 +1087,17 @@ function switchView(view) {
   Storage.setLastView(view);
   const htmlEl = document.documentElement;
   const wasPrepainted = htmlEl.classList.contains('preview-view-' + view);
-  htmlEl.classList.remove('auth-prepaint-signed-in');
-  htmlEl.className = htmlEl.className.replace(/\bpreview-view-\S+/g, '').trim();
+
+  // Add hidden to all views BEFORE dropping the prepaint shield. Otherwise
+  // we expose a microframe where the default CSS shows whichever view is
+  // not marked hidden in index.html, producing a visible flash on refresh.
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
   const target = document.getElementById(`view-${view}`);
   target.classList.remove('hidden');
+
+  htmlEl.classList.remove('auth-prepaint-signed-in');
+  htmlEl.className = htmlEl.className.replace(/\bpreview-view-\S+/g, '').trim();
+
   if (!wasPrepainted) playEnterAnimation(target);
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.view === view)
@@ -1095,6 +1105,7 @@ function switchView(view) {
   if (view === 'leaderboard') renderLeaderboard();
   if (view === 'predictions') { renderPredictions(); renderEveryone(); }
   if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
+  if (view === 'profile') renderProfileLeagues();
 
   // Auto-refresh API data when entering predictions/leaderboard. ApiCache
   // (5min TTL) prevents hammering; admin's call additionally fans out to
@@ -2797,6 +2808,93 @@ function bindLeaguesViewEvents() {
       statusEl.className = 'form-status status-error';
     }
   });
+}
+
+function renderProfileLeagues() {
+  const container = document.getElementById('profile-leagues-container');
+  if (!container) return;
+
+  const myLeagues = state.myLeagues || [];
+  const currentId = state.leagueId;
+
+  const rowsHtml = myLeagues.length === 0
+    ? `<div class="empty-state">${t('profile.noLeagues')}</div>`
+    : myLeagues.map(league => {
+        const isCurrent = league.id === currentId;
+        const memberCount = (league.memberUids || []).length;
+        const memberLabel = memberCount === 1
+          ? t('leagues.members', { n: 1 })
+          : t('leagues.membersPlural', { n: memberCount });
+        const action = isCurrent
+          ? `<span class="profile-league-current" aria-label="${t('profile.currentLeague')}">✓ ${t('profile.currentLeague')}</span>`
+          : `<button type="button" class="btn btn-secondary btn-sm" data-league-switch="${league.id}">${t('profile.switchLeague')}</button>`;
+        return `
+          <div class="profile-league-row${isCurrent ? ' is-current' : ''}">
+            <div class="profile-league-info">
+              <div class="profile-league-name">${escapeHtml(displayLeagueName(league.name))}</div>
+              <div class="profile-league-meta">${memberLabel}</div>
+            </div>
+            <div class="profile-league-action">${action}</div>
+          </div>`;
+      }).join('');
+
+  const createForm = isAdmin() ? `
+    <div class="profile-league-create">
+      <label class="profile-label" for="profile-create-league-name" data-i18n="leagues.createHeading">${t('leagues.createHeading')}</label>
+      <div class="form-row">
+        <input id="profile-create-league-name" type="text" maxlength="60"
+               placeholder="${t('leagues.create.namePlaceholder')}">
+        <button id="profile-btn-create-league" class="btn btn-primary">${t('leagues.create.submit')}</button>
+      </div>
+      <div id="profile-create-league-status" class="form-status"></div>
+    </div>` : '';
+
+  container.innerHTML = `
+    <div class="profile-leagues-list">${rowsHtml}</div>
+    <div class="profile-leagues-actions">
+      <button id="profile-btn-browse-leagues" class="btn btn-secondary btn-sm">${t('profile.browseLeagues')}</button>
+    </div>
+    ${createForm}
+  `;
+
+  container.querySelectorAll('[data-league-switch]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.leagueSwitch;
+      btn.disabled = true;
+      try {
+        await enterLeague(id);
+        switchView('predictions');
+      } catch (err) {
+        showToast(err.message);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const browseBtn = container.querySelector('#profile-btn-browse-leagues');
+  if (browseBtn) {
+    browseBtn.addEventListener('click', () => { enterLeaguesView(); });
+  }
+
+  const createBtn = container.querySelector('#profile-btn-create-league');
+  if (createBtn) {
+    createBtn.addEventListener('click', async () => {
+      const name = container.querySelector('#profile-create-league-name').value.trim();
+      const statusEl = container.querySelector('#profile-create-league-status');
+      try {
+        statusEl.textContent = '';
+        const newId = await createLeague(name);
+        statusEl.textContent = `✓ ${t('leagues.created')}`;
+        statusEl.className = 'form-status status-ok';
+        await loadMyLeagues();
+        await enterLeague(newId);
+        switchView('predictions');
+      } catch (err) {
+        statusEl.textContent = err.message;
+        statusEl.className = 'form-status status-error';
+      }
+    });
+  }
 }
 
 function showToast(msg) {

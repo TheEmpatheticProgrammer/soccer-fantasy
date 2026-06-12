@@ -27,7 +27,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=2026061202">
+  <link rel="stylesheet" href="css/styles.css?v=2026061203">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -69,10 +69,10 @@
   <script defer src="js/config.local.js" onerror="/* no local overrides — fine in production */"></script>
   <script defer src="js/data.js"></script>
   <script defer src="js/api.js"></script>
-  <script defer src="js/i18n.js?v=2026061201"></script>
+  <script defer src="js/i18n.js?v=2026061203"></script>
   <script defer src="js/firebase-init.js"></script>
   <script defer src="js/auth.js"></script>
-  <script defer src="js/app.js?v=2026061201"></script>
+  <script defer src="js/app.js?v=2026061203"></script>
 </head>
 <body>
 
@@ -148,7 +148,6 @@
         </div>
       </div>
       <nav class="main-nav">
-        <button class="nav-btn" data-view="leagues" data-i18n="nav.leagues">Leagues</button>
         <button class="nav-btn requires-league active" data-view="predictions" data-i18n="nav.predictions">Predictions</button>
         <button class="nav-btn requires-league" data-view="leaderboard" data-i18n="nav.leaderboard">Leaderboard</button>
         <button class="nav-btn" data-view="rules" data-i18n="nav.rules">Rules</button>
@@ -200,7 +199,7 @@
     </div>
 
     <!-- Predictions view -->
-    <div id="view-predictions" class="view">
+    <div id="view-predictions" class="view hidden">
 
       <div class="player-bar">
         <div id="player-avatar" class="player-card-avatar">·</div>
@@ -293,6 +292,15 @@
             <button id="btn-change-password" class="btn btn-primary" data-i18n="profile.changePasswordSubmit">Update password</button>
           </div>
           <div id="profile-password-status" class="profile-status"></div>
+        </div>
+
+        <div class="profile-divider"></div>
+
+        <div class="profile-field">
+          <label class="profile-label" data-i18n="profile.leaguesHeading">My leagues</label>
+          <div id="profile-leagues-container" class="profile-leagues">
+            <div class="empty-state" data-i18n="profile.leaguesLoading">Loading…</div>
+          </div>
         </div>
 
         <div class="profile-divider"></div>
