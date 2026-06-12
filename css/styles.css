@@ -1699,6 +1699,17 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .leaderboard-table tr:hover td { background: var(--surface-hi); }
 .leaderboard-table tr.current-player td { background: var(--accent-soft); font-weight: 600; }
 
+/* Center every numeric/badge column under its header. Player name stays
+   left-aligned, the trailing remove-button column stays centered. */
+.leaderboard-table th:nth-child(1),
+.leaderboard-table td:nth-child(1),
+.leaderboard-table th:nth-child(3),
+.leaderboard-table td:nth-child(3),
+.leaderboard-table th:nth-child(4),
+.leaderboard-table td:nth-child(4) { text-align: center; }
+.leaderboard-table th:nth-child(2),
+.leaderboard-table td:nth-child(2) { text-align: left; }
+
 .rank-badge {
   display: inline-flex;
   align-items: center;
@@ -1715,10 +1726,10 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .rank-other { background: var(--gray-200); color: var(--gray-600); }
 
 .this-match-th,
-.rank-move-th { text-align: left; white-space: nowrap; }
+.rank-move-th { text-align: center; white-space: nowrap; }
 .this-match-cell,
 .rank-move-cell {
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -1731,7 +1742,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 .this-match-cell .pts-delta {
   min-width: 2.2rem;
-  text-align: left;
+  text-align: center;
 }
 
 .leaderboard-table th:last-child,

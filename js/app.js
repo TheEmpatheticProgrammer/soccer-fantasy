@@ -1958,14 +1958,38 @@ function initLeaderboardDelegation() {
 }
 
 let _playerPredModalInited = false;
+let _playerPredModalOpenedAt = 0;
 function initPlayerPredModal() {
   if (_playerPredModalInited) return;
   const modal = document.getElementById('player-pred-modal');
   if (!modal) return;
   _playerPredModalInited = true;
 
+  // Only close on a real press-and-release on the backdrop. This prevents
+  // the synthesized mobile click that comes from the tap that *opened* the
+  // modal from immediately closing it (the tap point on the leaderboard
+  // ends up over the freshly-rendered backdrop).
+  let backdropPressed = false;
+  const markPress = (e) => {
+    backdropPressed = !!(e.target && e.target.closest && e.target.closest('[data-close="1"]'));
+  };
+  modal.addEventListener('mousedown', markPress);
+  modal.addEventListener('touchstart', markPress, { passive: true });
+
   modal.addEventListener('click', (e) => {
-    if (e.target.closest('[data-close="1"]')) closePlayerPredictionsModal();
+    // Ignore the click that originated from the same tap that opened us.
+    if (Date.now() - _playerPredModalOpenedAt < 400) {
+      backdropPressed = false;
+      return;
+    }
+    if (!e.target.closest('[data-close="1"]')) return;
+    // For backdrop clicks, require press+release on the backdrop. The close
+    // button still works because it has data-close="1" on itself.
+    const isCloseButton = !!e.target.closest('#player-pred-modal-close');
+    if (isCloseButton || backdropPressed) {
+      closePlayerPredictionsModal();
+    }
+    backdropPressed = false;
   });
 
   document.addEventListener('keydown', (e) => {
@@ -2039,9 +2063,13 @@ function openPlayerPredictionsModal(uid, rank) {
   }
 
   modal.classList.remove('hidden');
+  _playerPredModalOpenedAt = Date.now();
   document.body.classList.add('modal-open');
-  // Focus close button so Escape / keyboard users have a clear handle
-  setTimeout(() => document.getElementById('player-pred-modal-close')?.focus(), 0);
+  // Focus close button so Escape / keyboard users have a clear handle.
+  // preventScroll avoids iOS jumping the viewport on focus.
+  setTimeout(() => {
+    document.getElementById('player-pred-modal-close')?.focus({ preventScroll: true });
+  }, 0);
 }
 
 function closePlayerPredictionsModal() {
