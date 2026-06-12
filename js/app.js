@@ -1273,15 +1273,21 @@ function matchCard(match, pred = {}, result) {
                     : t('match.actual');
   const liveClass = liveState === 'live' ? ' status-live' : '';
 
+  const isLive = liveState === 'live';
+  const liveMetaPill = isLive
+    ? `<span class="meta-sep">·</span><span class="meta-live-pill"><span class="meta-live-dot" aria-hidden="true"></span>${t('match.live')}</span>`
+    : '';
   const statusIcon = result === undefined || result === null
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
-    : pts === 3
-      ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
-      : pts === 1
-        ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
-        : pts === 0
-          ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
-          : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
+    : isLive
+      ? ''
+      : pts === 3
+        ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
+        : pts === 1
+          ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
+          : pts === 0
+            ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
+            : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
 
   const actualNumsHtml = result
     ? `<span class="actual-num">${result.home}</span>
@@ -1302,6 +1308,7 @@ function matchCard(match, pred = {}, result) {
         <span class="meta-sep">·</span>
         <span class="meta-time">${time}</span>
         ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+        ${liveMetaPill}
       </div>
 
       <div class="match-teams">
@@ -1319,7 +1326,7 @@ function matchCard(match, pred = {}, result) {
           <input class="score-input" type="number" min="0" max="30" inputmode="numeric"
                  data-match="${match.id}" data-side="away" value="${pred.away ?? ''}" ${lockAttr}>
         </div>
-        <div class="actual-side">
+        <div class="actual-side${isLive ? ' is-live' : ''}">
           ${statusIcon}
           ${actualNumsHtml}
           ${ptsBadge}
@@ -1846,6 +1853,20 @@ function renderLeaderboard() {
       }));
     }
   } catch (e) { /* quota or storage disabled — skip cache */ }
+
+  // Attach click handlers directly to each row as a mobile-Safari-safe
+  // fallback for event delegation (some touch contexts swallow taps on
+  // <tr> elements before they bubble to the container).
+  container.querySelectorAll('tr.leaderboard-row[data-player-uid]').forEach((row) => {
+    if (row._directClickBound) return;
+    row._directClickBound = true;
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.btn-remove-player, .col-info-btn, button')) return;
+      const uid = row.dataset.playerUid;
+      const rank = parseInt(row.dataset.playerRank, 10) || 0;
+      openPlayerPredictionsModal(uid, rank);
+    });
+  });
 }
 
 function initLeaderboardDelegation() {
@@ -2051,15 +2072,21 @@ function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
                     : t('match.actual');
   const liveClass = liveState === 'live' ? ' status-live' : '';
 
+  const isLive = liveState === 'live';
+  const liveMetaPill = isLive
+    ? `<span class="meta-sep">·</span><span class="meta-live-pill"><span class="meta-live-dot" aria-hidden="true"></span>${t('match.live')}</span>`
+    : '';
   const statusIcon = result === undefined || result === null
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
-    : pts === 3
-      ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
-      : pts === 1
-        ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
-        : pts === 0
-          ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
-          : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
+    : isLive
+      ? ''
+      : pts === 3
+        ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
+        : pts === 1
+          ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
+          : pts === 0
+            ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
+            : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
 
   const actualNumsHtml = result
     ? `<span class="actual-num">${result.home}</span>
@@ -2083,6 +2110,7 @@ function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
         <span class="meta-sep">·</span>
         <span class="meta-time">${time}</span>
         ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+        ${liveMetaPill}
       </div>
 
       <div class="match-teams">
@@ -2098,7 +2126,7 @@ function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
           <span class="vs">−</span>
           <span class="player-pred-num">${pickAway}</span>
         </div>
-        <div class="actual-side">
+        <div class="actual-side${isLive ? ' is-live' : ''}">
           ${statusIcon}
           ${actualNumsHtml}
           ${ptsBadge}
