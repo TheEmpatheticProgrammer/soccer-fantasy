@@ -79,19 +79,6 @@
   <!-- Auth screen (shown when signed out) -->
   <div id="auth-screen" class="auth-screen">
     <div class="auth-card">
-      <div class="auth-hero">
-        <div class="auth-hero-label" data-i18n="hero.kickoffLabel">Kickoff in</div>
-        <div class="kickoff-hero-grid">
-          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-days">--</span><span class="kickoff-unit" data-i18n="hero.days">days</span></div>
-          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-hours">--</span><span class="kickoff-unit" data-i18n="hero.hours">hrs</span></div>
-          <div class="kickoff-cell"><span class="kickoff-num" id="auth-kickoff-mins">--</span><span class="kickoff-unit" data-i18n="hero.mins">min</span></div>
-        </div>
-        <div class="auth-hero-meta" data-i18n="hero.firstMatch">June 11, 2026 · Mexico City</div>
-        <div class="kickoff-lock-note hidden" id="auth-lock-note">
-          <span class="lock-note-label" data-i18n="hero.predictionsLockIn">Predictions will lock in:</span>
-          <span class="lock-note-time" id="auth-lock-countdown">--</span>
-        </div>
-      </div>
       <h1 data-i18n="app.title">Copamigos</h1>
       <p class="auth-subtitle" data-i18n="auth.subtitle">Sign in to make your predictions</p>
 
@@ -193,22 +180,7 @@
     </div>
   </div>
 
-  <!-- Hero kickoff countdown (signed in) -->
-  <div id="kickoff-hero" class="kickoff-hero hidden" aria-live="polite">
-    <div class="kickoff-hero-inner">
-      <div class="kickoff-hero-label" data-i18n="hero.kickoffLabel">Kickoff in</div>
-      <div class="kickoff-hero-grid">
-        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-days">--</span><span class="kickoff-unit" data-i18n="hero.days">days</span></div>
-        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-hours">--</span><span class="kickoff-unit" data-i18n="hero.hours">hrs</span></div>
-        <div class="kickoff-cell"><span class="kickoff-num" id="kickoff-mins">--</span><span class="kickoff-unit" data-i18n="hero.mins">min</span></div>
-      </div>
-      <div class="kickoff-hero-meta" data-i18n="hero.firstMatch">June 11, 2026 · Mexico City</div>
-      <div class="kickoff-lock-note hidden" id="kickoff-lock-note">
-        <span class="lock-note-label" data-i18n="hero.predictionsLockIn">Predictions will lock in:</span>
-        <span class="lock-note-time" id="kickoff-lock-countdown">--</span>
-      </div>
-    </div>
-  </div>
+  <!-- Hero kickoff countdown removed once tournament started -->
 
   <div id="current-league-bar" class="current-league-bar">
     <div class="league-info">
@@ -438,6 +410,32 @@
   </main>
 
   <div id="toast" class="toast hidden"></div>
+
+  <!-- Read-only modal for viewing another player's predictions -->
+  <div id="player-pred-modal" class="player-pred-modal hidden" role="dialog" aria-modal="true" aria-labelledby="player-pred-modal-title">
+    <div class="player-pred-modal-backdrop" data-close="1"></div>
+    <div class="player-pred-modal-panel" role="document">
+      <header class="player-pred-modal-header">
+        <div class="player-pred-modal-identity">
+          <span id="player-pred-modal-avatar" class="player-pred-modal-avatar">·</span>
+          <div class="player-pred-modal-text">
+            <h2 id="player-pred-modal-title" class="player-pred-modal-name"></h2>
+            <div class="player-pred-modal-meta">
+              <span id="player-pred-modal-rank" class="player-pred-modal-rank"></span>
+              <span class="player-pred-modal-sep">·</span>
+              <span id="player-pred-modal-points" class="player-pred-modal-points"></span>
+            </div>
+          </div>
+        </div>
+        <button id="player-pred-modal-close" class="player-pred-modal-close" data-close="1" aria-label="Close" data-i18n-title="playerModal.close" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </header>
+      <div id="player-pred-modal-body" class="player-pred-modal-body"></div>
+    </div>
+  </div>
 
 </body>
 </html>

@@ -264,7 +264,6 @@ function init() {
   renderAdminMatches();
   renderLeaderboard();
   startCountdownInterval();
-  renderKickoffHero();
 
   document.addEventListener('visibilitychange', maybeAdjustLivePolling);
 
@@ -281,7 +280,6 @@ async function onSignedIn(user) {
   document.getElementById('auth-screen').classList.add('hidden');
   try { localStorage.setItem('wc2026_signed_in', '1'); } catch (e) {}
   document.getElementById('player-display').textContent = state.currentPlayer;
-  renderKickoffHero();
   renderProfile();
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('hidden', !isAdmin()));
 
@@ -490,47 +488,7 @@ function startCountdownInterval() {
   if (countdownInterval) return;
   countdownInterval = setInterval(() => {
     renderHeaderStats();
-    renderKickoffHero();
   }, 60000);
-}
-
-function renderKickoffHero() {
-  const targets = [
-    { d: 'kickoff-days', h: 'kickoff-hours', m: 'kickoff-mins', wrap: 'kickoff-hero', lockNote: 'kickoff-lock-note', lockCountdown: 'kickoff-lock-countdown' },
-    { d: 'auth-kickoff-days', h: 'auth-kickoff-hours', m: 'auth-kickoff-mins', wrap: null, lockNote: 'auth-lock-note', lockCountdown: 'auth-lock-countdown' },
-  ];
-  const diff = getWorldCupStart().getTime() - Date.now();
-  const live = diff <= 0;
-  const days  = live ? 0 : Math.floor(diff / 86400000);
-  const hours = live ? 0 : Math.floor((diff % 86400000) / 3600000);
-  const mins  = live ? 0 : Math.floor((diff % 3600000) / 60000);
-
-  const lockDiff = PREDICTIONS_LOCK_DATE.getTime() - Date.now();
-  const lockOpen = lockDiff > 0;
-  const lockHours = lockOpen ? Math.floor(lockDiff / 3600000) : 0;
-  const lockMins  = lockOpen ? Math.floor((lockDiff % 3600000) / 60000) : 0;
-  const lockText = `${String(lockHours).padStart(2, '0')}h ${String(lockMins).padStart(2, '0')}m`;
-
-  for (const ids of targets) {
-    const dEl = document.getElementById(ids.d);
-    const hEl = document.getElementById(ids.h);
-    const mEl = document.getElementById(ids.m);
-    if (!dEl || !hEl || !mEl) continue;
-    dEl.textContent = String(days).padStart(2, '0');
-    hEl.textContent = String(hours).padStart(2, '0');
-    mEl.textContent = String(mins).padStart(2, '0');
-    if (ids.wrap) {
-      const wrap = document.getElementById(ids.wrap);
-      if (wrap) {
-        wrap.classList.toggle('hidden', !state.uid);
-        wrap.classList.toggle('is-live', live);
-      }
-    }
-    const noteEl = ids.lockNote ? document.getElementById(ids.lockNote) : null;
-    const lockCountdownEl = ids.lockCountdown ? document.getElementById(ids.lockCountdown) : null;
-    if (noteEl) noteEl.classList.toggle('hidden', !lockOpen);
-    if (lockCountdownEl) lockCountdownEl.textContent = lockText;
-  }
 }
 
 function onSignedOut() {
@@ -733,7 +691,6 @@ function refreshDynamicContent() {
   refreshSaveStatus();
   renderHeaderStats();
   updateCurrentLeagueBadge();
-  renderKickoffHero();
   renderPlayerCard();
   document.querySelectorAll('.nav-btn.requires-league').forEach(btn => {
     btn.classList.toggle('hidden', !state.leagueId);
@@ -742,6 +699,7 @@ function refreshDynamicContent() {
 
 function bindEvents() {
   initLeaderboardDelegation();
+  initPlayerPredModal();
 
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.addEventListener('click', () => switchView(btn.dataset.view))
@@ -1119,6 +1077,7 @@ function switchView(view) {
   if ((view === 'predictions' || view === 'leaderboard') && !state.leagueId) {
     view = 'leagues';
   }
+  closePlayerPredictionsModal();
   state.view = view;
   Storage.setLastView(view);
   const htmlEl = document.documentElement;
@@ -1724,7 +1683,24 @@ function renderLeaderboard() {
           <th>${t('leaderboard.player')}</th>
           <th>${t('leaderboard.points')}</th>
           <th>${t('leaderboard.matchesScored')}</th>
-          ${previous ? `<th class="last-match-th">${t('leaderboard.lastMatch')}</th>` : ''}
+          ${previous ? `<th class="last-match-th">
+            <span class="last-match-th-label">${t('leaderboard.lastMatch')}</span>
+            <button type="button" class="last-match-info-btn" id="last-match-info-btn"
+                    aria-expanded="false"
+                    aria-controls="last-match-info-pop"
+                    aria-label="${t('leaderboard.lastMatchInfoTitle')}"
+                    title="${t('leaderboard.lastMatchInfoTitle')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="11" x2="12" y2="17"/>
+                <line x1="12" y1="7.5" x2="12" y2="7.6"/>
+              </svg>
+            </button>
+            <div id="last-match-info-pop" class="last-match-info-pop hidden" role="tooltip">
+              <div class="last-match-info-title">${t('leaderboard.lastMatchInfoTitle')}</div>
+              <div class="last-match-info-body">${t('leaderboard.lastMatchInfoBody')}</div>
+            </div>
+          </th>` : ''}
           ${ownerCanRemove ? '<th></th>' : ''}
         </tr>
       </thead>
@@ -1745,7 +1721,10 @@ function renderLeaderboard() {
             const prevPts = previous.points[player.uid] ?? 0;
             const ptsGained = player.points - prevPts;
             const ptsClass = ptsGained > 0 ? 'pts-delta-pos' : 'pts-delta-zero';
-            const ptsHtml = `<span class="pts-delta ${ptsClass}">+${ptsGained}</span>`;
+            const ptsTitle = ptsGained > 0
+              ? t('leaderboard.ptsDeltaGained', { n: ptsGained })
+              : t('leaderboard.ptsDeltaZero');
+            const ptsHtml = `<span class="pts-delta ${ptsClass}" title="${ptsTitle}">+${ptsGained}</span>`;
             let rankHtml = '';
             if (prevRank !== undefined) {
               const delta = prevRank - i;
@@ -1758,8 +1737,10 @@ function renderLeaderboard() {
             }
             lastMatchCell = `<td class="last-match-cell">${ptsHtml}${rankHtml}</td>`;
           }
+          const rowClasses = ['leaderboard-row'];
+          if (player.uid === state.uid) rowClasses.push('current-player');
           return `
-            <tr${player.uid === state.uid ? ' class="current-player"' : ''}>
+            <tr class="${rowClasses.join(' ')}" data-player-uid="${player.uid}" data-player-rank="${rank}" tabindex="0" role="button" aria-label="${t('leaderboard.viewPlayer', { name: player.name })}">
               <td><span class="rank-badge ${rankClass}">${rank}</span></td>
               <td>${player.name}</td>
               <td><span class="points-display">${player.points}</span></td>
@@ -1806,6 +1787,17 @@ function initLeaderboardDelegation() {
       return;
     }
 
+    const infoBtn = e.target.closest('#last-match-info-btn');
+    if (infoBtn) {
+      e.stopPropagation();
+      const pop = document.getElementById('last-match-info-pop');
+      if (pop) {
+        const open = pop.classList.toggle('hidden');
+        infoBtn.setAttribute('aria-expanded', String(!open));
+      }
+      return;
+    }
+
     const resetBtn = e.target.closest('#btn-reset-league');
     if (resetBtn) {
       if (!state.leagueId || (!isLeagueOwner() && !isAdmin())) return;
@@ -1820,8 +1812,205 @@ function initLeaderboardDelegation() {
       } finally {
         resetBtn.disabled = false;
       }
+      return;
+    }
+
+    const playerRow = e.target.closest('tr.leaderboard-row[data-player-uid]');
+    if (playerRow) {
+      const uid = playerRow.dataset.playerUid;
+      const rank = parseInt(playerRow.dataset.playerRank, 10) || 0;
+      openPlayerPredictionsModal(uid, rank);
     }
   });
+
+  container.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const playerRow = e.target.closest('tr.leaderboard-row[data-player-uid]');
+    if (!playerRow) return;
+    e.preventDefault();
+    const uid = playerRow.dataset.playerUid;
+    const rank = parseInt(playerRow.dataset.playerRank, 10) || 0;
+    openPlayerPredictionsModal(uid, rank);
+  });
+
+  // Dismiss the Last-match info popover when clicking outside it
+  document.addEventListener('click', (e) => {
+    const pop = document.getElementById('last-match-info-pop');
+    if (!pop || pop.classList.contains('hidden')) return;
+    if (e.target.closest('#last-match-info-btn') || e.target.closest('#last-match-info-pop')) return;
+    pop.classList.add('hidden');
+    const btn = document.getElementById('last-match-info-btn');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  });
+}
+
+let _playerPredModalInited = false;
+function initPlayerPredModal() {
+  if (_playerPredModalInited) return;
+  const modal = document.getElementById('player-pred-modal');
+  if (!modal) return;
+  _playerPredModalInited = true;
+
+  modal.addEventListener('click', (e) => {
+    if (e.target.closest('[data-close="1"]')) closePlayerPredictionsModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closePlayerPredictionsModal();
+    }
+  });
+}
+
+function openPlayerPredictionsModal(uid, rank) {
+  initPlayerPredModal();
+  const modal = document.getElementById('player-pred-modal');
+  if (!modal) return;
+
+  const doc = state.predictionDocs[uid];
+  const standings = computeStandings();
+  const standing = standings.find(s => s.uid === uid);
+  const name = (doc && doc.displayName) || (standing && standing.name) || t('toast.unknown');
+  const points = standing ? standing.points : 0;
+  const scored = standing ? standing.scored : 0;
+  const total = state.matches.length;
+  const isSelf = uid === state.uid;
+
+  document.getElementById('player-pred-modal-title').textContent = name;
+  const avatarEl = document.getElementById('player-pred-modal-avatar');
+  avatarEl.textContent = getInitials(name);
+  avatarEl.style.setProperty('--avatar-hue', String(isSelf ? 145 : hashHue(uid)));
+  document.getElementById('player-pred-modal-rank').textContent = t('playerModal.rank', { rank });
+  document.getElementById('player-pred-modal-points').textContent =
+    t('playerModal.points', { points, scored, total });
+
+  const body = document.getElementById('player-pred-modal-body');
+  const preds = (doc && doc.predictions) || {};
+  if (!Object.keys(preds).length) {
+    body.innerHTML = `<div class="empty-state">${t('playerModal.noPicks')}</div>`;
+  } else {
+    const hint = isSelf ? '' : `<div class="player-pred-modal-hint">${t('playerModal.readOnlyHint')}</div>`;
+    body.innerHTML = hint + Object.entries(state.groups).map(([group, teams]) => {
+      const matches = state.matches.filter(m => m.group === group);
+      let groupPts = 0;
+      let groupPicked = 0;
+      for (const m of matches) {
+        const p = preds[m.id];
+        if (p && p.home !== undefined && p.away !== undefined) {
+          groupPicked++;
+          const actual = state.results[m.id];
+          if (actual) groupPts += calcPoints(p, actual);
+        }
+      }
+      return `
+        <details class="prediction-group player-pred-group" open>
+          <summary class="prediction-group-title">
+            <span class="group-letter-badge">${group}</span>
+            <span class="group-letter-text">${t('match.group', { letter: group })}</span>
+            <span class="group-stats">
+              <span class="group-stats-pts">${groupPts} ${t('header.points')}</span>
+              <span class="group-stats-sep">·</span>
+              <span class="group-stats-predicted">${groupPicked}/${matches.length}</span>
+            </span>
+            <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </summary>
+          <div class="prediction-group-rows">
+            ${matches.map(m => playerPredictionCard(m, preds[m.id], state.results[m.id], name, uid)).join('')}
+          </div>
+        </details>`;
+    }).join('');
+  }
+
+  modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  // Focus close button so Escape / keyboard users have a clear handle
+  setTimeout(() => document.getElementById('player-pred-modal-close')?.focus(), 0);
+}
+
+function closePlayerPredictionsModal() {
+  const modal = document.getElementById('player-pred-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
+  const hasPred = pred && pred.home !== undefined && pred.away !== undefined;
+  const pts = (result && hasPred) ? calcPoints(pred, result) : null;
+
+  const { day, time } = formatMatchDateParts(match.utcDate);
+  const venue = displayVenue(venueForMatch(match));
+  const ownerInitial = getInitials(ownerName);
+  const isSelf = ownerUid === state.uid;
+  const avatarHue = isSelf ? 145 : hashHue(ownerUid);
+
+  const rowClass = pts === 3 ? 'predict-row pts-exact'
+                 : pts === 1 ? 'predict-row pts-partial'
+                 : pts === 0 ? 'predict-row pts-miss'
+                 : 'predict-row';
+
+  const liveState = matchLiveState(match);
+  const statusLabel = liveState === 'live' ? t('match.live')
+                    : liveState === 'ft'   ? t('match.ft')
+                    : t('match.actual');
+  const liveClass = liveState === 'live' ? ' status-live' : '';
+
+  const statusIcon = result === undefined || result === null
+    ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
+    : pts === 3
+      ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
+      : pts === 1
+        ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
+        : pts === 0
+          ? `<span class="actual-status status-label status-miss${liveClass}">${statusLabel}</span>`
+          : `<span class="actual-status status-label status-neutral${liveClass}">${statusLabel}</span>`;
+
+  const actualNumsHtml = result
+    ? `<span class="actual-num">${result.home}</span>
+       <span class="actual-dash">−</span>
+       <span class="actual-num">${result.away}</span>`
+    : `<span class="actual-num actual-empty">?</span>
+       <span class="actual-dash">−</span>
+       <span class="actual-num actual-empty">?</span>`;
+
+  const ptsBadge = pts !== null
+    ? `<span class="pts-badge pts-badge-${pts}">+${pts}</span>`
+    : '';
+
+  const pickHome = hasPred ? pred.home : '—';
+  const pickAway = hasPred ? pred.away : '—';
+
+  return `
+    <div class="${rowClass}">
+      <div class="match-meta-line">
+        <span class="meta-day">${day}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-time">${time}</span>
+        ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+      </div>
+
+      <div class="match-teams">
+        <span class="team home">${teamLabel(match.home, 'left')}</span>
+        <span class="team-vs">${t('match.vs')}</span>
+        <span class="team away">${teamLabel(match.away, 'right')}</span>
+      </div>
+
+      <div class="match-scoreboard">
+        <div class="my-pick player-pred-pick">
+          <span class="my-pick-avatar" style="--avatar-hue:${avatarHue}">${escapeHtml(ownerInitial)}</span>
+          <span class="player-pred-num">${pickHome}</span>
+          <span class="vs">−</span>
+          <span class="player-pred-num">${pickAway}</span>
+        </div>
+        <div class="actual-side">
+          ${statusIcon}
+          ${actualNumsHtml}
+          ${ptsBadge}
+        </div>
+      </div>
+    </div>`;
 }
 
 function exportPredictionsCSV() {
