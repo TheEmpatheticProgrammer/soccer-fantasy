@@ -2985,11 +2985,13 @@ body.modal-open { overflow: hidden; }
 
 @media (max-width: 520px) {
   .player-pred-modal {
-    padding: 0.6rem;
+    padding: 1.1rem 0.9rem;
   }
   .player-pred-modal-panel {
     width: 100%;
-    max-height: calc(100vh - 1.2rem);
+    max-width: 460px;
+    max-height: calc(100vh - 2.2rem);
+    max-height: calc(100dvh - 2.2rem);
     border-radius: 14px;
   }
   .player-pred-modal-header { padding: 0.7rem 0.8rem; }
