@@ -2895,15 +2895,34 @@ body.modal-open { overflow: hidden; }
 }
 
 @media (max-width: 520px) {
-  .player-pred-modal-panel {
-    margin: 0;
-    width: 100%;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
-    border: none;
+  .player-pred-modal {
+    padding: 0.6rem;
   }
-  .player-pred-modal-body { padding: 0.4rem 0.6rem 1rem; }
+  .player-pred-modal-panel {
+    width: 100%;
+    max-height: calc(100vh - 1.2rem);
+    border-radius: 14px;
+  }
+  .player-pred-modal-header { padding: 0.7rem 0.8rem; }
+  .player-pred-modal-avatar { width: 36px; height: 36px; font-size: 0.85rem; }
+  .player-pred-modal-name { font-size: 0.98rem; }
+  .player-pred-modal-body { padding: 0.4rem 0.7rem 0.9rem; }
   .last-match-info-pop { right: -8px; }
+
+  /* Keep the LIVE column-header indicator from getting clipped. */
+  .last-match-th {
+    white-space: normal;
+    line-height: 1.15;
+  }
+  .last-match-live-pill {
+    padding: 0.05rem 0.32rem 0.05rem 0.28rem;
+    font-size: 0;
+    margin-left: 0.3rem;
+  }
+  .last-match-live-pill .last-match-live-dot {
+    width: 7px; height: 7px;
+    margin: 0;
+  }
+  .last-match-info-btn { margin-left: 0.25rem; }
 }
 
