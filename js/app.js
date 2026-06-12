@@ -1179,10 +1179,15 @@ function renderPredictions() {
   const openPredictionGroups = captureOpenGroups('matches-container');
   const predictionsFirstRender = !state.predictionsRendered;
   state.predictionsRendered = true;
+  const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
+  const predictionsCurrentShifted = state._predictionsLastCurrentGroup !== defaultOpenGroup;
+  state._predictionsLastCurrentGroup = defaultOpenGroup;
 
   container.innerHTML = lockBanner + columnHeader + Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
-    const isOpen = predictionsFirstRender ? i === 0 : openPredictionGroups.has(group);
+    const isOpen = predictionsFirstRender
+      ? group === defaultOpenGroup
+      : (openPredictionGroups.has(group) || (predictionsCurrentShifted && group === defaultOpenGroup));
     const resetBtn = arePredictionsLocked()
       ? ''
       : `<button type="button" class="group-reset-btn" data-reset-group="${group}" title="${t('predictions.resetGroup')}">${t('predictions.resetGroup')}</button>`;
@@ -1359,10 +1364,15 @@ function renderEveryone() {
   const openEveryoneGroups = captureOpenGroups('everyone-container');
   const everyoneFirstRender = !state.everyoneRendered;
   state.everyoneRendered = true;
+  const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
+  const everyoneCurrentShifted = state._everyoneLastCurrentGroup !== defaultOpenGroup;
+  state._everyoneLastCurrentGroup = defaultOpenGroup;
 
   container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
-    const isOpen = everyoneFirstRender ? i === 0 : openEveryoneGroups.has(group);
+    const isOpen = everyoneFirstRender
+      ? group === defaultOpenGroup
+      : (openEveryoneGroups.has(group) || (everyoneCurrentShifted && group === defaultOpenGroup));
     return `
       <details class="group-section" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="group-header">
@@ -1547,6 +1557,40 @@ function computeStandings(resultsOverride) {
     _standingsCache = standings;
   }
   return standings;
+}
+
+function currentMatch() {
+  const matches = state.matches;
+  if (!matches.length) return null;
+
+  // 1. A match currently in play (live state from poller or canonical status).
+  for (const m of matches) {
+    if (matchLiveState(m) === 'live') return m;
+  }
+
+  // 2. The next upcoming match (earliest kickoff in the future).
+  const now = Date.now();
+  let next = null;
+  for (const m of matches) {
+    const t = new Date(m.utcDate).getTime();
+    if (!Number.isFinite(t) || t < now) continue;
+    if (!next || t < new Date(next.utcDate).getTime()) next = m;
+  }
+  if (next) return next;
+
+  // 3. The most recently played match (latest kickoff in the past, with a result).
+  let recent = null;
+  for (const m of matches) {
+    const t = new Date(m.utcDate).getTime();
+    if (!Number.isFinite(t)) continue;
+    if (!recent || t > new Date(recent.utcDate).getTime()) recent = m;
+  }
+  return recent;
+}
+
+function currentGroup() {
+  const m = currentMatch();
+  return m ? m.group : null;
 }
 
 function latestScoredMatch() {
@@ -1897,6 +1941,7 @@ function openPlayerPredictionsModal(uid, rank) {
     body.innerHTML = `<div class="empty-state">${t('playerModal.noPicks')}</div>`;
   } else {
     const hint = isSelf ? '' : `<div class="player-pred-modal-hint">${t('playerModal.readOnlyHint')}</div>`;
+    const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
     body.innerHTML = hint + Object.entries(state.groups).map(([group, teams]) => {
       const matches = state.matches.filter(m => m.group === group);
       let groupPts = 0;
@@ -1909,8 +1954,9 @@ function openPlayerPredictionsModal(uid, rank) {
           if (actual) groupPts += calcPoints(p, actual);
         }
       }
+      const isOpen = group === defaultOpenGroup;
       return `
-        <details class="prediction-group player-pred-group" open>
+        <details class="prediction-group player-pred-group"${isOpen ? ' open' : ''}>
           <summary class="prediction-group-title">
             <span class="group-letter-badge">${group}</span>
             <span class="group-letter-text">${t('match.group', { letter: group })}</span>
