@@ -348,6 +348,7 @@ async function enterLeague(leagueId) {
   state.leagueId = leagueId;
   state.predictionsRendered = false;
   state.everyoneRendered = false;
+  state._everyoneSeenMatches = new Set();
   Storage.setLastLeagueId(leagueId);
 
   const doc = await leagueDocRef(leagueId).get();
@@ -715,6 +716,8 @@ function bindEvents() {
   document.querySelectorAll('.sub-tab').forEach(btn =>
     btn.addEventListener('click', () => switchSubview(btn.dataset.subtab))
   );
+
+  bindEveryoneSearch();
 
   document.getElementById('btn-settings').addEventListener('click', () => {
     document.getElementById('settings-panel').classList.toggle('hidden');
@@ -1370,28 +1373,48 @@ function renderEveryone() {
     return;
   }
 
+  const filterRaw = (state.everyoneFilter || '').trim();
+  const filterLc = filterRaw.toLowerCase();
+  const filterActive = filterLc.length > 0;
+
   // Pre-index participants by match: avoids re-filtering all participants
   // for each of the 72 group-stage matches inside everyoneMatchBlock.
   const participantsByMatch = {};
   for (const entry of participants) {
     const preds = entry[1].predictions || {};
+    const name = (entry[1].displayName || '').toLowerCase();
+    const matchesFilter = !filterActive || name.includes(filterLc);
+    if (filterActive && !matchesFilter) continue;
     for (const mid of Object.keys(preds)) {
       (participantsByMatch[mid] ||= []).push(entry);
     }
   }
 
+  if (filterActive && Object.keys(participantsByMatch).length === 0) {
+    container.innerHTML = `<div class="empty-state">${t('predictions.searchNoMatches', { q: escapeHtml(filterRaw) })}</div>`;
+    return;
+  }
+
   const openEveryoneGroups = captureOpenGroups('everyone-container');
+  const openMatchCards = captureOpenMatchCards('everyone-container');
   const everyoneFirstRender = !state.everyoneRendered;
   state.everyoneRendered = true;
+  const seenMatches = state._everyoneSeenMatches ||= new Set();
   const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
   const everyoneCurrentShifted = state._everyoneLastCurrentGroup !== defaultOpenGroup;
   state._everyoneLastCurrentGroup = defaultOpenGroup;
 
   container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
     const matches = state.matches.filter(m => m.group === group);
-    const isOpen = everyoneFirstRender
-      ? group === defaultOpenGroup
-      : (openEveryoneGroups.has(group) || (everyoneCurrentShifted && group === defaultOpenGroup));
+    const groupMatches = filterActive
+      ? matches.filter(m => (participantsByMatch[m.id] || []).length > 0)
+      : matches;
+    if (filterActive && groupMatches.length === 0) return '';
+    const isOpen = filterActive
+      ? true
+      : (everyoneFirstRender
+          ? group === defaultOpenGroup
+          : (openEveryoneGroups.has(group) || (everyoneCurrentShifted && group === defaultOpenGroup)));
     return `
       <details class="group-section" data-group="${group}"${isOpen ? ' open' : ''}>
         <summary class="group-header">
@@ -1401,9 +1424,13 @@ function renderEveryone() {
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </summary>
-        ${matches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [])).join('')}
+        ${groupMatches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [], { filterActive, openMatchCards, seenMatches })).join('')}
       </details>`;
   }).join('');
+
+  // Mark every rendered match as seen so subsequent renders honor user toggles
+  // instead of re-applying the FT auto-collapse rule.
+  for (const m of state.matches) seenMatches.add(m.id);
 }
 
 function captureOpenGroups(containerId) {
@@ -1414,9 +1441,57 @@ function captureOpenGroups(containerId) {
   return open;
 }
 
-function everyoneMatchBlock(match, participants) {
+function captureOpenMatchCards(containerId) {
+  const open = new Set();
+  document.querySelectorAll(`#${containerId} details[data-match-id]`).forEach(el => {
+    if (el.open) open.add(el.dataset.matchId);
+  });
+  return open;
+}
+
+let _everyoneSearchDebounce = null;
+function bindEveryoneSearch() {
+  const input = document.getElementById('everyone-search-input');
+  const clearBtn = document.getElementById('everyone-search-clear');
+  if (!input || !clearBtn) return;
+
+  const apply = (raw) => {
+    const next = (raw || '').trim();
+    state.everyoneFilter = next;
+    clearBtn.classList.toggle('hidden', next.length === 0);
+    renderEveryone();
+  };
+
+  input.addEventListener('input', (e) => {
+    const v = e.target.value;
+    if (_everyoneSearchDebounce) clearTimeout(_everyoneSearchDebounce);
+    _everyoneSearchDebounce = setTimeout(() => apply(v), 120);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    if (_everyoneSearchDebounce) clearTimeout(_everyoneSearchDebounce);
+    apply('');
+    input.focus();
+  });
+}
+
+function everyoneMatchBlock(match, participants, ctx) {
   const result = state.results[match.id];
   const liveState = matchLiveState(match);
+  const ctxFilter = !!(ctx && ctx.filterActive);
+  const openMatchCards = (ctx && ctx.openMatchCards) || null;
+  const seenMatches = (ctx && ctx.seenMatches) || null;
+  const isFinal = !!result && liveState !== 'live';
+
+  let isOpen;
+  if (ctxFilter) {
+    isOpen = true;
+  } else if (seenMatches && seenMatches.has(match.id) && openMatchCards) {
+    isOpen = openMatchCards.has(match.id);
+  } else {
+    isOpen = !isFinal;
+  }
 
   const headerRight = result
     ? `<span class="everyone-ft-pill${liveState === 'live' ? ' is-live' : ''}"><span class="ft-label">${liveState === 'live' ? t('match.live') : t('match.ft')}</span> <span class="ft-score">${result.home}<span class="ft-dash">−</span>${result.away}</span></span>`
@@ -1446,9 +1521,14 @@ function everyoneMatchBlock(match, participants) {
       </div>`;
   });
 
+  const pickCount = participants.length;
+  const pickLabel = pickCount === 1
+    ? t('predictions.pickCount', { count: pickCount })
+    : t('predictions.pickCountPlural', { count: pickCount });
+
   return `
-    <div class="everyone-match-card">
-      <div class="everyone-match-header">
+    <details class="everyone-match-card" data-match-id="${match.id}"${isOpen ? ' open' : ''}>
+      <summary class="everyone-match-header">
         <span class="everyone-match-teams">
           ${teamFlag(match.home)}
           <span class="everyone-team-name">${tCountry(match.home)}</span>
@@ -1456,8 +1536,14 @@ function everyoneMatchBlock(match, participants) {
           <span class="everyone-team-name">${tCountry(match.away)}</span>
           ${teamFlag(match.away)}
         </span>
-        ${headerRight}
-      </div>
+        <span class="everyone-match-meta-right">
+          ${headerRight}
+          <span class="everyone-pick-count">${pickLabel}</span>
+          <svg class="match-chevron" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </summary>
       ${(() => {
         const { day, time } = formatMatchDateParts(match.utcDate);
         const venue = displayVenue(venueForMatch(match));
@@ -1472,7 +1558,7 @@ function everyoneMatchBlock(match, participants) {
       ${rows.length > 0
         ? rows.join('')
         : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}
-    </div>`;
+    </details>`;
 }
 
 function hashHue(s) {
