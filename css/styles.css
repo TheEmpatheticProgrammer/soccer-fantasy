@@ -3104,6 +3104,16 @@ body.modal-open { overflow: hidden; }
   padding: 0.5rem 0.85rem 1rem;
   overflow-y: auto;
 }
+
+#player-pred-modal-body .predict-row {
+  display: flex;
+  flex-direction: column;
+  padding: 0.7rem 0.85rem 0.85rem;
+  gap: 0.5rem;
+}
+#player-pred-modal-body .match-meta-line { font-size: 0.7rem; }
+#player-pred-modal-body .match-teams .team { font-size: 0.95rem; gap: 0.45rem; }
+#player-pred-modal-body .match-teams .team-flag { width: 24px; height: 24px; }
 .player-pred-modal-hint {
   margin: 0.4rem 0 0.65rem;
   padding: 0.45rem 0.7rem;
