@@ -2814,6 +2814,23 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   .group-team-sep { display: none; }
   .leaderboard-table th:nth-child(4),
   .leaderboard-table td:nth-child(4) { display: none; }
+
+  /* Tooltips on the leaderboard headers eat horizontal room on mobile —
+     the column labels alone are clear enough, hide the (?) buttons. */
+  .leaderboard-table th .col-info-btn,
+  .leaderboard-table th .last-match-info-btn { display: none; }
+
+  /* Reclaim horizontal space so the trailing rank-move column stays
+     in view on narrow screens. */
+  .leaderboard-table { font-size: 0.82rem; }
+  .leaderboard-table th,
+  .leaderboard-table td { padding: 0.55rem 0.45rem; }
+  .leaderboard-table th:first-child,
+  .leaderboard-table td:first-child { padding-left: 0.65rem; }
+  .leaderboard-table th:last-child,
+  .leaderboard-table td:last-child { padding-right: 0.65rem; }
+  .this-match-cell .pts-delta { min-width: 1.8rem; font-size: 0.74rem; }
+  .rank-move-cell .rank-delta { font-size: 0.74rem; }
 }
 
 @media (max-width: 480px) {
