@@ -1521,22 +1521,6 @@ function everyoneMatchBlock(match, participants, ctx) {
       </div>`;
   });
 
-  let exactCount = 0;
-  if (result) {
-    for (const [, doc] of participants) {
-      const p = doc.predictions[match.id];
-      if (p && calcPoints(p, result) === 3) exactCount++;
-    }
-  }
-  const exactLabel = result
-    ? (exactCount === 1
-        ? t('predictions.exactCount', { count: exactCount })
-        : t('predictions.exactCountPlural', { count: exactCount }))
-    : '';
-  const exactBadge = exactLabel
-    ? `<span class="everyone-exact-count${exactCount > 0 ? ' has-exact' : ''}">${exactLabel}</span>`
-    : '';
-
   return `
     <details class="everyone-match-card" data-match-id="${match.id}"${isOpen ? ' open' : ''}>
       <summary class="everyone-match-header">
@@ -1549,7 +1533,6 @@ function everyoneMatchBlock(match, participants, ctx) {
         </span>
         <span class="everyone-match-meta-right">
           ${headerRight}
-          ${exactBadge}
           <svg class="match-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>

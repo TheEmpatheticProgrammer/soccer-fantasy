@@ -2288,20 +2288,6 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   gap: 0.5rem;
   flex-shrink: 0;
 }
-.everyone-exact-count {
-  font-size: 0.7rem;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 0.15rem 0.55rem;
-  white-space: nowrap;
-}
-.everyone-exact-count.has-exact {
-  color: var(--accent);
-  background: rgba(45, 255, 165, 0.10);
-  border-color: rgba(45, 255, 165, 0.45);
-}
 .match-chevron {
   width: 14px;
   height: 14px;
@@ -2312,7 +2298,6 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .everyone-match-card[open] > summary .match-chevron { transform: rotate(180deg); }
 
 @media (max-width: 720px) {
-  .everyone-exact-count { font-size: 0.65rem; padding: 0.12rem 0.45rem; }
   .everyone-match-meta-right { gap: 0.35rem; }
 }
 
