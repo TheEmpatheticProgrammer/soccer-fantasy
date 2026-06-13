@@ -1731,6 +1731,9 @@ function renderLeaderboard() {
 
   const ownerCanRemove = isLeagueOwner() || isAdmin();
   const adminOnly = isAdmin();
+  // Hide the per-row trash button in the leaderboard table for now —
+  // the same action remains available in the admin tools members panel.
+  const showLeaderboardRemove = false;
 
   const memberUids = state.currentLeague?.memberUids || [];
   const allMemberUids = Array.from(new Set([
@@ -1886,20 +1889,20 @@ function renderLeaderboard() {
               <div class="col-info-pop-body">${t('leaderboard.rankMoveInfoBody')}</div>
             </div>
           </th>` : ''}
-          ${ownerCanRemove ? '<th></th>' : ''}
+          ${showLeaderboardRemove ? '<th></th>' : ''}
         </tr>
       </thead>
       <tbody>
         ${standings.map((player, i) => {
           const rank = i + 1;
           const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
-          const removeCell = ownerCanRemove && player.uid !== state.uid
+          const removeCell = showLeaderboardRemove && player.uid !== state.uid
             ? `<td><button class="btn-remove-player" data-remove-uid="${player.uid}" data-remove-name="${escapeHtml(player.name)}" title="${t('leaderboard.removePlayer')}" aria-label="${t('leaderboard.removePlayer')}">
                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                  </svg>
                </button></td>`
-            : (ownerCanRemove ? '<td></td>' : '');
+            : (showLeaderboardRemove ? '<td></td>' : '');
           let lastMatchCell = '';
           if (previous) {
             const prevRank = previous.ranks[player.uid];
