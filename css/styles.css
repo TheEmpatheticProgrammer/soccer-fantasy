@@ -160,7 +160,6 @@ html { color-scheme: dark; }
 }
 
 @media (max-width: 500px) {
-  .header-stats { width: 100%; justify-content: flex-start; margin-left: 0; }
   .header-pill { font-size: 0.62rem; padding: 0.18rem 0.5rem; }
 }
 
