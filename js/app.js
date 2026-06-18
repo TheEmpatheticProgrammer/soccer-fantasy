@@ -1321,12 +1321,6 @@ function renderPredictions() {
   const myDoc = state.predictionDocs[state.uid] || {};
   const preds = myDoc.predictions || {};
 
-  const lockBanner = arePredictionsLocked()
-    ? `<div class="lock-banner">${t('predictions.locked')}</div>`
-    : '';
-
-  const columnHeader = '';
-
   const sections = predictionSections();
   const openPredictionGroups = captureOpenGroups('matches-container');
   const predictionsFirstRender = !state.predictionsRendered;
@@ -1335,7 +1329,7 @@ function renderPredictions() {
   const defaultShifted = state._predictionsLastDefaultKey !== defaultOpenKey;
   state._predictionsLastDefaultKey = defaultOpenKey;
 
-  container.innerHTML = lockBanner + columnHeader + sections.map(section => {
+  container.innerHTML = sections.map(section => {
     const matches = section.matches;
     const isOpen = isMobileViewport()
       ? section.key === defaultOpenKey
