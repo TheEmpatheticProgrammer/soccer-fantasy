@@ -167,7 +167,7 @@ const TRANSLATIONS = {
     'settings.error': 'Error: {msg}',
 
     'predictions.playingAs': 'Playing as',
-    'predictions.picksMade': 'picks made',
+    'predictions.picksMade': 'exact picks',
     'predictions.resetGroup': 'Reset',
     'predictions.resetGroupConfirm': 'Clear your predictions for Group {letter}?',
     'predictions.tabMine': 'Yours',
@@ -241,6 +241,8 @@ const TRANSLATIONS = {
     'leaderboard.matchesScoredInfoTitle': 'What counts as scored',
     'leaderboard.matchesScoredInfoBody': 'Only matches where you picked both the exact score and the winner (3-point picks). Partial credit picks do not count.',
     'leaderboard.viewPlayer': "View {name}'s predictions",
+    'leaderboard.tierContenders': 'Contenders',
+    'leaderboard.tierRest': 'The Pack',
 
     'playerModal.close': 'Close',
     'playerModal.rank': 'Rank #{rank}',
@@ -425,7 +427,7 @@ const TRANSLATIONS = {
     'settings.error': 'Error: {msg}',
 
     'predictions.playingAs': 'Jugando como',
-    'predictions.picksMade': 'pronósticos',
+    'predictions.picksMade': 'aciertos exactos',
     'predictions.resetGroup': 'Borrar',
     'predictions.resetGroupConfirm': '¿Borrar tus pronósticos del Grupo {letter}?',
     'predictions.tabMine': 'Tuyos',
@@ -499,6 +501,8 @@ const TRANSLATIONS = {
     'leaderboard.matchesScoredInfoTitle': 'Qué cuenta como calificado',
     'leaderboard.matchesScoredInfoBody': 'Solo los partidos donde acertaste el marcador exacto y el ganador (pronósticos de 3 puntos). Los aciertos parciales no cuentan.',
     'leaderboard.viewPlayer': 'Ver pronósticos de {name}',
+    'leaderboard.tierContenders': 'Aspirantes',
+    'leaderboard.tierRest': 'El Pelotón',
 
     'playerModal.close': 'Cerrar',
     'playerModal.rank': 'Posición #{rank}',

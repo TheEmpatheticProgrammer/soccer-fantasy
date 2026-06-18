@@ -739,12 +739,16 @@ function renderPlayerCard() {
   const myDoc = state.predictionDocs?.[state.uid] || {};
   const preds = myDoc.predictions || {};
   const total = state.matches.length || 0;
-  const count = Object.keys(preds).filter(id =>
-    preds[id]?.home !== undefined && preds[id]?.away !== undefined
-  ).length;
+  let exact = 0;
+  for (const [id, pred] of Object.entries(preds)) {
+    if (pred?.home === undefined || pred?.away === undefined) continue;
+    const actual = state.results[id];
+    if (!actual) continue;
+    if (pred.home === actual.home && pred.away === actual.away) exact++;
+  }
   const countEl = document.getElementById('picks-count');
   const totalEl = document.getElementById('picks-total');
-  if (countEl) countEl.textContent = count;
+  if (countEl) countEl.textContent = exact;
   if (totalEl) totalEl.textContent = total;
 }
 
@@ -1196,7 +1200,7 @@ function switchView(view) {
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.classList.toggle('active', btn.dataset.view === view)
   );
-  if (view === 'leaderboard') renderLeaderboard();
+  if (view === 'leaderboard') { state._leaderboardScrollPending = true; renderLeaderboard(); }
   if (view === 'predictions') { state._predictionsScrollPending = true; renderPredictions(); renderEveryone(); }
   if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
   if (view === 'profile') renderProfileLeagues();
@@ -1892,6 +1896,11 @@ function renderLeaderboard() {
   const total = state.matches.length;
   const players = Object.entries(state.predictionDocs);
 
+  const oldRowTops = new Map();
+  container.querySelectorAll('.leaderboard-row[data-uid]').forEach(row => {
+    oldRowTops.set(row.dataset.uid, row.getBoundingClientRect().top);
+  });
+
   if (players.length === 0) {
     container.innerHTML = `<div class="empty-state">${t('leaderboard.empty')}</div>`;
     return;
@@ -2077,9 +2086,12 @@ function renderLeaderboard() {
         </tr>
       </thead>
       <tbody>
-        ${standings.map((player, i) => {
-          const rank = i + 1;
-          const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+        ${(() => {
+          const out = [];
+          standings.forEach((player, i) => {
+            const rank = i + 1;
+            const rankClass = rank <= 3 ? `rank-${rank}` : 'rank-other';
+            const tierClass = rank <= 3 ? 'tier-podium' : (rank <= 10 ? 'tier-contenders' : 'tier-rest');
           const removeCell = showLeaderboardRemove && player.uid !== state.uid
             ? `<td><button class="btn-remove-player" data-remove-uid="${player.uid}" data-remove-name="${escapeHtml(player.name)}" title="${t('leaderboard.removePlayer')}" aria-label="${t('leaderboard.removePlayer')}">
                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2110,10 +2122,10 @@ function renderLeaderboard() {
             }
             lastMatchCell = `<td class="this-match-cell${previous.live ? ' is-live' : ''}">${previous.live ? `<span class="row-live-dot" aria-hidden="true" title="${escapeHtml(t('leaderboard.lastMatchLiveTooltip', { match: previous.label }))}"></span>` : ''}${ptsHtml}</td><td class="rank-move-cell${previous.live ? ' is-live' : ''}">${rankHtml}</td>`;
           }
-          const rowClasses = ['leaderboard-row'];
+          const rowClasses = ['leaderboard-row', tierClass];
           if (player.uid === state.uid) rowClasses.push('current-player');
-          return `
-            <tr class="${rowClasses.join(' ')}">
+          out.push(`
+            <tr class="${rowClasses.join(' ')}" data-uid="${player.uid}">
               <td><span class="rank-badge ${rankClass}">${rank}</span></td>
               <td><button type="button" class="player-name-pill" data-player-uid="${player.uid}" data-player-rank="${rank}" aria-label="${t('leaderboard.viewPlayer', { name: player.name })}" title="${t('leaderboard.viewPlayer', { name: player.name })}">
                 <span class="player-name-pill-text">${player.name}</span>
@@ -2125,8 +2137,10 @@ function renderLeaderboard() {
               <td>${player.scored} / ${total}</td>
               ${lastMatchCell}
               ${removeCell}
-            </tr>`;
-        }).join('')}
+            </tr>`);
+          });
+          return out.join('');
+        })()}
       </tbody>
     </table>`;
 
@@ -2149,6 +2163,46 @@ function renderLeaderboard() {
       const uid = pill.dataset.playerUid;
       const rank = parseInt(pill.dataset.playerRank, 10) || 0;
       openPlayerPredictionsModal(uid, rank);
+    });
+  });
+
+  applyLeaderboardFlip(oldRowTops);
+
+  if (state._leaderboardScrollPending) {
+    state._leaderboardScrollPending = false;
+    const me = container.querySelector('.leaderboard-row.current-player');
+    if (me) {
+      requestAnimationFrame(() => {
+        me.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      });
+    }
+  }
+}
+
+function applyLeaderboardFlip(oldRowTops) {
+  if (!oldRowTops || oldRowTops.size === 0) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const rows = document.querySelectorAll('.leaderboard-row[data-uid]');
+  rows.forEach(row => {
+    const uid = row.dataset.uid;
+    const oldTop = oldRowTops.get(uid);
+    if (oldTop === undefined) return;
+    const newTop = row.getBoundingClientRect().top;
+    const delta = oldTop - newTop;
+    if (Math.abs(delta) < 1) return;
+    row.style.transition = 'none';
+    row.style.transform = `translateY(${delta}px)`;
+    row.classList.add('rank-shifting');
+    requestAnimationFrame(() => {
+      row.style.transition = 'transform 480ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+      row.style.transform = '';
+      const onEnd = () => {
+        row.style.transition = '';
+        row.style.transform = '';
+        row.classList.remove('rank-shifting');
+        row.removeEventListener('transitionend', onEnd);
+      };
+      row.addEventListener('transitionend', onEnd);
     });
   });
 }

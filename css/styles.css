@@ -1835,6 +1835,32 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 
 .points-display { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
 
+/* ── Leaderboard tier zones ── */
+.leaderboard-row { will-change: transform; }
+.leaderboard-row.tier-podium td {
+  background: linear-gradient(90deg, rgba(255, 200, 64, 0.10) 0%, rgba(255, 200, 64, 0.02) 100%);
+}
+.leaderboard-row.tier-contenders td {
+  background: linear-gradient(90deg, rgba(57, 126, 217, 0.08) 0%, rgba(57, 126, 217, 0.015) 100%);
+}
+.leaderboard-row.tier-rest td {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%);
+  color: var(--text-muted);
+}
+.leaderboard-row.tier-rest .points-display {
+  color: var(--text);
+  opacity: 0.85;
+}
+.leaderboard-row.current-player td {
+  background: rgba(57, 126, 217, 0.18) !important;
+}
+.leaderboard-row.rank-shifting td {
+  background: rgba(57, 126, 217, 0.12) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .leaderboard-row { transition: none !important; transform: none !important; }
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed;
