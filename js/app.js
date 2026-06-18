@@ -272,8 +272,11 @@ function predictionSections() {
     const byDate = new Map();
     for (const m of state.matches) {
       const k = dateKey(m.utcDate);
-      if (!byDate.has(k)) byDate.set(k, { key: k, title: dateSectionLabel(m.utcDate), letter: null, teams: null, matches: [] });
-      byDate.get(k).matches.push(m);
+      if (!byDate.has(k)) byDate.set(k, { key: k, title: dateSectionLabel(m.utcDate), letter: null, teams: [], matches: [] });
+      const section = byDate.get(k);
+      section.matches.push(m);
+      if (m.home && m.home !== 'TBD' && !section.teams.includes(m.home)) section.teams.push(m.home);
+      if (m.away && m.away !== 'TBD' && !section.teams.includes(m.away)) section.teams.push(m.away);
     }
     return Array.from(byDate.values()).sort((a, b) => a.key.localeCompare(b.key));
   }
@@ -1353,7 +1356,8 @@ function renderPredictions() {
       ? `<span class="group-letter-badge">${section.letter}</span>
          <span class="group-letter-text">${section.title}</span>
          <span class="group-teams">${section.teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>`
-      : `<span class="date-section-title">${section.title}</span>`;
+      : `<span class="date-section-title">${section.title}</span>
+         <span class="group-teams date-teams">${(section.teams || []).map(name => `<span class="group-team-chip" title="${escapeHtml(tCountry(name))}">${teamFlag(name)}</span>`).join('')}</span>`;
     return `
       <details class="prediction-group" data-group="${section.key}"${isOpen ? ' open' : ''}>
         <summary class="prediction-group-title">
@@ -1564,7 +1568,8 @@ function renderEveryone() {
     const headerInner = section.letter
       ? `<h2>${section.title}</h2>
          <span class="group-teams">${section.teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>`
-      : `<h2>${section.title}</h2>`;
+      : `<h2>${section.title}</h2>
+         <span class="group-teams date-teams">${(section.teams || []).map(name => `<span class="group-team-chip" title="${escapeHtml(tCountry(name))}">${teamFlag(name)}</span>`).join('')}</span>`;
     return `
       <details class="group-section" data-group="${section.key}"${isOpen ? ' open' : ''}>
         <summary class="group-header">
