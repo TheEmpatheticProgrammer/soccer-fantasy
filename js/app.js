@@ -1552,6 +1552,8 @@ function renderEveryone() {
   const everyoneShifted = state._everyoneLastDefaultKey !== defaultOpenKey;
   state._everyoneLastDefaultKey = defaultOpenKey;
 
+  const topUids = computeStandings().slice(0, 3).map(s => s.uid);
+
   container.innerHTML = sections.map(section => {
     const matches = section.matches;
     const sectionMatches = filterActive
@@ -1578,7 +1580,7 @@ function renderEveryone() {
           </svg>
         </summary>
         <div class="group-section-rows">
-          ${sectionMatches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [], { filterActive, openMatchCards, seenMatches })).join('')}
+          ${sectionMatches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [], { filterActive, openMatchCards, seenMatches, topUids })).join('')}
         </div>
       </details>`;
   }).join('');
@@ -1664,7 +1666,16 @@ function everyoneMatchBlock(match, participants, ctx) {
         ? `<span class="match-status status-in_play">${t('match.live')}</span>`
         : '');
 
+  const topUids = (ctx && ctx.topUids) || [];
+  const topSet = new Set(topUids);
   const sortedParticipants = [...participants].sort((a, b) => {
+    const aTopIdx = topUids.indexOf(a[0]);
+    const bTopIdx = topUids.indexOf(b[0]);
+    if (aTopIdx !== -1 || bTopIdx !== -1) {
+      if (aTopIdx === -1) return 1;
+      if (bTopIdx === -1) return -1;
+      return aTopIdx - bTopIdx;
+    }
     if (a[0] === state.uid) return -1;
     if (b[0] === state.uid) return 1;
     return 0;
@@ -1674,6 +1685,8 @@ function everyoneMatchBlock(match, participants, ctx) {
     const pred = doc.predictions[match.id];
     const pts = result ? calcPoints(pred, result) : null;
     const isSelf = uid === state.uid;
+    const isTop = topSet.has(uid);
+    const isPriority = isSelf || isTop;
     const name = doc.displayName || t('toast.unknown');
     const initials = getInitials(name);
     const avatarHue = isSelf ? 145 : hashHue(uid);
@@ -1681,7 +1694,7 @@ function everyoneMatchBlock(match, participants, ctx) {
       ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
       : '';
     return `
-      <div class="everyone-player-row${isSelf ? ' is-self' : ''}">
+      <div class="everyone-player-row${isSelf ? ' is-self' : ''}${isPriority ? ' is-priority' : ''}">
         <span class="everyone-avatar" style="--avatar-hue:${avatarHue}">${escapeHtml(initials)}</span>
         <span class="everyone-player-info">
           <span class="everyone-player-name">${escapeHtml(name)}</span>
@@ -1718,7 +1731,7 @@ function everyoneMatchBlock(match, participants, ctx) {
           ? rows.join('')
           : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}
       </div>
-      ${rows.length > 3
+      ${sortedParticipants.some(([uid]) => uid !== state.uid && !topSet.has(uid))
         ? `<button type="button" class="show-all-players" data-expand-players data-full-label="${escapeHtml(t('predictions.showAllPlayers', { count: rows.length }))}" aria-expanded="false">${t('predictions.showAllPlayers', { count: rows.length })}</button>`
         : ''}
     </div>`;

@@ -2444,7 +2444,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
     max-height: none;
     overflow: visible;
   }
-  .match-players-scroll > .everyone-player-row:nth-child(n+4):not(.is-self) {
+  .match-players-scroll > .everyone-player-row:not(.is-priority) {
     display: none;
   }
   .everyone-match-card-grid.expanded .match-players-scroll > .everyone-player-row {
