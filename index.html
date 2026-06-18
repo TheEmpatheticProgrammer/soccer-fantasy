@@ -27,7 +27,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=2026061805">
+  <link rel="stylesheet" href="css/styles.css?v=2026061808">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -72,7 +72,7 @@
   <script defer src="js/i18n.js?v=2026061805"></script>
   <script defer src="js/firebase-init.js"></script>
   <script defer src="js/auth.js"></script>
-  <script defer src="js/app.js?v=2026061806"></script>
+  <script defer src="js/app.js?v=2026061808"></script>
 </head>
 <body>
 
@@ -201,30 +201,32 @@
     <!-- Predictions view -->
     <div id="view-predictions" class="view hidden">
 
-      <div class="player-bar">
-        <div id="player-avatar" class="player-card-avatar">·</div>
-        <div class="player-card-info">
-          <span class="player-card-label" data-i18n="predictions.playingAs">Playing as</span>
-          <strong id="player-display" class="player-card-name"></strong>
-          <span id="rank-pill" class="player-rank-pill hidden"></span>
-        </div>
-        <div class="player-card-stats">
-          <div class="player-card-picks">
-            <span id="picks-count">0</span><span class="picks-divider">/</span><span id="picks-total">0</span>
+      <div class="predictions-sticky-header">
+        <div class="player-bar">
+          <div id="player-avatar" class="player-card-avatar">·</div>
+          <div class="player-card-info">
+            <span class="player-card-label" data-i18n="predictions.playingAs">Playing as</span>
+            <strong id="player-display" class="player-card-name"></strong>
+            <span id="rank-pill" class="player-rank-pill hidden"></span>
           </div>
-          <div class="player-card-picks-label" data-i18n="predictions.picksMade">exact picks</div>
+          <div class="player-card-stats">
+            <div class="player-card-picks">
+              <span id="picks-count">0</span><span class="picks-divider">/</span><span id="picks-total">0</span>
+            </div>
+            <div class="player-card-picks-label" data-i18n="predictions.picksMade">exact picks</div>
+          </div>
         </div>
-      </div>
 
-      <div class="sub-tabs">
-        <div class="sub-tabs-left">
-          <button class="sub-tab active" data-subtab="mine" data-i18n="predictions.tabMine">Yours</button>
-          <button class="sub-tab" data-subtab="everyone" data-i18n="predictions.tabEveryone">Everyone</button>
-        </div>
-        <div class="sort-toggle" role="group" data-i18n-aria-label="predictions.sortAria" aria-label="Sort matches">
-          <span class="sort-label" data-i18n="predictions.sortBy">Sort:</span>
-          <button class="sort-btn active" data-sort="group" data-i18n="predictions.sortGroup">Group</button>
-          <button class="sort-btn" data-sort="date" data-i18n="predictions.sortDate">Date</button>
+        <div class="sub-tabs">
+          <div class="sub-tabs-left">
+            <button class="sub-tab active" data-subtab="mine" data-i18n="predictions.tabMine">Yours</button>
+            <button class="sub-tab" data-subtab="everyone" data-i18n="predictions.tabEveryone">Everyone</button>
+          </div>
+          <div class="sort-toggle" role="group" data-i18n-aria-label="predictions.sortAria" aria-label="Sort matches">
+            <span class="sort-label" data-i18n="predictions.sortBy">Sort:</span>
+            <button class="sort-btn active" data-sort="group" data-i18n="predictions.sortGroup">Group</button>
+            <button class="sort-btn" data-sort="date" data-i18n="predictions.sortDate">Date</button>
+          </div>
         </div>
       </div>
 

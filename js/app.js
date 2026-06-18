@@ -2123,6 +2123,7 @@ function renderLeaderboard() {
             lastMatchCell = `<td class="this-match-cell${previous.live ? ' is-live' : ''}">${previous.live ? `<span class="row-live-dot" aria-hidden="true" title="${escapeHtml(t('leaderboard.lastMatchLiveTooltip', { match: previous.label }))}"></span>` : ''}${ptsHtml}</td><td class="rank-move-cell${previous.live ? ' is-live' : ''}">${rankHtml}</td>`;
           }
           const rowClasses = ['leaderboard-row', tierClass];
+          if (rank <= 3) rowClasses.push(`lb-rank-${rank}`);
           if (player.uid === state.uid) rowClasses.push('current-player');
           out.push(`
             <tr class="${rowClasses.join(' ')}" data-uid="${player.uid}">

@@ -1837,20 +1837,22 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 
 /* ── Leaderboard tier zones ── */
 .leaderboard-row { will-change: transform; }
-.leaderboard-row.tier-podium td {
-  background: linear-gradient(90deg, rgba(255, 200, 64, 0.10) 0%, rgba(255, 200, 64, 0.02) 100%);
+.leaderboard-row td:first-child {
+  position: relative;
 }
-.leaderboard-row.tier-contenders td {
-  background: linear-gradient(90deg, rgba(57, 126, 217, 0.08) 0%, rgba(57, 126, 217, 0.015) 100%);
+.leaderboard-row td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
 }
-.leaderboard-row.tier-rest td {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0) 100%);
-  color: var(--text-muted);
-}
-.leaderboard-row.tier-rest .points-display {
-  color: var(--text);
-  opacity: 0.85;
-}
+.leaderboard-row.lb-rank-1 td:first-child::before { background: #FFD700; }
+.leaderboard-row.lb-rank-2 td:first-child::before { background: #C0C0C0; }
+.leaderboard-row.lb-rank-3 td:first-child::before { background: #CD7F32; }
+.leaderboard-row.tier-contenders td:first-child::before { background: #397ED9; }
 .leaderboard-row.current-player td {
   background: rgba(57, 126, 217, 0.18) !important;
 }
@@ -2083,15 +2085,51 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+  background: var(--bg-base);
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding: 0.55rem 1rem 0.7rem;
+  flex-wrap: wrap;
+}
+.predictions-sticky-header {
   position: sticky;
   top: var(--app-header-h, 72px);
   z-index: 50;
   background: var(--bg-base);
   margin-left: -1rem;
   margin-right: -1rem;
-  padding: 0.55rem 1rem;
-  flex-wrap: wrap;
+  padding: 0.6rem 1rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+.predictions-sticky-header .player-bar {
+  margin-bottom: 0.5rem;
+}
+.predictions-sticky-header .sub-tabs {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+@media (max-width: 600px) {
+  .predictions-sticky-header { padding: 0.4rem 1rem 0; margin-bottom: 0.75rem; }
+  .predictions-sticky-header .player-bar {
+    padding: 0.5rem 0.7rem;
+    border-radius: 10px;
+    gap: 0.65rem;
+    margin-bottom: 0.4rem;
+  }
+  .predictions-sticky-header .player-card-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+    box-shadow: 0 0 0 3px rgba(45, 255, 165, 0.12);
+  }
+  .predictions-sticky-header .player-card-label { font-size: 0.62rem; }
+  .predictions-sticky-header .player-card-name { font-size: 0.95rem; }
+  .predictions-sticky-header .player-card-picks { font-size: 1rem; }
+  .predictions-sticky-header .player-card-picks-label { font-size: 0.6rem; }
 }
 .sub-tabs-left {
   display: inline-flex;
