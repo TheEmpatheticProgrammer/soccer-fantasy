@@ -18,7 +18,7 @@ const arePredictionsLocked = () => {
 };
 
 const Storage = {
-  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id', lastView: 'wc2026_last_view' },
+  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id', lastView: 'wc2026_last_view', predictionsSort: 'wc2026_predictions_sort' },
   getApiKey()         { return localStorage.getItem(this.keys.apiKey) || ''; },
   setApiKey(k)        { localStorage.setItem(this.keys.apiKey, k); },
   getLastLeagueId()   { return localStorage.getItem(this.keys.lastLeagueId) || ''; },
@@ -26,6 +26,8 @@ const Storage = {
   clearLastLeagueId() { localStorage.removeItem(this.keys.lastLeagueId); },
   getLastView()       { return localStorage.getItem(this.keys.lastView) || ''; },
   setLastView(v)      { localStorage.setItem(this.keys.lastView, v); },
+  getPredictionsSort(){ return localStorage.getItem(this.keys.predictionsSort) || 'group'; },
+  setPredictionsSort(v){ localStorage.setItem(this.keys.predictionsSort, v); },
 };
 
 // Spanish team names as they appear in the import template → canonical
@@ -205,6 +207,7 @@ const state = {
   crests: {},
   apiKey: '',
   view: null,
+  predictionsSort: Storage.getPredictionsSort(),
 };
 
 function teamLabel(name, flagPos = 'left') {
@@ -248,6 +251,59 @@ function formatMatchDateParts(utcDate) {
   };
 }
 
+function dateKey(utcDate) {
+  const d = new Date(utcDate);
+  if (isNaN(d.getTime())) return 'tbd';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function dateSectionLabel(utcDate) {
+  const d = new Date(utcDate);
+  if (isNaN(d.getTime())) return t('app.dateTBD');
+  const locale = getLanguage() === 'es' ? 'es-MX' : 'en-US';
+  return new Intl.DateTimeFormat(locale, { weekday: 'long', month: 'short', day: 'numeric' }).format(d);
+}
+
+function predictionSections() {
+  if (state.predictionsSort === 'date') {
+    const byDate = new Map();
+    for (const m of state.matches) {
+      const k = dateKey(m.utcDate);
+      if (!byDate.has(k)) byDate.set(k, { key: k, title: dateSectionLabel(m.utcDate), letter: null, teams: null, matches: [] });
+      byDate.get(k).matches.push(m);
+    }
+    return Array.from(byDate.values()).sort((a, b) => a.key.localeCompare(b.key));
+  }
+  return Object.entries(state.groups).map(([letter, teams]) => ({
+    key: letter,
+    title: t('match.group', { letter }),
+    letter,
+    teams,
+    matches: state.matches.filter(m => m.group === letter),
+  }));
+}
+
+function isMobileViewport() {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 600px)').matches;
+}
+
+function defaultOpenSectionKey(sections) {
+  if (state.predictionsSort === 'date') {
+    const today = dateKey(new Date().toISOString());
+    if (sections.some(s => s.key === today)) return today;
+    const now = Date.now();
+    for (const s of sections) {
+      const first = s.matches[0];
+      if (first && new Date(first.utcDate).getTime() >= now) return s.key;
+    }
+    return sections[sections.length - 1]?.key;
+  }
+  return currentGroup() || Object.keys(state.groups)[0];
+}
+
 let unsubPredictions = null;
 let unsubResults = null;
 let unsubLeague = null;
@@ -264,6 +320,7 @@ function init() {
   renderAdminMatches();
   renderLeaderboard();
   startCountdownInterval();
+  initHeaderHeightTracking();
 
   document.addEventListener('visibilitychange', maybeAdjustLivePolling);
 
@@ -271,6 +328,20 @@ function init() {
     if (user) onSignedIn(user);
     else      onSignedOut();
   });
+}
+
+function initHeaderHeightTracking() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+  const update = () => {
+    const h = header.offsetHeight;
+    if (h > 0) document.documentElement.style.setProperty('--app-header-h', h + 'px');
+  };
+  update();
+  window.addEventListener('resize', update);
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(update).observe(header);
+  }
 }
 
 async function onSignedIn(user) {
@@ -717,6 +788,20 @@ function bindEvents() {
     btn.addEventListener('click', () => switchSubview(btn.dataset.subtab))
   );
 
+  document.querySelectorAll('.sort-btn').forEach(btn =>
+    btn.addEventListener('click', () => setPredictionsSort(btn.dataset.sort))
+  );
+
+  document.getElementById('everyone-container')?.addEventListener('click', e => {
+    const btn = e.target.closest('[data-expand-players]');
+    if (!btn) return;
+    const card = btn.closest('.everyone-match-card-grid');
+    if (!card) return;
+    const expanded = card.classList.toggle('expanded');
+    btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+    btn.textContent = expanded ? t('predictions.showFewerPlayers') : (btn.dataset.fullLabel || btn.textContent);
+  });
+
   bindEveryoneSearch();
 
   document.getElementById('btn-settings').addEventListener('click', () => {
@@ -1106,7 +1191,7 @@ function switchView(view) {
     btn.classList.toggle('active', btn.dataset.view === view)
   );
   if (view === 'leaderboard') renderLeaderboard();
-  if (view === 'predictions') { renderPredictions(); renderEveryone(); }
+  if (view === 'predictions') { state._predictionsScrollPending = true; renderPredictions(); renderEveryone(); }
   if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
   if (view === 'profile') renderProfileLeagues();
 
@@ -1131,8 +1216,59 @@ function switchSubview(name) {
     s.classList.toggle('hidden', !shouldShow);
     if (shouldShow) playEnterAnimation(s);
   });
-  if (name === 'everyone') renderEveryone();
-  if (name === 'mine') renderPredictions();
+  if (name === 'everyone') { state._predictionsScrollPending = true; renderEveryone(); }
+  if (name === 'mine')     { state._predictionsScrollPending = true; renderPredictions(); }
+}
+
+function setPredictionsSort(sort) {
+  if (sort !== 'group' && sort !== 'date') return;
+  if (state.predictionsSort === sort) return;
+  state.predictionsSort = sort;
+  Storage.setPredictionsSort(sort);
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.sort === sort);
+  });
+  state.predictionsRendered = false;
+  state.everyoneRendered = false;
+  state._predictionsScrollPending = true;
+  renderPredictions();
+  renderEveryone();
+}
+
+function currentMatchId() {
+  if (!state.matches || state.matches.length === 0) return null;
+  for (const m of state.matches) {
+    if (matchLiveState(m) === 'live') return m.id;
+  }
+  const now = Date.now();
+  let next = null, nextT = Infinity;
+  for (const m of state.matches) {
+    const t = new Date(m.utcDate).getTime();
+    if (!isFinite(t)) continue;
+    if (t >= now && t < nextT) { next = m; nextT = t; }
+  }
+  if (next) return next.id;
+  let last = null, lastT = -Infinity;
+  for (const m of state.matches) {
+    const t = new Date(m.utcDate).getTime();
+    if (!isFinite(t)) continue;
+    if (t > lastT) { last = m; lastT = t; }
+  }
+  return last ? last.id : null;
+}
+
+function scrollToCurrentMatch(containerId) {
+  const mid = currentMatchId();
+  if (!mid) return;
+  requestAnimationFrame(() => {
+    const root = document.getElementById(containerId);
+    if (!root) return;
+    const card = root.querySelector(`[data-match-id="${mid}"]`);
+    if (!card) return;
+    const group = card.closest('details[data-group]');
+    if (group && !group.open) group.open = true;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 }
 
 function playEnterAnimation(el) {
@@ -1191,41 +1327,47 @@ function renderPredictions() {
 
   const columnHeader = '';
 
+  const sections = predictionSections();
   const openPredictionGroups = captureOpenGroups('matches-container');
   const predictionsFirstRender = !state.predictionsRendered;
   state.predictionsRendered = true;
-  const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
-  const predictionsCurrentShifted = state._predictionsLastCurrentGroup !== defaultOpenGroup;
-  state._predictionsLastCurrentGroup = defaultOpenGroup;
+  const defaultOpenKey = defaultOpenSectionKey(sections);
+  const defaultShifted = state._predictionsLastDefaultKey !== defaultOpenKey;
+  state._predictionsLastDefaultKey = defaultOpenKey;
 
-  container.innerHTML = lockBanner + columnHeader + Object.entries(state.groups).map(([group, teams], i) => {
-    const matches = state.matches.filter(m => m.group === group);
-    const isOpen = predictionsFirstRender
-      ? group === defaultOpenGroup
-      : (openPredictionGroups.has(group) || (predictionsCurrentShifted && group === defaultOpenGroup));
-    const resetBtn = arePredictionsLocked()
-      ? ''
-      : `<button type="button" class="group-reset-btn" data-reset-group="${group}" title="${t('predictions.resetGroup')}">${t('predictions.resetGroup')}</button>`;
-    let groupPts = 0;
-    let groupPredicted = 0;
+  container.innerHTML = lockBanner + columnHeader + sections.map(section => {
+    const matches = section.matches;
+    const isOpen = isMobileViewport()
+      ? section.key === defaultOpenKey
+      : (predictionsFirstRender
+          ? section.key === defaultOpenKey
+          : (openPredictionGroups.has(section.key) || (defaultShifted && section.key === defaultOpenKey)));
+    const resetBtn = (section.letter && !arePredictionsLocked())
+      ? `<button type="button" class="group-reset-btn" data-reset-group="${section.letter}" title="${t('predictions.resetGroup')}">${t('predictions.resetGroup')}</button>`
+      : '';
+    let sectionPts = 0;
+    let sectionPredicted = 0;
     for (const m of matches) {
       const p = preds[m.id];
       if (p && p.home !== undefined && p.away !== undefined) {
-        groupPredicted++;
+        sectionPredicted++;
         const actual = state.results[m.id];
-        if (actual) groupPts += calcPoints(p, actual);
+        if (actual) sectionPts += calcPoints(p, actual);
       }
     }
+    const headerInner = section.letter
+      ? `<span class="group-letter-badge">${section.letter}</span>
+         <span class="group-letter-text">${section.title}</span>
+         <span class="group-teams">${section.teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>`
+      : `<span class="date-section-title">${section.title}</span>`;
     return `
-      <details class="prediction-group" data-group="${group}"${isOpen ? ' open' : ''}>
+      <details class="prediction-group" data-group="${section.key}"${isOpen ? ' open' : ''}>
         <summary class="prediction-group-title">
-          <span class="group-letter-badge">${group}</span>
-          <span class="group-letter-text">${t('match.group', { letter: group })}</span>
-          <span class="group-teams">${teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>
+          ${headerInner}
           <span class="group-stats">
-            <span class="group-stats-pts">${groupPts} ${t('header.points')}</span>
+            <span class="group-stats-pts">${sectionPts} ${t('header.points')}</span>
             <span class="group-stats-sep">·</span>
-            <span class="group-stats-predicted">${groupPredicted}/${matches.length}</span>
+            <span class="group-stats-predicted">${sectionPredicted}/${matches.length}</span>
           </span>
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1243,6 +1385,11 @@ function renderPredictions() {
   if (focusInfo) {
     const sel = `.score-input[data-match="${focusInfo.match}"][data-side="${focusInfo.side}"]`;
     document.querySelector(sel)?.focus();
+  }
+
+  if (state._predictionsScrollPending && isSubviewActive('subview-mine')) {
+    state._predictionsScrollPending = false;
+    scrollToCurrentMatch('matches-container');
   }
 
   refreshSaveStatus();
@@ -1317,7 +1464,7 @@ function matchCard(match, pred = {}, result) {
     : '';
 
   return `
-    <div class="${rowClass}">
+    <div class="${rowClass}" data-match-id="${match.id}">
       <div class="match-meta-line">
         <span class="meta-day">${day}</span>
         <span class="meta-sep">·</span>
@@ -1395,42 +1542,73 @@ function renderEveryone() {
     return;
   }
 
+  const sections = predictionSections();
   const openEveryoneGroups = captureOpenGroups('everyone-container');
   const openMatchCards = captureOpenMatchCards('everyone-container');
   const everyoneFirstRender = !state.everyoneRendered;
   state.everyoneRendered = true;
   const seenMatches = state._everyoneSeenMatches ||= new Set();
-  const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
-  const everyoneCurrentShifted = state._everyoneLastCurrentGroup !== defaultOpenGroup;
-  state._everyoneLastCurrentGroup = defaultOpenGroup;
+  const defaultOpenKey = defaultOpenSectionKey(sections);
+  const everyoneShifted = state._everyoneLastDefaultKey !== defaultOpenKey;
+  state._everyoneLastDefaultKey = defaultOpenKey;
 
-  container.innerHTML = Object.entries(state.groups).map(([group, teams], i) => {
-    const matches = state.matches.filter(m => m.group === group);
-    const groupMatches = filterActive
+  container.innerHTML = sections.map(section => {
+    const matches = section.matches;
+    const sectionMatches = filterActive
       ? matches.filter(m => (participantsByMatch[m.id] || []).length > 0)
       : matches;
-    if (filterActive && groupMatches.length === 0) return '';
+    if (filterActive && sectionMatches.length === 0) return '';
     const isOpen = filterActive
       ? true
-      : (everyoneFirstRender
-          ? group === defaultOpenGroup
-          : (openEveryoneGroups.has(group) || (everyoneCurrentShifted && group === defaultOpenGroup)));
+      : (isMobileViewport()
+          ? section.key === defaultOpenKey
+          : (everyoneFirstRender
+              ? section.key === defaultOpenKey
+              : (openEveryoneGroups.has(section.key) || (everyoneShifted && section.key === defaultOpenKey))));
+    const headerInner = section.letter
+      ? `<h2>${section.title}</h2>
+         <span class="group-teams">${section.teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>`
+      : `<h2>${section.title}</h2>`;
     return `
-      <details class="group-section" data-group="${group}"${isOpen ? ' open' : ''}>
+      <details class="group-section" data-group="${section.key}"${isOpen ? ' open' : ''}>
         <summary class="group-header">
-          <h2>${t('match.group', { letter: group })}</h2>
-          <span class="group-teams">${teams.map(name => `<span class="group-team-chip">${teamFlag(name)}<span>${tCountry(name)}</span></span>`).join('<span class="group-team-sep">·</span>')}</span>
+          ${headerInner}
           <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
             <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </summary>
-        ${groupMatches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [], { filterActive, openMatchCards, seenMatches })).join('')}
+        <div class="group-section-rows">
+          ${sectionMatches.map(m => everyoneMatchBlock(m, participantsByMatch[m.id] || [], { filterActive, openMatchCards, seenMatches })).join('')}
+        </div>
       </details>`;
   }).join('');
 
   // Mark every rendered match as seen so subsequent renders honor user toggles
   // instead of re-applying the FT auto-collapse rule.
   for (const m of state.matches) seenMatches.add(m.id);
+
+  centerSelfInPlayersScrolls('everyone-container');
+
+  if (state._predictionsScrollPending && isSubviewActive('subview-everyone')) {
+    state._predictionsScrollPending = false;
+    scrollToCurrentMatch('everyone-container');
+  }
+}
+
+function centerSelfInPlayersScrolls(containerId) {
+  const root = document.getElementById(containerId);
+  if (!root) return;
+  requestAnimationFrame(() => {
+    root.querySelectorAll('.match-players-scroll').forEach(scroller => {
+      const self = scroller.querySelector('.everyone-player-row.is-self');
+      if (!self) return;
+      const sRect = scroller.getBoundingClientRect();
+      const tRect = self.getBoundingClientRect();
+      const offsetWithin = (tRect.top - sRect.top) + scroller.scrollTop;
+      const target = offsetWithin - (scroller.clientHeight / 2) + (self.clientHeight / 2);
+      scroller.scrollTop = Math.max(0, target);
+    });
+  });
 }
 
 function captureOpenGroups(containerId) {
@@ -1479,19 +1657,6 @@ function bindEveryoneSearch() {
 function everyoneMatchBlock(match, participants, ctx) {
   const result = state.results[match.id];
   const liveState = matchLiveState(match);
-  const ctxFilter = !!(ctx && ctx.filterActive);
-  const openMatchCards = (ctx && ctx.openMatchCards) || null;
-  const seenMatches = (ctx && ctx.seenMatches) || null;
-  const isFinal = !!result && liveState !== 'live';
-
-  let isOpen;
-  if (ctxFilter) {
-    isOpen = true;
-  } else if (seenMatches && seenMatches.has(match.id) && openMatchCards) {
-    isOpen = openMatchCards.has(match.id);
-  } else {
-    isOpen = !isFinal;
-  }
 
   const headerRight = result
     ? `<span class="everyone-ft-pill${liveState === 'live' ? ' is-live' : ''}"><span class="ft-label">${liveState === 'live' ? t('match.live') : t('match.ft')}</span> <span class="ft-score">${result.home}<span class="ft-dash">−</span>${result.away}</span></span>`
@@ -1499,7 +1664,13 @@ function everyoneMatchBlock(match, participants, ctx) {
         ? `<span class="match-status status-in_play">${t('match.live')}</span>`
         : '');
 
-  const rows = participants.map(([uid, doc]) => {
+  const sortedParticipants = [...participants].sort((a, b) => {
+    if (a[0] === state.uid) return -1;
+    if (b[0] === state.uid) return 1;
+    return 0;
+  });
+
+  const rows = sortedParticipants.map(([uid, doc]) => {
     const pred = doc.predictions[match.id];
     const pts = result ? calcPoints(pred, result) : null;
     const isSelf = uid === state.uid;
@@ -1507,7 +1678,7 @@ function everyoneMatchBlock(match, participants, ctx) {
     const initials = getInitials(name);
     const avatarHue = isSelf ? 145 : hashHue(uid);
     const ptsBadge = pts !== null
-      ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts} ${t('match.ptShort')}</span>`
+      ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
       : '';
     return `
       <div class="everyone-player-row${isSelf ? ' is-self' : ''}">
@@ -1521,9 +1692,12 @@ function everyoneMatchBlock(match, participants, ctx) {
       </div>`;
   });
 
+  const { day, time } = formatMatchDateParts(match.utcDate);
+  const venue = displayVenue(venueForMatch(match));
+
   return `
-    <details class="everyone-match-card" data-match-id="${match.id}"${isOpen ? ' open' : ''}>
-      <summary class="everyone-match-header">
+    <div class="everyone-match-card-grid" data-match-id="${match.id}">
+      <div class="everyone-match-header">
         <span class="everyone-match-teams">
           ${teamFlag(match.home)}
           <span class="everyone-team-name">${tCountry(match.home)}</span>
@@ -1531,28 +1705,23 @@ function everyoneMatchBlock(match, participants, ctx) {
           <span class="everyone-team-name">${tCountry(match.away)}</span>
           ${teamFlag(match.away)}
         </span>
-        <span class="everyone-match-meta-right">
-          ${headerRight}
-          <svg class="match-chevron" viewBox="0 0 12 12" aria-hidden="true">
-            <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-      </summary>
-      ${(() => {
-        const { day, time } = formatMatchDateParts(match.utcDate);
-        const venue = displayVenue(venueForMatch(match));
-        return `
-        <div class="everyone-match-meta">
-          <span class="meta-day">${day}</span>
-          <span class="meta-sep">·</span>
-          <span class="meta-time">${time}</span>
-          ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
-        </div>`;
-      })()}
-      ${rows.length > 0
-        ? rows.join('')
-        : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}
-    </details>`;
+        ${headerRight ? `<span class="everyone-match-meta-right">${headerRight}</span>` : ''}
+      </div>
+      <div class="everyone-match-meta">
+        <span class="meta-day">${day}</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-time">${time}</span>
+        ${venue ? `<span class="meta-sep">·</span><span class="meta-venue">${escapeHtml(venue)}</span>` : ''}
+      </div>
+      <div class="match-players-scroll">
+        ${rows.length > 0
+          ? rows.join('')
+          : `<div class="empty-state-small">${t('predictions.noPredsForMatch')}</div>`}
+      </div>
+      ${rows.length > 3
+        ? `<button type="button" class="show-all-players" data-expand-players data-full-label="${escapeHtml(t('predictions.showAllPlayers', { count: rows.length }))}" aria-expanded="false">${t('predictions.showAllPlayers', { count: rows.length })}</button>`
+        : ''}
+    </div>`;
 }
 
 function hashHue(s) {
