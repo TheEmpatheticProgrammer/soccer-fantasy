@@ -794,6 +794,9 @@ function bindEvents() {
   document.querySelectorAll('.sort-btn').forEach(btn =>
     btn.addEventListener('click', () => setPredictionsSort(btn.dataset.sort))
   );
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.sort === state.predictionsSort);
+  });
 
   document.getElementById('everyone-container')?.addEventListener('click', e => {
     const btn = e.target.closest('[data-expand-players]');
