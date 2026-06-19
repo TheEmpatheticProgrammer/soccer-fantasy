@@ -1226,6 +1226,8 @@ function switchSubview(name) {
     s.classList.toggle('hidden', !shouldShow);
     if (shouldShow) playEnterAnimation(s);
   });
+  const stickyHeader = document.querySelector('.predictions-sticky-header');
+  if (stickyHeader) stickyHeader.dataset.subtab = name;
   if (name === 'everyone') { state._predictionsScrollPending = true; renderEveryone(); }
   if (name === 'mine')     { state._predictionsScrollPending = true; renderPredictions(); }
 }
