@@ -1045,8 +1045,10 @@ async function loadFromApi(force = false, maxAgeMs) {
 // its live window AND the user is on predictions/leaderboard AND the tab is
 // visible. football-data's free tier doesn't flip IN_PLAY reliably, so we
 // gate on the match's scheduled time and pull live scores from ESPN.
-// football-data still owns schedule + final scores.
-const LIVE_POLL_MS = 60 * 1000;
+// football-data still owns schedule + final scores. 15s keeps updates feeling
+// real-time without hammering ESPN (admin tabs additionally fan out via
+// Firestore, so most clients see changes through the snapshot listener).
+const LIVE_POLL_MS = 15 * 1000;
 const LIVE_WINDOW_MS = 3 * 60 * 60 * 1000; // ~3h after kickoff covers extra time + delays
 let livePollTimer = null;
 
@@ -1677,6 +1679,11 @@ function everyoneMatchBlock(match, participants, ctx) {
   const topUids = (ctx && ctx.topUids) || [];
   const topSet = new Set(topUids);
   const sortedParticipants = [...participants].sort((a, b) => {
+    if (result) {
+      const aPts = calcPoints(a[1].predictions[match.id], result) ?? 0;
+      const bPts = calcPoints(b[1].predictions[match.id], result) ?? 0;
+      if (aPts !== bPts) return bPts - aPts;
+    }
     const aTopIdx = topUids.indexOf(a[0]);
     const bTopIdx = topUids.indexOf(b[0]);
     if (aTopIdx !== -1 || bTopIdx !== -1) {
@@ -1694,7 +1701,8 @@ function everyoneMatchBlock(match, participants, ctx) {
     const pts = result ? calcPoints(pred, result) : null;
     const isSelf = uid === state.uid;
     const isTop = topSet.has(uid);
-    const isPriority = isSelf || isTop;
+    const isScorer = pts !== null && pts > 0;
+    const isPriority = isSelf || isTop || isScorer;
     const name = doc.displayName || t('toast.unknown');
     const initials = getInitials(name);
     const avatarHue = isSelf ? 145 : hashHue(uid);
