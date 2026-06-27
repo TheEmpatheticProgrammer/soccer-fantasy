@@ -893,6 +893,9 @@ function refreshDynamicContent() {
   refreshApiStatus();
   refreshSaveStatus();
   renderHeaderStats();
+  renderRules();
+  if (typeof renderKnockoutBracket === 'function') renderKnockoutBracket();
+  renderKnockoutPlayerCard();
   updateCurrentLeagueBadge();
   renderPlayerCard();
   document.querySelectorAll('.nav-btn.requires-league').forEach(btn => {
