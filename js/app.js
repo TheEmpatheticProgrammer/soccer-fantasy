@@ -1185,7 +1185,6 @@ function findMatchByLiveTeams(home, away) {
   if (koMatch) return { match: koMatch, knockout: true };
   return null;
 }
-}
 
 async function pollLiveScores() {
   let live;
@@ -3232,27 +3231,41 @@ function renderLeagues() {
 
 function leagueCard(league, isMember) {
   const owned = league.ownerUid === state.uid;
+  const isCurrent = league.id === state.leagueId;
   const memberCount = (league.memberUids || []).length;
   const memberLabel = memberCount === 1
     ? t('leagues.members', { n: 1 })
     : t('leagues.membersPlural', { n: memberCount });
   const ownerNote = owned ? `<span class="league-owner-note">★ ${t('leagues.owner')}</span>` : '';
   const typeTag = league.type === 'knockout'
-    ? `<span class="league-type-tag">${t('knockout.tag')}</span>`
-    : '';
+    ? `<span class="league-type-tag knockout-tag">${t('knockout.tag')}</span>`
+    : `<span class="league-type-tag groups-tag">${t('leagues.create.typeGroups')}</span>`;
 
-  const actionHtml = isMember
-    ? `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`
-    : `<button class="btn btn-primary" data-league-join-public="${league.id}">${t('leagues.join')}</button>`;
+  let actionHtml;
+  if (isCurrent) {
+    actionHtml = `<button class="btn btn-secondary league-card-current-btn" disabled>${t('leagues.current')}</button>`;
+  } else if (isMember) {
+    actionHtml = `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`;
+  } else {
+    actionHtml = `<button class="btn btn-primary" data-league-join-public="${league.id}">${t('leagues.join')}</button>`;
+  }
 
   return `
-    <div class="league-card">
+    <div class="league-card${isCurrent ? ' is-current' : ''}">
       <div class="league-card-header">
         <h4>${escapeHtml(displayLeagueName(league.name))}</h4>
         ${typeTag}
       </div>
       <div class="league-card-meta">
-        <span>${memberLabel}</span>
+        <span class="league-card-members">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          ${memberLabel}
+        </span>
         ${ownerNote}
       </div>
       <div class="league-card-actions">${actionHtml}</div>
