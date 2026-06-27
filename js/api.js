@@ -185,6 +185,9 @@ function parseKnockoutResponse(stageResults) {
         utcDate: m.utcDate,
         status: m.status,
         venue: m.venue || null,
+        result: m.score?.fullTime?.home != null
+          ? { home: m.score.fullTime.home, away: m.score.fullTime.away }
+          : null,
       });
     });
   }

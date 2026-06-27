@@ -497,6 +497,28 @@ async function refreshKnockoutMatches() {
     if (matches && matches.length) {
       state.knockout.matches = matches;
       state.knockout.crests = crests || {};
+
+      // Fan out any API-reported final results to Firestore (admin only)
+      if (isAdmin()) {
+        const existing = state.knockout.results || {};
+        let newResults = false;
+        const merged = { ...existing };
+        for (const m of matches) {
+          if (m.result && !existing[m.id]) {
+            merged[m.id] = m.result;
+            newResults = true;
+          }
+        }
+        if (newResults) {
+          state.knockout.results = merged;
+          state.knockout.resultsVersion = (state.knockout.resultsVersion || 0) + 1;
+          firebase.firestore().collection('knockoutResults').doc('all').set({
+            results: merged,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true }).catch(err => console.warn('[knockout] results fanout failed:', err.message));
+        }
+      }
+
       scheduleRenderAll();
     }
   } catch (err) {
