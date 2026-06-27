@@ -1268,6 +1268,9 @@ async function pollLiveScores() {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       }, { merge: true }).catch(err => console.warn('[live] ko fanout failed:', err.message));
     }
+    // When a knockout match finishes, refresh from football-data for official data
+    const anyFinished = live.some(ev => ev.state === 'post' && findMatchByLiveTeams(ev.home, ev.away)?.knockout);
+    if (anyFinished) setTimeout(refreshKnockoutMatches, 30_000);
   }
 }
 
@@ -1281,6 +1284,23 @@ function maybeAdjustLivePolling() {
   } else if (!shouldPoll && livePollTimer) {
     clearInterval(livePollTimer);
     livePollTimer = null;
+  }
+  maybeAdjustKnockoutRefresh();
+}
+
+// Periodically refresh knockout fixtures from football-data (every 5 min)
+// to pick up newly resolved team names and official final results.
+const KO_REFRESH_MS = 5 * 60 * 1000;
+let koRefreshTimer = null;
+
+function maybeAdjustKnockoutRefresh() {
+  const shouldRefresh = state.leagueType === 'knockout' &&
+    document.visibilityState === 'visible' && !!state.uid;
+  if (shouldRefresh && !koRefreshTimer) {
+    koRefreshTimer = setInterval(refreshKnockoutMatches, KO_REFRESH_MS);
+  } else if (!shouldRefresh && koRefreshTimer) {
+    clearInterval(koRefreshTimer);
+    koRefreshTimer = null;
   }
 }
 
