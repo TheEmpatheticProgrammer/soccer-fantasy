@@ -3880,37 +3880,62 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .player-pred-ko-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.45rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 0.8rem;
 }
 .player-pred-ko-row:last-child { border-bottom: none; }
 .player-pred-ko-teams {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto 1fr;
   align-items: center;
-  gap: 0.25rem;
-  flex: 1;
+  gap: 0.3rem;
   min-width: 0;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
 }
+.player-pred-ko-home,
+.player-pred-ko-away {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-pred-ko-home { text-align: right; }
+.player-pred-ko-away { text-align: left; }
 .player-pred-ko-vs {
-  opacity: 0.4;
-  margin: 0 0.15rem;
+  opacity: 0.35;
+  font-size: 0.7rem;
+  text-align: center;
 }
 .player-pred-ko-pick {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  min-width: 2.5rem;
+  text-align: center;
 }
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted, #9ca3af);
+.player-pred-ko-result {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+.player-pred-ko-stage-badge {
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #04141a;
+  font-weight: 700;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.create-league-type-label {
 .create-league-type-label select {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);

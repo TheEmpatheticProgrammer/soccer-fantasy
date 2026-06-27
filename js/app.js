@@ -2611,7 +2611,7 @@ function openPlayerPredictionsModal(uid, rank) {
       return `
         <details class="prediction-group player-pred-group"${idx === 0 ? ' open' : ''}>
           <summary class="prediction-group-title">
-            <span class="group-letter-badge">${label}</span>
+            <span class="player-pred-ko-stage-badge">${label}</span>
             <span class="group-stats">
               <span class="group-stats-pts">${stagePts} ${t('header.points')}</span>
               <span class="group-stats-sep">·</span>
@@ -2634,16 +2634,20 @@ function openPlayerPredictionsModal(uid, rank) {
                 ? `${p.home} - ${p.away}` : `<span class="text-muted">—</span>`;
               const resultStr = actual
                 ? `<span class="bracket-result-score">${actual.home} - ${actual.away}</span>` : '';
+              const homeName = typeof tCountry === 'function' ? tCountry(m.home) : m.home;
+              const awayName = typeof tCountry === 'function' ? tCountry(m.away) : m.away;
+              const homeFlag = typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.home) : '';
+              const awayFlag = typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.away) : '';
               return `<div class="player-pred-ko-row">
                 <span class="player-pred-ko-teams">
-                  ${typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.home) : ''}
-                  <span>${escapeHtml(typeof tCountry === 'function' ? tCountry(m.home) : m.home)}</span>
+                  ${homeFlag}
+                  <span class="player-pred-ko-home">${escapeHtml(homeName)}</span>
                   <span class="player-pred-ko-vs">v</span>
-                  ${typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.away) : ''}
-                  <span>${escapeHtml(typeof tCountry === 'function' ? tCountry(m.away) : m.away)}</span>
+                  ${awayFlag}
+                  <span class="player-pred-ko-away">${escapeHtml(awayName)}</span>
                 </span>
                 <span class="player-pred-ko-pick">${predStr}</span>
-                ${resultStr}
+                ${resultStr ? `<span class="player-pred-ko-result">${actual.home} - ${actual.away}</span>` : ''}
                 ${ptsBadge}
               </div>`;
             }).join('')}
