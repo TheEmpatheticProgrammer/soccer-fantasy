@@ -495,6 +495,23 @@ async function refreshKnockoutMatches() {
     if (typeof loadKnockoutData !== 'function') return;
     const { matches, crests } = await loadKnockoutData(state.apiKey, false);
     if (matches && matches.length) {
+      // Resolve TBD teams using group standings
+      if (typeof loadGroupStandings === 'function') {
+        try {
+          const aliasMap = await loadGroupStandings(state.apiKey);
+          if (aliasMap && Object.keys(aliasMap).length) {
+            for (const m of matches) {
+              if (m.home === 'TBD' && m.homeAlias && aliasMap[m.homeAlias]) {
+                m.home = aliasMap[m.homeAlias];
+              }
+              if (m.away === 'TBD' && m.awayAlias && aliasMap[m.awayAlias]) {
+                m.away = aliasMap[m.awayAlias];
+              }
+            }
+          }
+        } catch (e) { console.warn('[knockout] standings resolve failed:', e.message); }
+      }
+
       state.knockout.matches = matches;
       state.knockout.crests = crests || {};
 

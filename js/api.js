@@ -195,6 +195,35 @@ function parseKnockoutResponse(stageResults) {
   return { matches, crests };
 }
 
+// Fetch group standings and build a map: alias → team name.
+// e.g. { 'Winner A': 'Germany', 'Runner-up A': 'Mexico', ... }
+async function loadGroupStandings(apiKey) {
+  const headers = isUsingProxy() ? {} : { 'X-Auth-Token': apiKey };
+  const res = await fetch(
+    `${getApiBase()}/competitions/${COMPETITION}/standings`,
+    { headers }
+  );
+  if (!res.ok) return {};
+  const json = await res.json();
+  const standings = json.standings || [];
+  const aliasMap = {};
+
+  for (const group of standings) {
+    if (group.type !== 'TOTAL') continue;
+    const groupLetter = (group.group || '').replace('GROUP_', '');
+    if (!groupLetter) continue;
+    const table = group.table || [];
+    for (const entry of table) {
+      const pos = entry.position;
+      const name = entry.team?.name;
+      if (!name) continue;
+      if (pos === 1) aliasMap[`Winner ${groupLetter}`] = name;
+      if (pos === 2) aliasMap[`Runner-up ${groupLetter}`] = name;
+    }
+  }
+  return aliasMap;
+}
+
 // ESPN's public scoreboard for the FIFA World Cup — undocumented but free,
 // no auth, no rate limit, updates in near real time. Returns today's events
 // by default; `events[].competitions[].competitors` carries the live score
