@@ -222,7 +222,7 @@ function formatKnockoutLockCountdown(ms) {
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return t('knockout.locksInMin', { n: Math.max(1, mins) });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return t('knockout.locksInHour', { n: hours });
+  if (hours < 48) return t('knockout.locksInHour', { n: hours });
   const days = Math.floor(hours / 24);
   return t('knockout.locksInDay', { n: days });
 }
@@ -283,6 +283,24 @@ function renderKnockoutMatch(match, myPred) {
 
   const { day, time } = formatMatchDateParts(match.utcDate);
 
+  let othersBtn = '';
+  if (locked && !isTbd) {
+    const docs = state.knockout?.predictionDocs || {};
+    let pickCount = 0;
+    for (const uid of Object.keys(docs)) {
+      const p = docs[uid]?.predictions?.[match.id];
+      if (p && p.home != null && p.away != null) pickCount++;
+    }
+    if (pickCount > 0) {
+      othersBtn = `<button type="button" class="bracket-match-others" data-match-id="${match.id}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>${pickCount} ${t('knockout.picks')}</span>
+      </button>`;
+    }
+  }
+
   return `
     <article class="bracket-match" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
       <div class="bracket-match-meta">
@@ -311,6 +329,7 @@ function renderKnockoutMatch(match, myPred) {
       </div>
       ${winnerBadge}
       ${resultStrip}
+      ${othersBtn}
     </article>`;
 }
 
@@ -755,6 +774,40 @@ function bindKnockoutEvents() {
     card.querySelectorAll('.penalty-pick-btn').forEach(b => b.classList.remove('is-selected'));
     btn.classList.add('is-selected');
     scheduleKnockoutAutosave();
+  });
+
+  container.addEventListener('click', e => {
+    const btn = e.target.closest('.bracket-match-others');
+    if (!btn) return;
+    const matchId = btn.dataset.matchId;
+    const card = btn.closest('.bracket-match');
+    if (!card) return;
+    const existing = card.querySelector('.bracket-others-panel');
+    if (existing) { existing.remove(); btn.classList.remove('is-open'); return; }
+    btn.classList.add('is-open');
+    const match = (state.knockout?.matches || []).find(m => m.id === matchId);
+    const result = match ? (getKnockoutResults()[matchId] || null) : null;
+    const docs = state.knockout?.predictionDocs || {};
+    const rows = [];
+    for (const [uid, doc] of Object.entries(docs)) {
+      const pred = doc.predictions?.[matchId];
+      if (!pred || pred.home == null || pred.away == null) continue;
+      const name = doc.displayName || t('toast.unknown');
+      const pts = result ? calcKnockoutPoints(pred, result) : null;
+      const ptsBadge = pts !== null
+        ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
+        : '';
+      const isSelf = uid === state.uid;
+      rows.push(`<div class="bracket-others-row${isSelf ? ' is-self' : ''}">
+        <span class="bracket-others-name">${escapeHtml(name)}</span>
+        <span class="bracket-others-score">${pred.home} - ${pred.away}</span>
+        ${ptsBadge}
+      </div>`);
+    }
+    const panel = document.createElement('div');
+    panel.className = 'bracket-others-panel';
+    panel.innerHTML = rows.length ? rows.join('') : `<div class="empty-state">${t('knockout.noPredictions')}</div>`;
+    card.appendChild(panel);
   });
 
   // Hover-trace: highlight a team's full forward path through the bracket

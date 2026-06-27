@@ -3824,7 +3824,87 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 .bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 
-.create-league-type-label {
+.bracket-match-others {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.bracket-match-others svg { width: 14px; height: 14px; }
+.bracket-match-others:hover,
+.bracket-match-others.is-open {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+.bracket-others-panel {
+  margin-top: 0.3rem;
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.bracket-others-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+.bracket-others-row.is-self {
+  background: rgba(45, 255, 165, 0.08);
+}
+.bracket-others-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+.bracket-others-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-pred-ko-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.8rem;
+}
+.player-pred-ko-row:last-child { border-bottom: none; }
+.player-pred-ko-teams {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+}
+.player-pred-ko-vs {
+  opacity: 0.4;
+  margin: 0 0.15rem;
+}
+.player-pred-ko-pick {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
   display: flex;
   align-items: center;
   gap: 0.5rem;

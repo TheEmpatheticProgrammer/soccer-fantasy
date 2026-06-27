@@ -2561,13 +2561,16 @@ function openPlayerPredictionsModal(uid, rank) {
   const modal = document.getElementById('player-pred-modal');
   if (!modal) return;
 
-  const doc = state.predictionDocs[uid];
+  const isKnockout = state.leagueType === 'knockout';
+  const doc = isKnockout
+    ? (state.knockout?.predictionDocs || {})[uid]
+    : state.predictionDocs[uid];
   const standings = computeStandings();
   const standing = standings.find(s => s.uid === uid);
   const name = (doc && doc.displayName) || (standing && standing.name) || t('toast.unknown');
   const points = standing ? standing.points : 0;
   const scored = standing ? standing.scored : 0;
-  const total = state.matches.length;
+  const total = isKnockout ? (state.knockout?.matches || []).length : state.matches.length;
   const isSelf = uid === state.uid;
 
   document.getElementById('player-pred-modal-title').textContent = name;
@@ -2580,8 +2583,73 @@ function openPlayerPredictionsModal(uid, rank) {
 
   const body = document.getElementById('player-pred-modal-body');
   const preds = (doc && doc.predictions) || {};
+
   if (!Object.keys(preds).length) {
     body.innerHTML = `<div class="empty-state">${t('playerModal.noPicks')}</div>`;
+  } else if (isKnockout) {
+    const hint = isSelf ? '' : `<div class="player-pred-modal-hint">${t('playerModal.readOnlyHint')}</div>`;
+    const matches = state.knockout?.matches || [];
+    const results = typeof getKnockoutResults === 'function' ? getKnockoutResults() : {};
+    const byStage = {};
+    for (const m of matches) { (byStage[m.stage] ||= []).push(m); }
+    const stageOrder = typeof KNOCKOUT_STAGES !== 'undefined' ? KNOCKOUT_STAGES : Object.keys(byStage);
+    body.innerHTML = hint + stageOrder.filter(s => byStage[s]?.length).map((stage, idx) => {
+      const stageMatches = byStage[stage].sort((a, b) => a.slot - b.slot);
+      let stagePts = 0, stagePicked = 0;
+      for (const m of stageMatches) {
+        const p = preds[m.id];
+        if (p && p.home != null && p.away != null) {
+          stagePicked++;
+          const actual = results[m.id];
+          if (actual && typeof calcKnockoutPoints === 'function') {
+            const pts = calcKnockoutPoints(p, actual);
+            if (pts !== null) stagePts += pts;
+          }
+        }
+      }
+      const label = typeof knockoutRoundLabel === 'function' ? knockoutRoundLabel(stage) : stage;
+      return `
+        <details class="prediction-group player-pred-group"${idx === 0 ? ' open' : ''}>
+          <summary class="prediction-group-title">
+            <span class="group-letter-badge">${label}</span>
+            <span class="group-stats">
+              <span class="group-stats-pts">${stagePts} ${t('header.points')}</span>
+              <span class="group-stats-sep">·</span>
+              <span class="group-stats-predicted">${stagePicked}/${stageMatches.length}</span>
+            </span>
+            <svg class="group-chevron" viewBox="0 0 12 12" aria-hidden="true">
+              <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </summary>
+          <div class="prediction-group-rows">
+            ${stageMatches.map(m => {
+              const p = preds[m.id];
+              const actual = results[m.id];
+              const pts = (p && actual && typeof calcKnockoutPoints === 'function')
+                ? calcKnockoutPoints(p, actual) : null;
+              const ptsBadge = pts !== null
+                ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
+                : '';
+              const predStr = (p && p.home != null && p.away != null)
+                ? `${p.home} - ${p.away}` : `<span class="text-muted">—</span>`;
+              const resultStr = actual
+                ? `<span class="bracket-result-score">${actual.home} - ${actual.away}</span>` : '';
+              return `<div class="player-pred-ko-row">
+                <span class="player-pred-ko-teams">
+                  ${typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.home) : ''}
+                  <span>${escapeHtml(typeof tCountry === 'function' ? tCountry(m.home) : m.home)}</span>
+                  <span class="player-pred-ko-vs">v</span>
+                  ${typeof knockoutTeamFlag === 'function' ? knockoutTeamFlag(m.away) : ''}
+                  <span>${escapeHtml(typeof tCountry === 'function' ? tCountry(m.away) : m.away)}</span>
+                </span>
+                <span class="player-pred-ko-pick">${predStr}</span>
+                ${resultStr}
+                ${ptsBadge}
+              </div>`;
+            }).join('')}
+          </div>
+        </details>`;
+    }).join('');
   } else {
     const hint = isSelf ? '' : `<div class="player-pred-modal-hint">${t('playerModal.readOnlyHint')}</div>`;
     const defaultOpenGroup = currentGroup() || Object.keys(state.groups)[0];
@@ -2622,8 +2690,6 @@ function openPlayerPredictionsModal(uid, rank) {
   modal.classList.remove('hidden');
   _playerPredModalOpenedAt = Date.now();
   document.body.classList.add('modal-open');
-  // Focus close button so Escape / keyboard users have a clear handle.
-  // preventScroll avoids iOS jumping the viewport on focus.
   setTimeout(() => {
     document.getElementById('player-pred-modal-close')?.focus({ preventScroll: true });
   }, 0);
