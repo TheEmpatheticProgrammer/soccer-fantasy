@@ -642,6 +642,31 @@ function setupBracketFloatingScrollbar() {
     realContainer.scrollLeft = (x / track.clientWidth) * (sw - cw);
   });
 
+  // Touch drag support for mobile
+  thumb.addEventListener('touchstart', e => {
+    _floatDragging = true;
+    _floatDragStartX = e.touches[0].clientX;
+    _floatDragStartScroll = realContainer.scrollLeft;
+    thumb.classList.add('is-dragging');
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchmove', e => {
+    if (!_floatDragging) return;
+    const sw = realContainer.scrollWidth;
+    const cw = realContainer.clientWidth;
+    const tw = track.clientWidth;
+    const thumbW = thumb.offsetWidth;
+    const maxThumb = tw - thumbW;
+    const maxScroll = sw - cw;
+    const dx = e.touches[0].clientX - _floatDragStartX;
+    realContainer.scrollLeft = _floatDragStartScroll + dx * (maxScroll / (maxThumb || 1));
+  });
+  document.addEventListener('touchend', () => {
+    if (!_floatDragging) return;
+    _floatDragging = false;
+    thumb.classList.remove('is-dragging');
+  });
+
   return wrap;
 }
 
