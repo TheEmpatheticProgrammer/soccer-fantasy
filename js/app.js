@@ -626,12 +626,10 @@ function computeMyRank() {
 
 function renderHeaderStats() {
   const rankEl = document.getElementById('rank-pill');
-  const countdownEl = document.getElementById('countdown-pill');
-  if (!rankEl || !countdownEl) return;
+  if (!rankEl) return;
 
   if (!state.currentLeague) {
     rankEl.classList.add('hidden');
-    countdownEl.classList.add('hidden');
     return;
   }
 
@@ -642,28 +640,9 @@ function renderHeaderStats() {
   } else {
     rankEl.classList.add('hidden');
   }
-
-  let label, kind;
-  const remaining = formatCountdown(PREDICTIONS_LOCK_DATE.getTime());
-  if (!remaining) {
-    label = t('header.tournamentLive');
-    kind = 'live';
-  } else {
-    label = t('header.locksIn', { time: remaining });
-    kind = 'pending';
-  }
-  countdownEl.textContent = label;
-  countdownEl.dataset.kind = kind;
-  countdownEl.classList.remove('hidden');
 }
 
-let countdownInterval = null;
-function startCountdownInterval() {
-  if (countdownInterval) return;
-  countdownInterval = setInterval(() => {
-    renderHeaderStats();
-  }, 60000);
-}
+function startCountdownInterval() {}
 
 function onSignedOut() {
   state.uid = null;

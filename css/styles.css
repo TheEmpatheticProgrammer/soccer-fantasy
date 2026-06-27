@@ -105,24 +105,26 @@ body { overflow-x: hidden; }
 .current-league-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  color: var(--accent);
+  gap: 0.35rem;
+  color: var(--highlight);
   font-weight: 700;
-  padding: 0.15rem 0.55rem;
-  background: var(--accent-soft);
+  font-size: 0.82rem;
+  padding: 0.25rem 0.7rem;
+  background: var(--highlight-soft);
   border-radius: 999px;
-  border: 1px solid rgba(0, 217, 119, 0.3);
+  border: 1px solid rgba(255, 184, 73, 0.35);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 .current-league-badge:hover {
-  background: rgba(0, 217, 119, 0.18);
-  border-color: rgba(0, 217, 119, 0.5);
+  background: rgba(255, 184, 73, 0.22);
+  border-color: rgba(255, 184, 73, 0.55);
+  box-shadow: 0 0 8px rgba(255, 184, 73, 0.15);
 }
 .current-league-badge-icon {
   width: 14px;
   height: 14px;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 
 .header-pill {
@@ -152,26 +154,6 @@ body { overflow-x: hidden; }
   letter-spacing: 0.2px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-.countdown-pill[data-kind="pending"] {
-  background: var(--highlight-soft);
-  color: var(--highlight);
-  border: 1px solid rgba(255, 214, 10, 0.3);
-}
-.countdown-pill[data-kind="live"] {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid rgba(0, 217, 119, 0.35);
-  animation: livePulse 2s ease-in-out infinite;
-}
-.countdown-pill[data-kind="unlocked"] {
-  background: rgba(255, 90, 79, 0.12);
-  color: var(--error);
-  border: 1px solid rgba(255, 90, 79, 0.3);
-}
-@keyframes livePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 217, 119, 0.4); }
-  50%      { box-shadow: 0 0 0 4px rgba(0, 217, 119, 0); }
 }
 
 @media (max-width: 500px) {
