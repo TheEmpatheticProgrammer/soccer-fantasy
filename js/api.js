@@ -91,6 +91,107 @@ function parseWorldCupResponse(json) {
   };
 }
 
+const KnockoutApiCache = {
+  key: 'wc2026_knockout_cache_v1',
+  ttl: 5 * 60 * 1000,
+  set(data) { localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data })); },
+  get(maxAgeMs) {
+    try {
+      const item = JSON.parse(localStorage.getItem(this.key));
+      const limit = typeof maxAgeMs === 'number' ? maxAgeMs : this.ttl;
+      if (!item || Date.now() - item.ts > limit) return null;
+      return item.data;
+    } catch { return null; }
+  },
+  clear() { localStorage.removeItem(this.key); },
+};
+
+const KNOCKOUT_API_STAGES = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
+
+async function loadKnockoutData(apiKey, force = false, maxAgeMs) {
+  if (typeof Storage !== 'undefined' && Storage.getKnockoutDemo && Storage.getKnockoutDemo()) {
+    const matches = buildKnockoutDemoMatches();
+    return { matches, crests: {} };
+  }
+
+  if (!force) {
+    const cached = KnockoutApiCache.get(maxAgeMs);
+    if (cached) return cached;
+  }
+
+  const headers = isUsingProxy() ? {} : { 'X-Auth-Token': apiKey };
+  const results = await Promise.all(KNOCKOUT_API_STAGES.map(async stage => {
+    const res = await fetch(
+      `${getApiBase()}/competitions/${COMPETITION}/matches?stage=${stage}`,
+      { headers }
+    );
+    if (!res.ok) {
+      // A stage may legitimately not exist yet (e.g. R16 before R32 finishes).
+      // Treat non-2xx as "no matches for this stage" rather than failing the whole load.
+      return { stage, matches: [] };
+    }
+    const json = await res.json().catch(() => ({}));
+    return { stage, matches: json.matches || [] };
+  }));
+
+  const out = parseKnockoutResponse(results);
+  KnockoutApiCache.set(out);
+  return out;
+}
+
+function parseKnockoutResponse(stageResults) {
+  const matches = [];
+  const crests = {};
+
+  for (const { stage, matches: raw } of stageResults) {
+    // Sort by utcDate; use match id as tiebreaker so ordering within a day is
+    // stable and matches the official fixture numbering (lower id = earlier).
+    const sorted = [...raw].sort((a, b) => {
+      const at = a.utcDate ? new Date(a.utcDate).getTime() : Infinity;
+      const bt = b.utcDate ? new Date(b.utcDate).getTime() : Infinity;
+      return at - bt || (a.id || 0) - (b.id || 0);
+    });
+
+    const template = (typeof KNOCKOUT_TEMPLATE !== 'undefined' && KNOCKOUT_TEMPLATE[stage]) || [];
+
+    sorted.forEach((m, idx) => {
+      const homeTeam = m.homeTeam || {};
+      const awayTeam = m.awayTeam || {};
+      const home = homeTeam.name || 'TBD';
+      const away = awayTeam.name || 'TBD';
+      if (homeTeam.crest && home !== 'TBD') crests[home] = homeTeam.crest;
+      if (awayTeam.crest && away !== 'TBD') crests[away] = awayTeam.crest;
+
+      const slotInfo = template[idx] || {};
+      const fromSlots = slotInfo.fromSlots || [];
+      const isLoser = slotInfo.sourceType === 'loser';
+      const prefix = isLoser ? 'Loser' : 'Winner';
+
+      // Template aliases take precedence (real bracket seedings for R32).
+      // For later rounds fall back to "Winner Slot X" derived from fromSlots.
+      const homeAlias = slotInfo.homeAlias ||
+        (fromSlots[0] != null ? `${prefix} Slot ${fromSlots[0]}` : null);
+      const awayAlias = slotInfo.awayAlias ||
+        (fromSlots[1] != null ? `${prefix} Slot ${fromSlots[1]}` : null);
+
+      matches.push({
+        id: String(m.id),
+        stage,
+        slot: slotInfo.slot || (idx + 1),
+        home,
+        away,
+        homeAlias,
+        awayAlias,
+        utcDate: m.utcDate,
+        status: m.status,
+        venue: m.venue || null,
+      });
+    });
+  }
+
+  return { matches, crests };
+}
+
 // ESPN's public scoreboard for the FIFA World Cup — undocumented but free,
 // no auth, no rate limit, updates in near real time. Returns today's events
 // by default; `events[].competitions[].competitors` carries the live score

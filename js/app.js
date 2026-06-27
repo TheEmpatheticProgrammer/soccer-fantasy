@@ -10,15 +10,24 @@ function getWorldCupStart() {
     ? new Date(earliest)
     : WORLD_CUP_START_FALLBACK;
 }
-// Predictions are hard-locked — set to epoch so arePredictionsLocked()
-// is always true and the UI never shows a "locks in" countdown.
+// Predictions are hard-locked for the group stage — set to epoch so
+// arePredictionsLocked() is always true there. Knockout leagues bypass the
+// lock entirely so members can edit their bracket predictions until each
+// match kicks off (per-match locking is a future enhancement).
 const PREDICTIONS_LOCK_DATE = new Date(0);
 const arePredictionsLocked = () => {
+  if (state?.leagueType === 'knockout') return false;
   return Date.now() >= PREDICTIONS_LOCK_DATE.getTime();
 };
 
 const Storage = {
-  keys: { apiKey: 'wc2026_api_key', lastLeagueId: 'wc2026_last_league_id', lastView: 'wc2026_last_view', predictionsSort: 'wc2026_predictions_sort' },
+  keys: {
+    apiKey: 'wc2026_api_key',
+    lastLeagueId: 'wc2026_last_league_id',
+    lastView: 'wc2026_last_view',
+    predictionsSort: 'wc2026_predictions_sort',
+    knockoutDemo: 'wc2026_knockout_demo',
+  },
   getApiKey()         { return localStorage.getItem(this.keys.apiKey) || ''; },
   setApiKey(k)        { localStorage.setItem(this.keys.apiKey, k); },
   getLastLeagueId()   { return localStorage.getItem(this.keys.lastLeagueId) || ''; },
@@ -28,6 +37,10 @@ const Storage = {
   setLastView(v)      { localStorage.setItem(this.keys.lastView, v); },
   getPredictionsSort(){ return localStorage.getItem(this.keys.predictionsSort) || 'group'; },
   setPredictionsSort(v){ localStorage.setItem(this.keys.predictionsSort, v); },
+  // Default ON — the real football-data fixtures won't return team names
+  // Demo mode defaults OFF — real API data is now used. Toggle in Settings.
+  getKnockoutDemo()   { return localStorage.getItem(this.keys.knockoutDemo) === '1'; },
+  setKnockoutDemo(v)  { localStorage.setItem(this.keys.knockoutDemo, v ? '1' : '0'); },
 };
 
 // Spanish team names as they appear in the import template → canonical
@@ -197,6 +210,7 @@ const state = {
   currentPlayer: '',
   leagueId: null,
   currentLeague: null,
+  leagueType: 'groups',
   myLeagues: [],
   publicLeagues: [],
   predictionDocs: {},
@@ -208,6 +222,14 @@ const state = {
   apiKey: '',
   view: null,
   predictionsSort: Storage.getPredictionsSort(),
+  knockout: {
+    matches: [],
+    results: {},
+    predictionDocs: {},
+    predVersion: 0,
+    resultsVersion: 0,
+    crests: {},
+  },
 };
 
 function teamLabel(name, flagPos = 'left') {
@@ -411,13 +433,24 @@ async function routeAfterSignIn() {
   const chosen = state.myLeagues.find(l => l.id === lastId) || state.myLeagues[0];
   await enterLeague(chosen.id);
   const lastView = Storage.getLastView();
-  const allowed = new Set(['predictions', 'leaderboard', 'leagues', 'profile', 'rules']);
-  switchView(allowed.has(lastView) ? lastView : 'predictions');
+  const allowed = new Set(['predictions', 'leaderboard', 'leagues', 'profile', 'rules', 'knockout']);
+  const defaultView = state.leagueType === 'knockout' ? 'knockout' : 'predictions';
+  // If user's last view doesn't apply to the league type they're entering,
+  // fall through to the type-appropriate default.
+  const isKnockoutView = lastView === 'knockout';
+  const isGroupView = lastView === 'predictions' || lastView === 'leaderboard';
+  let target = defaultView;
+  if (allowed.has(lastView)) {
+    if (state.leagueType === 'knockout' && !isGroupView) target = lastView;
+    else if (state.leagueType !== 'knockout' && !isKnockoutView) target = lastView;
+  }
+  switchView(target);
 }
 
 async function enterLeague(leagueId) {
   if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
   if (unsubLeague)      { unsubLeague();      unsubLeague = null; }
+  if (typeof unsubscribeKnockout === 'function') unsubscribeKnockout();
 
   state.leagueId = leagueId;
   state.predictionsRendered = false;
@@ -434,6 +467,8 @@ async function enterLeague(leagueId) {
     return;
   }
   state.currentLeague = { id: doc.id, ...doc.data() };
+  state.leagueType = state.currentLeague.type === 'knockout' ? 'knockout' : 'groups';
+  document.body.classList.toggle('league-type-knockout', state.leagueType === 'knockout');
 
   document.querySelectorAll('.league-owner-only').forEach(el =>
     el.classList.toggle('hidden', !isLeagueOwner())
@@ -442,9 +477,31 @@ async function enterLeague(leagueId) {
   document.getElementById('admin-panel').classList.toggle('hidden', !isAdmin());
 
   updateCurrentLeagueBadge();
-  subscribeToPredictions();
+  if (state.leagueType === 'knockout') {
+    state.knockout.matches = buildKnockoutDemoMatches();
+    state.knockout.crests = {};
+    if (typeof subscribeToKnockoutPredictions === 'function') subscribeToKnockoutPredictions();
+    if (typeof subscribeToKnockoutResults === 'function') subscribeToKnockoutResults();
+    refreshKnockoutMatches();
+  } else {
+    subscribeToPredictions();
+  }
   subscribeToLeague();
   renderProfileLeagues();
+}
+
+async function refreshKnockoutMatches() {
+  try {
+    if (typeof loadKnockoutData !== 'function') return;
+    const { matches, crests } = await loadKnockoutData(state.apiKey, false);
+    if (matches && matches.length) {
+      state.knockout.matches = matches;
+      state.knockout.crests = crests || {};
+      scheduleRenderAll();
+    }
+  } catch (err) {
+    console.warn('[knockout] load failed, using demo bracket', err);
+  }
 }
 
 function subscribeToLeague() {
@@ -467,7 +524,10 @@ async function enterLeaguesView() {
   state.leagueId = null;
   state.currentLeague = null;
   state.predictionDocs = {};
+  state.leagueType = 'groups';
+  document.body.classList.remove('league-type-knockout');
   if (unsubPredictions) { unsubPredictions(); unsubPredictions = null; }
+  if (typeof unsubscribeKnockout === 'function') unsubscribeKnockout();
   updateCurrentLeagueBadge();
   await loadPublicLeagues();
   switchView('leagues');
@@ -477,11 +537,12 @@ async function enterLeaguesView() {
 function updateCurrentLeagueBadge() {
   const badge = document.getElementById('current-league-badge');
   if (!badge) return;
+  const nameEl = badge.querySelector('.current-league-badge-name');
   if (state.currentLeague) {
-    badge.textContent = displayLeagueName(state.currentLeague.name);
+    (nameEl || badge).textContent = displayLeagueName(state.currentLeague.name);
     badge.classList.remove('hidden');
   } else {
-    badge.textContent = '';
+    if (nameEl) nameEl.textContent = ''; else badge.textContent = '';
     badge.classList.add('hidden');
   }
   renderHeaderStats();
@@ -752,6 +813,31 @@ function renderPlayerCard() {
   if (totalEl) totalEl.textContent = total;
 }
 
+function renderKnockoutPlayerCard() {
+  const view = document.getElementById('view-knockout');
+  if (!view || view.classList.contains('hidden')) return;
+  const name = state.currentPlayer || '';
+  const avatar = document.getElementById('knockout-player-avatar');
+  if (avatar) avatar.textContent = getInitials(name);
+  const display = document.getElementById('knockout-player-display');
+  if (display) display.textContent = name;
+
+  const myDoc = state.knockout.predictionDocs?.[state.uid] || {};
+  const preds = myDoc.predictions || {};
+  const matches = state.knockout.matches || [];
+  let exact = 0;
+  for (const m of matches) {
+    const pred = preds[m.id];
+    const actual = state.knockout.results?.[m.id];
+    if (!pred || !actual) continue;
+    if (pred.home === actual.home && pred.away === actual.away) exact++;
+  }
+  const cEl = document.getElementById('knockout-picks-count');
+  const tEl = document.getElementById('knockout-picks-total');
+  if (cEl) cEl.textContent = exact;
+  if (tEl) tEl.textContent = matches.length;
+}
+
 let _renderRafId = null;
 function scheduleRenderAll() {
   if (_renderRafId) return;
@@ -761,6 +847,8 @@ function scheduleRenderAll() {
     renderLeaderboard();
     renderPredictions();
     renderEveryone();
+    if (typeof renderKnockoutBracket === 'function') renderKnockoutBracket();
+    renderKnockoutPlayerCard();
     renderHeaderStats();
   });
 }
@@ -790,6 +878,9 @@ function bindEvents() {
   document.querySelectorAll('.nav-btn[data-view]').forEach(btn =>
     btn.addEventListener('click', () => switchView(btn.dataset.view))
   );
+
+  const leagueBadge = document.getElementById('current-league-badge');
+  if (leagueBadge) leagueBadge.addEventListener('click', () => switchView('leagues'));
 
   document.querySelectorAll('.sub-tab').forEach(btn =>
     btn.addEventListener('click', () => switchSubview(btn.dataset.subtab))
@@ -836,6 +927,22 @@ function bindEvents() {
 
   document.getElementById('btn-refresh').addEventListener('click', () => loadFromApi(true));
   document.getElementById('btn-save-results').addEventListener('click', saveResults);
+
+  const demoToggle = document.getElementById('knockout-demo-toggle');
+  if (demoToggle) {
+    demoToggle.checked = Storage.getKnockoutDemo();
+    demoToggle.addEventListener('change', async () => {
+      Storage.setKnockoutDemo(demoToggle.checked);
+      if (typeof KnockoutApiCache !== 'undefined') KnockoutApiCache.clear();
+      if (state.leagueType === 'knockout') {
+        await refreshKnockoutMatches();
+        if (typeof renderKnockoutBracket === 'function') renderKnockoutBracket();
+      }
+      showToast(t(demoToggle.checked ? 'knockout.demoOn' : 'knockout.demoOff'));
+    });
+  }
+
+  if (typeof bindKnockoutEvents === 'function') bindKnockoutEvents();
   document.getElementById('btn-update-name').addEventListener('click', updateDisplayName);
   document.getElementById('btn-change-password').addEventListener('click', changePassword);
   document.querySelectorAll('.password-eye[data-toggle-target]').forEach(btn => {
@@ -1179,9 +1286,11 @@ function formatTimeAgo(ts) {
 }
 
 function switchView(view) {
-  if ((view === 'predictions' || view === 'leaderboard') && !state.leagueId) {
+  if ((view === 'predictions' || view === 'leaderboard' || view === 'knockout') && !state.leagueId) {
     view = 'leagues';
   }
+  if (view === 'knockout' && state.leagueType !== 'knockout') view = 'predictions';
+  if (view === 'predictions' && state.leagueType === 'knockout') view = 'knockout';
   closePlayerPredictionsModal();
   state.view = view;
   Storage.setLastView(view);
@@ -1204,6 +1313,10 @@ function switchView(view) {
   );
   if (view === 'leaderboard') { state._leaderboardScrollPending = true; renderLeaderboard(); }
   if (view === 'predictions') { state._predictionsScrollPending = true; renderPredictions(); renderEveryone(); }
+  if (view === 'knockout') {
+    if (typeof renderKnockoutBracket === 'function') renderKnockoutBracket();
+    renderKnockoutPlayerCard();
+  }
   if (view === 'leagues') { loadPublicLeagues().then(renderLeagues); }
   if (view === 'profile') renderProfileLeagues();
 
@@ -1823,21 +1936,27 @@ let _standingsCache = null;
 let _standingsCacheKey = '';
 
 function computeStandings(resultsOverride) {
+  const isKnockout = state.leagueType === 'knockout';
   const useCustom = !!resultsOverride;
   if (!useCustom) {
-    const key = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
-    if (_standingsCache && _standingsCacheKey === key) return _standingsCache;
+    const vKey = isKnockout
+      ? `ko:${state.knockout?.predVersion || 0}:${state.knockout?.resultsVersion || 0}`
+      : `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+    if (_standingsCache && _standingsCacheKey === vKey) return _standingsCache;
   }
 
-  const results = resultsOverride || state.results;
-  const players = Object.entries(state.predictionDocs);
+  const results = resultsOverride || (isKnockout ? (typeof getKnockoutResults === 'function' ? getKnockoutResults() : {}) : state.results);
+  const players = Object.entries(isKnockout ? (state.knockout?.predictionDocs || {}) : state.predictionDocs);
+  const pointsFn = isKnockout && typeof calcKnockoutPoints === 'function' ? calcKnockoutPoints : calcPoints;
+
   const standings = players.map(([uid, doc]) => {
     const preds = doc.predictions || {};
     let points = 0, scored = 0;
     for (const [matchId, pred] of Object.entries(preds)) {
       const actual = results[matchId];
       if (!actual) continue;
-      const pts = calcPoints(pred, actual);
+      const pts = pointsFn(pred, actual);
+      if (pts == null) continue;
       points += pts;
       if (pts === 3) scored++;
     }
@@ -1851,7 +1970,10 @@ function computeStandings(resultsOverride) {
   }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
   if (!useCustom) {
-    _standingsCacheKey = `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+    const vKey = isKnockout
+      ? `ko:${state.knockout?.predVersion || 0}:${state.knockout?.resultsVersion || 0}`
+      : `${state.predVersion || 0}:${state.resultsVersion || 0}`;
+    _standingsCacheKey = vKey;
     _standingsCache = standings;
   }
   return standings;
@@ -1892,6 +2014,16 @@ function currentGroup() {
 }
 
 function latestScoredMatch() {
+  if (state.leagueType === 'knockout') {
+    const results = typeof getKnockoutResults === 'function' ? getKnockoutResults() : {};
+    const matches = state.knockout?.matches || [];
+    let latest = null;
+    for (const m of matches) {
+      if (!results[m.id]) continue;
+      if (!latest || new Date(m.utcDate) > new Date(latest.utcDate)) latest = m;
+    }
+    return latest;
+  }
   let latest = null;
   for (const m of state.matches) {
     if (!state.results[m.id]) continue;
@@ -1903,8 +2035,9 @@ function latestScoredMatch() {
 function renderLeaderboard() {
   if (!isViewActive('view-leaderboard')) return;
   const container = document.getElementById('leaderboard-container');
-  const total = state.matches.length;
-  const players = Object.entries(state.predictionDocs);
+  const isKnockout = state.leagueType === 'knockout';
+  const total = isKnockout ? (state.knockout?.matches || []).length : state.matches.length;
+  const players = Object.entries(isKnockout ? (state.knockout?.predictionDocs || {}) : state.predictionDocs);
 
   const oldRowTops = new Map();
   container.querySelectorAll('.leaderboard-row[data-uid]').forEach(row => {
@@ -1921,7 +2054,8 @@ function renderLeaderboard() {
   const previous = (() => {
     const latest = latestScoredMatch();
     if (!latest) return null;
-    const prevResults = { ...state.results };
+    const currentResults = isKnockout ? (typeof getKnockoutResults === 'function' ? getKnockoutResults() : {}) : state.results;
+    const prevResults = { ...currentResults };
     delete prevResults[latest.id];
     if (Object.keys(prevResults).length === 0) return null;
     const prev = computeStandings(prevResults);
@@ -1939,12 +2073,13 @@ function renderLeaderboard() {
   const showLeaderboardRemove = false;
 
   const memberUids = state.currentLeague?.memberUids || [];
+  const predDocs = isKnockout ? (state.knockout?.predictionDocs || {}) : (state.predictionDocs || {});
   const allMemberUids = Array.from(new Set([
     ...memberUids,
-    ...Object.keys(state.predictionDocs || {}),
+    ...Object.keys(predDocs),
   ]));
   const membersListHtml = adminOnly && allMemberUids.length > 0 ? allMemberUids.map(uid => {
-    const doc = state.predictionDocs[uid] || {};
+    const doc = predDocs[uid] || {};
     const name = doc.displayName || t('leaderboard.memberNoName');
     const email = doc.email || '';
     const picks = doc.predictions ? Object.keys(doc.predictions).length : 0;
@@ -2903,11 +3038,12 @@ function downloadCSV(csv, filename) {
 
 // ── League CRUD ───────────────────────────────────────────────────────────────
 
-async function createLeague(name) {
+async function createLeague(name, type = 'groups') {
   if (!name || name.trim().length < 3) throw new Error(t('leagues.create.invalidName'));
 
   const doc = {
     name: name.trim(),
+    type: type === 'knockout' ? 'knockout' : 'groups',
     ownerUid: state.uid,
     isPublic: true,
     memberUids: [state.uid],
@@ -3048,6 +3184,15 @@ function renderLeagues() {
                  placeholder="${t('leagues.create.namePlaceholder')}">
         </div>
         <div class="form-row">
+          <label class="create-league-type-label">
+            <span>${t('leagues.create.type')}</span>
+            <select id="create-league-type">
+              <option value="groups">${t('leagues.create.typeGroups')}</option>
+              <option value="knockout">${t('leagues.create.typeKnockout')}</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-row">
           <button id="btn-create-league" class="btn btn-primary">${t('leagues.create.submit')}</button>
         </div>
         <div id="create-league-status" class="form-status"></div>
@@ -3066,6 +3211,9 @@ function leagueCard(league, isMember) {
     ? t('leagues.members', { n: 1 })
     : t('leagues.membersPlural', { n: memberCount });
   const ownerNote = owned ? `<span class="league-owner-note">★ ${t('leagues.owner')}</span>` : '';
+  const typeTag = league.type === 'knockout'
+    ? `<span class="league-type-tag">${t('knockout.tag')}</span>`
+    : '';
 
   const actionHtml = isMember
     ? `<button class="btn btn-primary" data-league-enter="${league.id}">${t('leagues.enter')}</button>`
@@ -3075,6 +3223,7 @@ function leagueCard(league, isMember) {
     <div class="league-card">
       <div class="league-card-header">
         <h4>${escapeHtml(displayLeagueName(league.name))}</h4>
+        ${typeTag}
       </div>
       <div class="league-card-meta">
         <span>${memberLabel}</span>
@@ -3103,7 +3252,7 @@ function bindLeaguesViewEvents() {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.leagueEnter;
       await enterLeague(id);
-      switchView('predictions');
+      switchView(state.leagueType === 'knockout' ? 'knockout' : 'predictions');
     });
   });
 
@@ -3115,7 +3264,7 @@ function bindLeaguesViewEvents() {
         showToast(t('leagues.joined.success', { name: result.name }));
         await loadMyLeagues();
         await enterLeague(id);
-        switchView('predictions');
+        switchView(state.leagueType === 'knockout' ? 'knockout' : 'predictions');
       } catch (err) {
         showToast(err.message);
       }
@@ -3126,15 +3275,17 @@ function bindLeaguesViewEvents() {
   if (!createBtn) return;
   createBtn.addEventListener('click', async () => {
     const name = document.getElementById('create-league-name').value.trim();
+    const typeSel = document.getElementById('create-league-type');
+    const type = typeSel ? typeSel.value : 'groups';
     const statusEl = document.getElementById('create-league-status');
     try {
       statusEl.textContent = '';
-      const newId = await createLeague(name);
+      const newId = await createLeague(name, type);
       statusEl.textContent = `✓ ${t('leagues.created')}`;
       statusEl.className = 'form-status status-ok';
       await loadMyLeagues();
       await enterLeague(newId);
-      switchView('predictions');
+      switchView(state.leagueType === 'knockout' ? 'knockout' : 'predictions');
     } catch (err) {
       statusEl.textContent = err.message;
       statusEl.className = 'form-status status-error';
@@ -3157,13 +3308,16 @@ function renderProfileLeagues() {
         const memberLabel = memberCount === 1
           ? t('leagues.members', { n: 1 })
           : t('leagues.membersPlural', { n: memberCount });
+        const typeTag = league.type === 'knockout'
+          ? `<span class="league-type-tag">${t('knockout.tag')}</span>`
+          : '';
         const action = isCurrent
           ? `<span class="profile-league-current" aria-label="${t('profile.currentLeague')}">✓ ${t('profile.currentLeague')}</span>`
           : `<button type="button" class="btn btn-secondary btn-sm" data-league-switch="${league.id}">${t('profile.switchLeague')}</button>`;
         return `
           <div class="profile-league-row${isCurrent ? ' is-current' : ''}">
             <div class="profile-league-info">
-              <div class="profile-league-name">${escapeHtml(displayLeagueName(league.name))}</div>
+              <div class="profile-league-name">${escapeHtml(displayLeagueName(league.name))} ${typeTag}</div>
               <div class="profile-league-meta">${memberLabel}</div>
             </div>
             <div class="profile-league-action">${action}</div>
@@ -3176,6 +3330,15 @@ function renderProfileLeagues() {
       <div class="form-row">
         <input id="profile-create-league-name" type="text" maxlength="60"
                placeholder="${t('leagues.create.namePlaceholder')}">
+      </div>
+      <div class="form-row">
+        <label class="create-league-type-label">
+          <span>${t('leagues.create.type')}</span>
+          <select id="profile-create-league-type">
+            <option value="groups">${t('leagues.create.typeGroups')}</option>
+            <option value="knockout">${t('leagues.create.typeKnockout')}</option>
+          </select>
+        </label>
         <button id="profile-btn-create-league" class="btn btn-primary">${t('leagues.create.submit')}</button>
       </div>
       <div id="profile-create-league-status" class="form-status"></div>
@@ -3195,7 +3358,7 @@ function renderProfileLeagues() {
       btn.disabled = true;
       try {
         await enterLeague(id);
-        switchView('predictions');
+        switchView(state.leagueType === 'knockout' ? 'knockout' : 'predictions');
       } catch (err) {
         showToast(err.message);
         btn.disabled = false;
@@ -3212,15 +3375,17 @@ function renderProfileLeagues() {
   if (createBtn) {
     createBtn.addEventListener('click', async () => {
       const name = container.querySelector('#profile-create-league-name').value.trim();
+      const typeSel = container.querySelector('#profile-create-league-type');
+      const type = typeSel ? typeSel.value : 'groups';
       const statusEl = container.querySelector('#profile-create-league-status');
       try {
         statusEl.textContent = '';
-        const newId = await createLeague(name);
+        const newId = await createLeague(name, type);
         statusEl.textContent = `✓ ${t('leagues.created')}`;
         statusEl.className = 'form-status status-ok';
         await loadMyLeagues();
         await enterLeague(newId);
-        switchView('predictions');
+        switchView(state.leagueType === 'knockout' ? 'knockout' : 'predictions');
       } catch (err) {
         statusEl.textContent = err.message;
         statusEl.className = 'form-status status-error';
