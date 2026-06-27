@@ -284,7 +284,7 @@ function renderKnockoutMatch(match, myPred) {
   const { day, time } = formatMatchDateParts(match.utcDate);
 
   let othersBtn = '';
-  if (locked && !isTbd) {
+  if (!isTbd) {
     const docs = state.knockout?.predictionDocs || {};
     let pickCount = 0;
     for (const uid of Object.keys(docs)) {
@@ -294,7 +294,7 @@ function renderKnockoutMatch(match, myPred) {
     if (pickCount > 0) {
       othersBtn = `<button type="button" class="bracket-match-others" data-match-id="${match.id}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
         <span>${pickCount} ${t('knockout.picks')}</span>
       </button>`;
@@ -308,6 +308,7 @@ function renderKnockoutMatch(match, myPred) {
         <span class="bracket-meta-day">${day}</span>
         <span class="bracket-meta-sep">·</span>
         <span class="bracket-meta-time">${time}</span>
+        ${othersBtn}
       </div>
       <div class="bracket-team-row" data-team="${escapeHtml(match.home || '')}">
         <span class="bracket-team-side">
@@ -329,7 +330,6 @@ function renderKnockoutMatch(match, myPred) {
       </div>
       ${winnerBadge}
       ${resultStrip}
-      ${othersBtn}
     </article>`;
 }
 

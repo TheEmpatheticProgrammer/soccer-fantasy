@@ -3825,23 +3825,24 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 .bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 
 .bracket-match-others {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  margin-top: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
+  gap: 0.25rem;
+  margin-left: auto;
+  padding: 0.1rem 0.45rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
-.bracket-match-others svg { width: 14px; height: 14px; }
+.bracket-match-others svg { width: 12px; height: 12px; flex-shrink: 0; }
 .bracket-match-others:hover,
 .bracket-match-others.is-open {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--text);
 }
 .bracket-others-panel {
