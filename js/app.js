@@ -868,6 +868,7 @@ function scheduleRenderAll() {
     if (typeof renderKnockoutBracket === 'function') renderKnockoutBracket();
     renderKnockoutPlayerCard();
     renderHeaderStats();
+    renderRules();
   });
 }
 
@@ -1489,6 +1490,15 @@ function skeletonMatchCards(n = 4) {
       </div>
     </div>`;
   return Array(n).fill(card).join('');
+}
+
+function renderRules() {
+  const groupsEl = document.getElementById('rules-groups');
+  const knockoutEl = document.getElementById('rules-knockout');
+  if (!groupsEl || !knockoutEl) return;
+  const isKO = state.leagueType === 'knockout';
+  groupsEl.classList.toggle('hidden', isKO);
+  knockoutEl.classList.toggle('hidden', !isKO);
 }
 
 function renderPredictions() {

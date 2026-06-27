@@ -133,6 +133,11 @@ const TRANSLATIONS = {
     'rules.incorrectResult': 'Incorrect result → 0 points',
     'rules.totalsAfterGroupStage': 'After the group stage ends, the points from all matches will be totaled to determine the winners.',
     'rules.tieRule': 'If two or more people tie for first place, they will be assigned 1st, 2nd, and/or 3rd place accordingly, and so on in case of a tie in points.',
+    'rules.koScoringTitle': 'Scoring System',
+    'rules.koExactPoints': 'Exact score predicted → 3 points',
+    'rules.koCorrectAdvancer': 'Correct team to advance (includes penalty wins) → 1 point',
+    'rules.koIncorrect': 'Incorrect prediction → 0 points',
+    'rules.koSummary': 'Points are totaled across all knockout rounds to determine the winners.',
 
     'auth.subtitle': 'Sign in to make your predictions',
     'auth.signIn': 'Sign In',
@@ -420,6 +425,11 @@ const TRANSLATIONS = {
     'rules.incorrectResult': 'Resultado incorrecto → 0 puntos',
     'rules.totalsAfterGroupStage': 'Al terminar la fase de grupos, los puntos de todos los partidos se sumarán para determinar a los ganadores.',
     'rules.tieRule': 'Si dos o más personas empatan en el primer lugar, se les asignará 1°, 2° y/o 3° lugar según corresponda, y así sucesivamente en caso de empate.',
+    'rules.koScoringTitle': 'Sistema de Puntos',
+    'rules.koExactPoints': 'Marcador exacto → 3 puntos',
+    'rules.koCorrectAdvancer': 'Equipo correcto que avanza (incluye victoria en penales) → 1 punto',
+    'rules.koIncorrect': 'Pronóstico incorrecto → 0 puntos',
+    'rules.koSummary': 'Los puntos se suman de todas las rondas eliminatorias para determinar los ganadores.',
 
     'auth.subtitle': 'Inicia sesión para hacer tus pronósticos',
     'auth.signIn': 'Iniciar Sesión',
