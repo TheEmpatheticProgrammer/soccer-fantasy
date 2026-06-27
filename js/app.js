@@ -1160,9 +1160,10 @@ const LIVE_WINDOW_MS = 3 * 60 * 60 * 1000; // ~3h after kickoff covers extra tim
 let livePollTimer = null;
 
 function isAnyMatchInLiveWindow() {
-  if (!state.matches?.length) return false;
+  const allMatches = [...(state.matches || []), ...(state.knockout?.matches || [])];
+  if (!allMatches.length) return false;
   const now = Date.now();
-  return state.matches.some(m => {
+  return allMatches.some(m => {
     if (m.status === 'FINISHED') return false;
     const start = new Date(m.utcDate).getTime();
     return Number.isFinite(start) && start <= now && now <= start + LIVE_WINDOW_MS;
@@ -1173,12 +1174,17 @@ function findMatchByLiveTeams(home, away) {
   const h = normTeamName(home);
   const a = normTeamName(away);
   if (!h || !a) return null;
-  // Build normalized alias sets so e.g. "USA" vs "United States" matches.
-  return state.matches.find(m => {
+  const finder = m => {
     const mh = new Set(expandTeamAliases(m.home).map(normTeamName));
     const ma = new Set(expandTeamAliases(m.away).map(normTeamName));
     return (mh.has(h) && ma.has(a)) || (mh.has(a) && ma.has(h));
-  }) || null;
+  };
+  const groupMatch = (state.matches || []).find(finder);
+  if (groupMatch) return { match: groupMatch, knockout: false };
+  const koMatch = (state.knockout?.matches || []).find(finder);
+  if (koMatch) return { match: koMatch, knockout: true };
+  return null;
+}
 }
 
 async function pollLiveScores() {
@@ -1191,12 +1197,11 @@ async function pollLiveScores() {
   }
   if (!live.length) return;
   let changed = false;
+  let koChanged = false;
   for (const ev of live) {
-    const match = findMatchByLiveTeams(ev.home, ev.away);
-    if (!match) { console.warn('[live] no match for', ev.home, 'vs', ev.away); continue; }
-    // Defensive: only apply if the matched fixture's scheduled window
-    // includes 'now'. Guards against ESPN returning a different competition
-    // (e.g. friendly with the same teams) that maps onto a future WC fixture.
+    const found = findMatchByLiveTeams(ev.home, ev.away);
+    if (!found) { console.warn('[live] no match for', ev.home, 'vs', ev.away); continue; }
+    const { match, knockout } = found;
     const start = new Date(match.utcDate).getTime();
     if (!Number.isFinite(start) || Date.now() < start - 10 * 60 * 1000 || Date.now() > start + LIVE_WINDOW_MS) {
       console.warn('[live] ignoring out-of-window event for', match.home, 'vs', match.away);
@@ -1206,14 +1211,25 @@ async function pollLiveScores() {
     const swap = !matchHomeKeys.has(normTeamName(ev.home));
     const home = swap ? ev.awayScore : ev.homeScore;
     const away = swap ? ev.homeScore : ev.awayScore;
-    const cur = state.results[match.id];
-    if (!cur || cur.home !== home || cur.away !== away) {
-      state.results[match.id] = { home, away };
-      changed = true;
+
+    if (knockout) {
+      const koResults = state.knockout.results || {};
+      const cur = koResults[match.id];
+      if (!cur || cur.home !== home || cur.away !== away) {
+        state.knockout.results = { ...koResults, [match.id]: { home, away } };
+        koChanged = true;
+      }
+    } else {
+      const cur = state.results[match.id];
+      if (!cur || cur.home !== home || cur.away !== away) {
+        state.results[match.id] = { home, away };
+        changed = true;
+      }
     }
     if (state.matchStatus[match.id] !== ev.state) {
       state.matchStatus[match.id] = ev.state;
       changed = true;
+      if (knockout) koChanged = true;
     }
   }
   if (changed) {
@@ -1226,10 +1242,20 @@ async function pollLiveScores() {
       }, { merge: true }).catch(err => console.warn('[live] fanout failed:', err.message));
     }
   }
+  if (koChanged) {
+    state.knockout.resultsVersion = (state.knockout.resultsVersion || 0) + 1;
+    scheduleRenderAll();
+    if (isAdmin()) {
+      firebase.firestore().collection('knockoutResults').doc('all').set({
+        results: state.knockout.results,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true }).catch(err => console.warn('[live] ko fanout failed:', err.message));
+    }
+  }
 }
 
 function maybeAdjustLivePolling() {
-  const viewActive = state.view === 'predictions' || state.view === 'leaderboard';
+  const viewActive = state.view === 'predictions' || state.view === 'leaderboard' || state.view === 'knockout';
   const visible = document.visibilityState === 'visible';
   const shouldPoll = isAnyMatchInLiveWindow() && viewActive && visible && !!state.uid;
   if (shouldPoll && !livePollTimer) {
