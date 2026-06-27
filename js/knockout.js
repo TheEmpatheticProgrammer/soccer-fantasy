@@ -335,6 +335,25 @@ function renderKnockoutBracket() {
     ? { match: focused.dataset.match, side: focused.dataset.side, start: focused.selectionStart, end: focused.selectionEnd }
     : null;
 
+  // Capture unsaved DOM input values so partial entries survive re-renders.
+  const domValues = {};
+  container.querySelectorAll('.knockout-score-input').forEach(input => {
+    const { match, side } = input.dataset;
+    if (input.value !== '') {
+      if (!domValues[match]) domValues[match] = {};
+      domValues[match][side] = parseInt(input.value, 10);
+    }
+  });
+  // Merge: saved predictions take priority, but unsaved DOM values fill gaps.
+  const mergedPreds = {};
+  for (const m of matches) {
+    const saved = myPreds[m.id];
+    const dom = domValues[m.id];
+    if (saved || dom) {
+      mergedPreds[m.id] = { ...dom, ...saved };
+    }
+  }
+
   const byStage = {};
   for (const m of matches) {
     (byStage[m.stage] ||= []).push(m);
@@ -365,7 +384,7 @@ function renderKnockoutBracket() {
             </div>
           </header>
           <div class="bracket-round-matches">
-            ${byStage[stage].map(m => renderKnockoutMatch(m, myPreds[m.id])).join('')}
+            ${byStage[stage].map(m => renderKnockoutMatch(m, mergedPreds[m.id])).join('')}
           </div>
         </section>
         `;
