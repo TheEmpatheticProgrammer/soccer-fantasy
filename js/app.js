@@ -512,8 +512,18 @@ async function refreshKnockoutMatches() {
         } catch (e) { console.warn('[knockout] standings resolve failed:', e.message); }
       }
 
+      // Preserve previously resolved team names if the API/standings still
+      // return TBD — prevents losing names on transient API failures.
+      const prev = new Map((state.knockout.matches || []).map(m => [m.id, m]));
+      for (const m of matches) {
+        const old = prev.get(m.id);
+        if (!old) continue;
+        if (m.home === 'TBD' && old.home !== 'TBD') m.home = old.home;
+        if (m.away === 'TBD' && old.away !== 'TBD') m.away = old.away;
+      }
+
       state.knockout.matches = matches;
-      state.knockout.crests = crests || {};
+      state.knockout.crests = { ...state.knockout.crests, ...crests };
 
       // Fan out any API-reported final results to Firestore (admin only)
       if (isAdmin()) {
