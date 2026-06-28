@@ -3652,6 +3652,19 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   .bracket-connectors { display: none; }
 }
 
+@media (max-width: 600px) {
+  .bracket-round { min-width: 280px; }
+  .bracket-match { padding: 0.75rem 0.9rem 0.85rem; gap: 0.55rem; }
+  .bracket-team-name { font-size: 1rem; }
+  .bracket-team-tbd { font-size: 0.88rem; }
+  .knockout-score-input { width: 2.8rem; height: 2.4rem; font-size: 1.1rem; }
+  .bracket-match-meta { font-size: 0.78rem; }
+  .bracket-match-venue { font-size: 0.72rem; max-width: 160px; }
+  .winner-badge { font-size: 0.88rem; padding: 0.5rem 0.65rem; }
+  .penalty-pick-btn { padding: 0.4rem 0.55rem; font-size: 0.88rem; }
+  .bracket-result { font-size: 0.92rem; padding: 0.45rem 0.6rem; }
+}
+
 .bracket-round {
   display: flex;
   flex-direction: column;
@@ -3739,10 +3752,10 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 0.55rem 0.7rem 0.65rem;
+  padding: 0.65rem 0.8rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .bracket-match-header {
@@ -3762,20 +3775,20 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .bracket-match-venue {
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   color: var(--text-muted, #9ca3af);
-  opacity: 0.7;
+  opacity: 0.75;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 140px;
 }
 
 .bracket-match-meta {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted, #9ca3af);
 }
 
@@ -3784,19 +3797,20 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 .bracket-team-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
 }
 
 .bracket-team-side {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
   flex: 1;
   min-width: 0;
 }
 
 .bracket-team-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3805,19 +3819,19 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 .bracket-team-tbd {
   color: var(--text-muted, #9ca3af);
   font-style: italic;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
 }
 
 .knockout-score-input {
-  width: 2.4rem;
-  height: 2rem;
+  width: 2.6rem;
+  height: 2.2rem;
   text-align: center;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   color: inherit;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -3837,10 +3851,10 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .winner-badge {
-  margin-top: 0.15rem;
-  padding: 0.4rem 0.55rem;
+  margin-top: 0.2rem;
+  padding: 0.45rem 0.6rem;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px dashed rgba(255, 255, 255, 0.08);
   color: var(--text-muted, #9ca3af);
@@ -3862,7 +3876,7 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 
 .winner-badge-text {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
 }
 
 .winner-badge-pk {
@@ -3875,7 +3889,7 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .winner-badge-label {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -3883,16 +3897,16 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 
 .penalty-pick {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .penalty-pick-btn {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.45rem;
-  font-size: 0.8rem;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
@@ -3914,17 +3928,17 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .bracket-result {
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.5rem;
+  padding: 0.4rem 0.55rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 .bracket-result-label {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.05em;
   font-weight: 600;
   color: var(--text-muted, #9ca3af);
@@ -3938,13 +3952,13 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 .bracket-match-others {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.1rem 0.4rem;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   color: var(--text-muted);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
