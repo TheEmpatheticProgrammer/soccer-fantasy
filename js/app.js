@@ -2090,7 +2090,7 @@ async function saveResults() {
 }
 
 function calcPoints(pred, actual) {
-  if (pred.home === actual.home && pred.away === actual.away) return 4;
+  if (pred.home === actual.home && pred.away === actual.away) return 3;
   const predOutcome   = Math.sign(pred.home   - pred.away);
   const actualOutcome = Math.sign(actual.home - actual.away);
   return predOutcome === actualOutcome ? 1 : 0;
