@@ -309,7 +309,7 @@ function renderKnockoutMatch(match, myPred) {
     ? displayVenue(venueForMatch(match)) : '';
 
   let othersBtn = '';
-  if (!isTbd && locked) {
+  if (!isTbd) {
     const docs = state.knockout?.predictionDocs || {};
     let pickCount = 0;
     for (const uid of Object.keys(docs)) {
