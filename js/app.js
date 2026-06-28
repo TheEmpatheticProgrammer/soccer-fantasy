@@ -2126,12 +2126,12 @@ function computeStandings(resultsOverride) {
     }
     return {
       uid,
-      name: doc.displayName || t('toast.unknown'),
+      name: doc.displayName || '',
       points,
       scored,
       predicted: Object.keys(preds).length,
     };
-  }).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
+  }).filter(p => p.name).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
   if (!useCustom) {
     const vKey = isKnockout
