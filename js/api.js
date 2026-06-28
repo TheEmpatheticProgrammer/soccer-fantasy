@@ -211,7 +211,7 @@ async function loadGroupStandings(apiKey) {
 
   for (const group of standings) {
     if (group.type !== 'TOTAL') continue;
-    const groupLetter = (group.group || '').replace('GROUP_', '');
+    const groupLetter = (group.group || '').replace(/^(?:GROUP_|Group\s*)/i, '');
     if (!groupLetter) continue;
     const table = group.table || [];
     for (const entry of table) {
