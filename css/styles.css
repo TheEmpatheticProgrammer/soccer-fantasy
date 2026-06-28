@@ -2838,23 +2838,26 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   box-shadow: var(--shadow);
 }
 .rules-section-title {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
+  font-weight: 700;
   color: var(--accent);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.75rem;
   margin-top: 1.5rem;
+  letter-spacing: -0.01em;
 }
 .rules-section-title:first-child { margin-top: 0; }
 .rules-intro {
   color: var(--gray-600);
   margin-bottom: 1.2rem;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 .rules-list {
   margin: 0.4rem 0 0;
   padding-left: 1.2rem;
   color: var(--text);
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 .rules-list li {
   margin-bottom: 0.55rem;
@@ -2862,8 +2865,8 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 .rules-list li::marker { color: var(--accent); }
 .rules-paragraph {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.55;
   margin-top: 1rem;
 }
 .rules-paragraph:first-of-type { margin-top: 1.5rem; }
@@ -2872,8 +2875,8 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  padding: 0.6rem 0.75rem;
-  margin: 0 0 0.4rem 56px;
+  padding: 0.65rem 0.85rem;
+  margin: 0 0 0.5rem 56px;
 }
 
 .rules-example:last-of-type {
@@ -2881,36 +2884,36 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 
 .rules-example-matchup {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 0.35rem;
-  letter-spacing: 0.02em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.01em;
 }
 
 .rules-example-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .rules-example-col {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
   flex: 1;
 }
 
 .rules-example-label {
-  font-size: 0.55rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 .rules-example-score {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.04em;
@@ -2918,30 +2921,30 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 
 .rules-example-row .rule-badge {
-  width: 32px;
-  height: 32px;
-  font-size: 0.85rem;
+  width: 34px;
+  height: 34px;
+  font-size: 0.9rem;
   flex-shrink: 0;
 }
 
 .rules-example-note {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 0.3rem;
+  margin-top: 0.35rem;
   font-style: italic;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .rules-example-pk {
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 @media (max-width: 600px) {
   .rules-example {
     margin-left: 0;
-    padding: 0.5rem 0.6rem;
+    padding: 0.55rem 0.65rem;
   }
 }
 
@@ -2977,7 +2980,7 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   display: grid;
   grid-template-columns: 56px 1fr;
   gap: 1rem;
-  align-items: start;
+  align-items: center;
   padding: 0.85rem 0;
   border-top: 1px solid var(--gray-200);
 }
@@ -3000,9 +3003,9 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 .rule-content p {
   margin: 0;
-  color: var(--gray-600);
-  font-size: 0.9rem;
-  line-height: 1.45;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 600px) {
