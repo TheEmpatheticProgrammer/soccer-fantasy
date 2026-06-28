@@ -2933,6 +2933,12 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
   font-style: italic;
 }
 
+.rules-example-pk {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
 .prizes-list {
   display: flex;
   flex-direction: column;

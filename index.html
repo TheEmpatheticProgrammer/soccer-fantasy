@@ -8,7 +8,7 @@
   <!-- Auto-reload when a new version is deployed (solves mobile browser caching) -->
   <script>
   (function(){
-    var V='2026062803';
+    var V='2026062804';
     try {
       fetch('version.json?_='+Date.now(),{cache:'no-store'})
         .then(function(r){return r.json()})
@@ -422,23 +422,6 @@
             <p data-i18n="rules.koExactPoints">Exact score predicted → 3 points</p>
           </div>
         </div>
-
-        <div class="rule-item">
-          <span class="rule-badge points-1">1</span>
-          <div class="rule-content">
-            <p data-i18n="rules.koCorrectAdvancer">Correct team to advance (includes penalty wins) → 1 point</p>
-          </div>
-        </div>
-
-        <div class="rule-item">
-          <span class="rule-badge points-0">0</span>
-          <div class="rule-content">
-            <p data-i18n="rules.koIncorrect">Incorrect prediction → 0 points</p>
-          </div>
-        </div>
-
-        <h3 class="rules-example-title" data-i18n="rules.koExampleTitle">Examples</h3>
-
         <div class="rules-example">
           <div class="rules-example-matchup">Brazil vs France</div>
           <div class="rules-example-row">
@@ -454,7 +437,30 @@
           </div>
           <div class="rules-example-note" data-i18n="rules.koExampleExact">Exact score — 3 points</div>
         </div>
+        <div class="rules-example">
+          <div class="rules-example-matchup">Spain vs Mexico</div>
+          <div class="rules-example-row">
+            <div class="rules-example-col">
+              <span class="rules-example-label" data-i18n="rules.koExampleYourPick">Your prediction</span>
+              <span class="rules-example-score">1 - 1</span>
+              <span class="rules-example-pk" data-i18n="rules.koExamplePkPick">PK winner: Spain</span>
+            </div>
+            <div class="rules-example-col">
+              <span class="rules-example-label" data-i18n="rules.koExampleResult">Actual result</span>
+              <span class="rules-example-score">1 - 1</span>
+              <span class="rules-example-pk" data-i18n="rules.koExamplePkResult">PK winner: Spain</span>
+            </div>
+            <span class="rule-badge points-3">+3</span>
+          </div>
+          <div class="rules-example-note" data-i18n="rules.koExampleTieCorrect">Exact score + correct penalty winner — 3 points</div>
+        </div>
 
+        <div class="rule-item">
+          <span class="rule-badge points-1">1</span>
+          <div class="rule-content">
+            <p data-i18n="rules.koCorrectAdvancer">Correct team to advance (includes penalty wins) → 1 point</p>
+          </div>
+        </div>
         <div class="rules-example">
           <div class="rules-example-matchup">Germany vs Japan</div>
           <div class="rules-example-row">
@@ -470,7 +476,30 @@
           </div>
           <div class="rules-example-note" data-i18n="rules.koExampleCorrectWinner">Same winner (Germany) — 1 point</div>
         </div>
+        <div class="rules-example">
+          <div class="rules-example-matchup">England vs Netherlands</div>
+          <div class="rules-example-row">
+            <div class="rules-example-col">
+              <span class="rules-example-label" data-i18n="rules.koExampleYourPick">Your prediction</span>
+              <span class="rules-example-score">2 - 2</span>
+              <span class="rules-example-pk" data-i18n="rules.koExamplePkPickWrong">PK winner: Netherlands</span>
+            </div>
+            <div class="rules-example-col">
+              <span class="rules-example-label" data-i18n="rules.koExampleResult">Actual result</span>
+              <span class="rules-example-score">2 - 2</span>
+              <span class="rules-example-pk" data-i18n="rules.koExamplePkResultWrong">PK winner: England</span>
+            </div>
+            <span class="rule-badge points-1">+1</span>
+          </div>
+          <div class="rules-example-note" data-i18n="rules.koExampleTieWrongPk">Exact score but wrong penalty winner — 1 point</div>
+        </div>
 
+        <div class="rule-item">
+          <span class="rule-badge points-0">0</span>
+          <div class="rule-content">
+            <p data-i18n="rules.koIncorrect">Incorrect prediction → 0 points</p>
+          </div>
+        </div>
         <div class="rules-example">
           <div class="rules-example-matchup">Argentina vs Canada</div>
           <div class="rules-example-row">
