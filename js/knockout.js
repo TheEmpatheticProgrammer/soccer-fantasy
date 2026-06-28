@@ -257,7 +257,7 @@ function renderKnockoutMatch(match, myPred) {
   if (!result) {
     const lockMs = knockoutMatchLockTime(match);
     if (lockMs !== null && Date.now() >= lockMs) {
-      matchLockText = `<span class="bracket-match-lock is-locked">🔒 ${t('knockout.lockedRound')}</span>`;
+      matchLockText = `<span class="bracket-match-lock is-locked">🔒</span>`;
     } else if (lockMs !== null) {
       const cd = formatKnockoutLockCountdown(lockMs);
       if (cd) matchLockText = `<span class="bracket-match-lock">${escapeHtml(cd)}</span>`;
@@ -335,7 +335,10 @@ function renderKnockoutMatch(match, myPred) {
           <span class="bracket-meta-time">${time}</span>
           ${matchLockText ? `<span class="bracket-meta-sep">·</span>${matchLockText}` : ''}
         </div>
-        ${venue ? `<div class="bracket-match-venue">${escapeHtml(venue)}</div>` : ''}
+        <div class="bracket-match-header-right">
+          ${venue ? `<span class="bracket-match-venue">${escapeHtml(venue)}</span>` : ''}
+          ${othersBtn}
+        </div>
       </div>
       <div class="bracket-team-row" data-team="${escapeHtml(match.home || '')}">
         <span class="bracket-team-side">
@@ -357,7 +360,6 @@ function renderKnockoutMatch(match, myPred) {
       </div>
       ${winnerBadge}
       ${resultStrip}
-      ${othersBtn}
     </article>`;
 }
 
