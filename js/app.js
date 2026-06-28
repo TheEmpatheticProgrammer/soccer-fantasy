@@ -490,16 +490,104 @@ async function enterLeague(leagueId) {
   renderProfileLeagues();
 }
 
+// Reassign R32 match slots by matching resolved team names against the
+// template's expected aliases. The API returns matches in date order which
+// doesn't correspond to the bracket slot numbering — this step ensures each
+// match ends up in the correct bracket position.
+function reassignR32Slots(matches, aliasMap) {
+  if (typeof KNOCKOUT_TEMPLATE === 'undefined') return;
+  const r32Template = KNOCKOUT_TEMPLATE.LAST_32 || [];
+  const r32Matches = matches.filter(m => m.stage === 'LAST_32');
+  if (!r32Matches.length || !r32Template.length) return;
+
+  // Build expected home/away for each template slot
+  const slotExpectations = r32Template.map(s => ({
+    slot: s.slot,
+    homeAlias: s.homeAlias,
+    awayAlias: s.awayAlias,
+    expectedHome: aliasMap[s.homeAlias] || null,
+    expectedAway: aliasMap[s.awayAlias] || null,
+    feedsIntoSlot: s.feedsIntoSlot,
+  }));
+
+  const assigned = new Set();
+  const matchToSlot = new Map();
+
+  // Pass 1: match on BOTH home AND away
+  for (const m of r32Matches) {
+    for (const s of slotExpectations) {
+      if (assigned.has(s.slot)) continue;
+      const homeOk = m.home !== 'TBD' && s.expectedHome && m.home === s.expectedHome;
+      const awayOk = m.away !== 'TBD' && s.expectedAway && m.away === s.expectedAway;
+      if (homeOk && awayOk) {
+        matchToSlot.set(m.id, s);
+        assigned.add(s.slot);
+        break;
+      }
+    }
+  }
+
+  // Pass 2: match on home only
+  for (const m of r32Matches) {
+    if (matchToSlot.has(m.id)) continue;
+    for (const s of slotExpectations) {
+      if (assigned.has(s.slot)) continue;
+      if (m.home !== 'TBD' && s.expectedHome && m.home === s.expectedHome) {
+        matchToSlot.set(m.id, s);
+        assigned.add(s.slot);
+        break;
+      }
+    }
+  }
+
+  // Pass 3: match on away only
+  for (const m of r32Matches) {
+    if (matchToSlot.has(m.id)) continue;
+    for (const s of slotExpectations) {
+      if (assigned.has(s.slot)) continue;
+      if (m.away !== 'TBD' && s.expectedAway && m.away === s.expectedAway) {
+        matchToSlot.set(m.id, s);
+        assigned.add(s.slot);
+        break;
+      }
+    }
+  }
+
+  // Pass 4: remaining unmatched get leftover slots in order
+  const remainingSlots = slotExpectations.filter(s => !assigned.has(s.slot));
+  let ri = 0;
+  for (const m of r32Matches) {
+    if (matchToSlot.has(m.id)) continue;
+    if (ri < remainingSlots.length) {
+      matchToSlot.set(m.id, remainingSlots[ri++]);
+    }
+  }
+
+  // Apply slot reassignments
+  for (const m of r32Matches) {
+    const s = matchToSlot.get(m.id);
+    if (s) {
+      m.slot = s.slot;
+      m.homeAlias = s.homeAlias;
+      m.awayAlias = s.awayAlias;
+    }
+  }
+}
+
 async function refreshKnockoutMatches() {
   try {
     if (typeof loadKnockoutData !== 'function') return;
     const { matches, crests } = await loadKnockoutData(state.apiKey, false);
     if (matches && matches.length) {
-      // Resolve TBD teams using group standings
+      // Reassign R32 slots and resolve TBD teams using group standings.
+      // Order matters: reassign slots first (using already-known team names
+      // from the API) so that aliases become correct, THEN resolve remaining
+      // TBD teams using the now-correct aliases.
       if (typeof loadGroupStandings === 'function') {
         try {
           const aliasMap = await loadGroupStandings(state.apiKey);
           if (aliasMap && Object.keys(aliasMap).length) {
+            reassignR32Slots(matches, aliasMap);
             for (const m of matches) {
               if (m.home === 'TBD' && m.homeAlias && aliasMap[m.homeAlias]) {
                 m.home = aliasMap[m.homeAlias];
