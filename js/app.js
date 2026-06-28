@@ -579,15 +579,35 @@ async function refreshKnockoutMatches() {
     if (typeof loadKnockoutData !== 'function') return;
     const { matches, crests } = await loadKnockoutData(state.apiKey, false);
     if (matches && matches.length) {
-      // Reassign R32 slots and resolve TBD teams using group standings.
-      // Order matters: reassign slots first (using already-known team names
-      // from the API) so that aliases become correct, THEN resolve remaining
-      // TBD teams using the now-correct aliases.
+      // Resolve TBD teams using group standings + API-derived constraints.
+      // The Best 3rd solver may differ from FIFA's official lookup table,
+      // so we use API-known teams as constraints to get the correct assignment.
       if (typeof loadGroupStandings === 'function') {
         try {
-          const aliasMap = await loadGroupStandings(state.apiKey);
-          if (aliasMap && Object.keys(aliasMap).length) {
+          const result = await loadGroupStandings(state.apiKey);
+          const aliasMap = result?.aliasMap || result || {};
+          const thirdPlaceByName = result?.thirdPlaceByName || {};
+          if (Object.keys(aliasMap).length) {
             reassignR32Slots(matches, aliasMap);
+
+            // Build constraints from API-known Best 3rd placements
+            const constraints = {};
+            for (const m of matches) {
+              if (m.stage !== 'LAST_32' || m.away === 'TBD') continue;
+              if (!m.awayAlias?.startsWith('Best 3rd')) continue;
+              const group = thirdPlaceByName[m.away];
+              if (group) constraints[m.awayAlias] = group;
+            }
+
+            // Re-run solver with constraints if the API revealed any Best 3rd teams
+            if (Object.keys(constraints).length) {
+              const corrected = await loadGroupStandings(state.apiKey, constraints);
+              const correctedMap = corrected?.aliasMap || corrected || {};
+              if (Object.keys(correctedMap).length) {
+                Object.assign(aliasMap, correctedMap);
+              }
+            }
+
             for (const m of matches) {
               if (m.home === 'TBD' && m.homeAlias && aliasMap[m.homeAlias]) {
                 m.home = aliasMap[m.homeAlias];

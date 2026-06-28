@@ -197,13 +197,15 @@ function parseKnockoutResponse(stageResults) {
 
 // Fetch group standings and build a map: alias → team name.
 // e.g. { 'Winner A': 'Germany', 'Runner-up A': 'Mexico', 'Best 3rd C/E/F/H/I': 'Belgium', ... }
-async function loadGroupStandings(apiKey) {
+// Optional `constraints`: { aliasName: groupLetter } to pre-lock Best 3rd assignments
+// (used when the API already reveals which team occupies a slot).
+async function loadGroupStandings(apiKey, constraints) {
   const headers = isUsingProxy() ? {} : { 'X-Auth-Token': apiKey };
   const res = await fetch(
     `${getApiBase()}/competitions/${COMPETITION}/standings`,
     { headers }
   );
-  if (!res.ok) return {};
+  if (!res.ok) return { aliasMap: {}, thirdPlaceByName: {} };
   const json = await res.json();
   const standings = json.standings || [];
   const aliasMap = {};
@@ -233,19 +235,19 @@ async function loadGroupStandings(apiKey) {
     }
   }
 
+  const thirdPlaceByName = {};
+  for (const t of thirdPlace) thirdPlaceByName[t.name] = t.group;
+
   // Resolve "Best 3rd" aliases once enough groups have finished
   if (thirdPlace.length >= 8 && typeof KNOCKOUT_TEMPLATE !== 'undefined') {
-    // Only consider groups that have played all 3 matchdays
     const finished = thirdPlace.filter(t => t.played >= 3);
     if (finished.length >= 8) {
-      // Rank: points → goal difference → goals for
       finished.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
       const qualifying = finished.slice(0, 8);
       const qualGroups = qualifying.map(t => t.group);
       const groupToTeam = {};
       for (const t of qualifying) groupToTeam[t.group] = t.name;
 
-      // Collect all "Best 3rd" slots from the template
       const r32 = KNOCKOUT_TEMPLATE.LAST_32 || [];
       const best3rdSlots = [];
       for (const s of r32) {
@@ -257,12 +259,22 @@ async function loadGroupStandings(apiKey) {
         }
       }
 
-      // Backtracking solver to find valid assignment
+      // Pre-lock constraints from API-known match data
       const assignment = {};
       const used = new Set();
+      if (constraints) {
+        for (const [alias, group] of Object.entries(constraints)) {
+          if (qualGroups.includes(group)) {
+            assignment[alias] = group;
+            used.add(group);
+          }
+        }
+      }
+
       function solve(idx) {
         if (idx === best3rdSlots.length) return true;
         const slot = best3rdSlots[idx];
+        if (assignment[slot.alias]) return solve(idx + 1);
         for (const g of slot.groups) {
           if (qualGroups.includes(g) && !used.has(g)) {
             used.add(g);
@@ -282,7 +294,7 @@ async function loadGroupStandings(apiKey) {
     }
   }
 
-  return aliasMap;
+  return { aliasMap, thirdPlaceByName };
 }
 
 // ESPN's public scoreboard for the FIFA World Cup — undocumented but free,
