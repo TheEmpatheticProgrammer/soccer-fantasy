@@ -579,45 +579,15 @@ async function refreshKnockoutMatches() {
     if (typeof loadKnockoutData !== 'function') return;
     const { matches, crests } = await loadKnockoutData(state.apiKey, false);
     if (matches && matches.length) {
-      // Resolve TBD teams using group standings + API-derived constraints.
-      // The Best 3rd solver may differ from FIFA's official lookup table,
-      // so we use API-known teams as constraints to get the correct assignment.
+      // Use standings to get Winner/Runner-up mappings for correct slot assignment.
+      // The API already provides real team names — no solver needed.
       if (typeof loadGroupStandings === 'function') {
         try {
-          const result = await loadGroupStandings(state.apiKey);
-          const aliasMap = result?.aliasMap || result || {};
-          const thirdPlaceByName = result?.thirdPlaceByName || {};
+          const aliasMap = await loadGroupStandings(state.apiKey);
           if (Object.keys(aliasMap).length) {
             reassignR32Slots(matches, aliasMap);
-
-            // Build constraints from API-known Best 3rd placements
-            const constraints = {};
-            for (const m of matches) {
-              if (m.stage !== 'LAST_32' || m.away === 'TBD') continue;
-              if (!m.awayAlias?.startsWith('Best 3rd')) continue;
-              const group = thirdPlaceByName[m.away];
-              if (group) constraints[m.awayAlias] = group;
-            }
-
-            // Re-run solver with constraints if the API revealed any Best 3rd teams
-            if (Object.keys(constraints).length) {
-              const corrected = await loadGroupStandings(state.apiKey, constraints);
-              const correctedMap = corrected?.aliasMap || corrected || {};
-              if (Object.keys(correctedMap).length) {
-                Object.assign(aliasMap, correctedMap);
-              }
-            }
-
-            for (const m of matches) {
-              if (m.home === 'TBD' && m.homeAlias && aliasMap[m.homeAlias]) {
-                m.home = aliasMap[m.homeAlias];
-              }
-              if (m.away === 'TBD' && m.awayAlias && aliasMap[m.awayAlias]) {
-                m.away = aliasMap[m.awayAlias];
-              }
-            }
           }
-        } catch (e) { console.warn('[knockout] standings resolve failed:', e.message); }
+        } catch (e) { console.warn('[knockout] standings fetch failed:', e.message); }
       }
 
       // Preserve previously resolved team names if the API/standings still

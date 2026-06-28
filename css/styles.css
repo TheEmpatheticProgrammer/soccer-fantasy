@@ -3627,6 +3627,16 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   border-color: rgba(248, 113, 113, 0.3);
 }
 
+.bracket-match-lock {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(251, 191, 36, 0.85);
+  white-space: nowrap;
+}
+.bracket-match-lock.is-locked {
+  color: rgba(248, 113, 113, 0.85);
+}
+
 .bracket-round.round-locked .bracket-match {
   opacity: 0.78;
 }
@@ -3646,10 +3656,31 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 0.6rem 0.7rem;
+  padding: 0.55rem 0.7rem 0.65rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.bracket-match-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.1rem;
+}
+
+.bracket-match-venue {
+  font-size: 0.62rem;
+  color: var(--text-muted, #9ca3af);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+  text-align: right;
 }
 
 .bracket-match-meta {
@@ -3658,14 +3689,6 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   gap: 0.35rem;
   font-size: 0.7rem;
   color: var(--text-muted, #9ca3af);
-}
-
-.bracket-slot {
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
-  padding: 0.05rem 0.3rem;
-  font-weight: 600;
-  margin-right: 0.25rem;
 }
 
 .bracket-meta-sep { opacity: 0.5; }
@@ -3825,17 +3848,17 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 .bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 
 .bracket-match-others {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
-  margin-left: auto;
-  padding: 0.1rem 0.45rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
   color: var(--text-muted);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }

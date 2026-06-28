@@ -4,6 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#05080f">
+
+  <!-- Auto-reload when a new version is deployed (solves mobile browser caching) -->
+  <script>
+  (function(){
+    var V='2026062714';
+    try {
+      fetch('version.json?_='+Date.now(),{cache:'no-store'})
+        .then(function(r){return r.json()})
+        .then(function(d){
+          if(d.v&&d.v!==V&&!sessionStorage.getItem('_vr_'+d.v)){
+            sessionStorage.setItem('_vr_'+d.v,'1');
+            location.reload();
+          }
+        }).catch(function(){});
+    } catch(e){}
+  })();
+  </script>
   <title>Copamigos · World Cup 2026 Friends Pool</title>
   <meta name="description" content="$30 in, $300 to the winner. Predict every group-stage match of the 2026 FIFA World Cup with friends. Live scoring. Kickoff June 11.">
 
@@ -27,7 +44,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
-  <link rel="stylesheet" href="css/styles.css?v=2026062707">
+  <link rel="stylesheet" href="css/styles.css?v=2026062714">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -69,13 +86,13 @@
   <script defer src="js/config.js"></script>
   <script defer src="js/config.local.js" onerror="/* no local overrides — fine in production */"></script>
   <script defer src="js/data.js"></script>
-  <script defer src="js/api.js?v=2026062707"></script>
+  <script defer src="js/api.js?v=2026062713"></script>
   <script defer src="js/i18n.js?v=2026062703"></script>
   <script defer src="js/knockout-data.js?v=2026062701"></script>
-  <script defer src="js/knockout.js?v=2026062705"></script>
+  <script defer src="js/knockout.js?v=2026062714"></script>
   <script defer src="js/firebase-init.js"></script>
   <script defer src="js/auth.js"></script>
-  <script defer src="js/app.js?v=2026062712"></script>
+  <script defer src="js/app.js?v=2026062713"></script>
 </head>
 <body>
 

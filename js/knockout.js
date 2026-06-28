@@ -138,13 +138,13 @@ async function runKnockoutAutosave() {
     if (pick && preds[matchId]) preds[matchId].winnerPick = pick;
   });
 
-  // Drop any predictions for rounds whose lock time has passed, and preserve
+  // Drop any predictions for matches whose lock time has passed, and preserve
   // the saved version for those matches so we never overwrite a locked pick.
   const matchById = new Map((state.knockout?.matches || []).map(m => [m.id, m]));
   const existing = state.knockout.predictionDocs?.[state.uid]?.predictions || {};
   for (const matchId of Object.keys(preds)) {
     const m = matchById.get(matchId);
-    if (m && isKnockoutRoundLocked(m.stage)) {
+    if (m && isKnockoutMatchLocked(m)) {
       if (existing[matchId]) preds[matchId] = existing[matchId];
       else delete preds[matchId];
     }
@@ -197,7 +197,18 @@ function knockoutTeamLabel(name, alias) {
   return `<span class="bracket-team-name">${escapeHtml(tCountry(name))}</span>`;
 }
 
-const KNOCKOUT_ROUND_LOCK_LEAD_MS = 60 * 60 * 1000; // 1 hour before first kickoff in a round
+const KNOCKOUT_ROUND_LOCK_LEAD_MS = 60 * 60 * 1000; // 1 hour before kickoff
+
+function knockoutMatchLockTime(match) {
+  const t = match?.utcDate ? new Date(match.utcDate).getTime() : NaN;
+  if (!Number.isFinite(t)) return null;
+  return t - KNOCKOUT_ROUND_LOCK_LEAD_MS;
+}
+
+function isKnockoutMatchLocked(match) {
+  const lock = knockoutMatchLockTime(match);
+  return lock !== null && Date.now() >= lock;
+}
 
 function knockoutRoundLockTime(stage) {
   const matches = (state.knockout?.matches || []).filter(m => m.stage === stage);
@@ -211,9 +222,9 @@ function knockoutRoundLockTime(stage) {
 }
 
 function isKnockoutRoundLocked(stage) {
-  const lockMs = knockoutRoundLockTime(stage);
-  if (lockMs === null) return false;
-  return Date.now() >= lockMs;
+  const matches = (state.knockout?.matches || []).filter(m => m.stage === stage);
+  if (!matches.length) return false;
+  return matches.every(m => isKnockoutMatchLocked(m));
 }
 
 function formatKnockoutLockCountdown(ms) {
@@ -230,7 +241,7 @@ function formatKnockoutLockCountdown(ms) {
 function renderKnockoutMatch(match, myPred) {
   const result = getKnockoutResults()[match.id] || null;
   const matches = state.knockout.matches || [];
-  const locked = arePredictionsLocked() || isKnockoutRoundLocked(match.stage);
+  const locked = arePredictionsLocked() || isKnockoutMatchLocked(match);
 
   const homeVal  = myPred && myPred.home != null ? myPred.home : '';
   const awayVal  = myPred && myPred.away != null ? myPred.away : '';
@@ -240,6 +251,18 @@ function renderKnockoutMatch(match, myPred) {
   const numAway = hasBoth ? parseInt(awayVal, 10) : null;
   const isTie   = hasBoth && numHome === numAway;
   const isTbd   = match.home === 'TBD' || match.away === 'TBD';
+
+  // Per-match lock indicator (subtle text, not a pill)
+  let matchLockText = '';
+  if (!result) {
+    const lockMs = knockoutMatchLockTime(match);
+    if (lockMs !== null && Date.now() >= lockMs) {
+      matchLockText = `<span class="bracket-match-lock is-locked">🔒 ${t('knockout.lockedRound')}</span>`;
+    } else if (lockMs !== null) {
+      const cd = formatKnockoutLockCountdown(lockMs);
+      if (cd) matchLockText = `<span class="bracket-match-lock">${escapeHtml(cd)}</span>`;
+    }
+  }
 
   let winnerBadge = '';
   if (!hasBoth) {
@@ -282,9 +305,11 @@ function renderKnockoutMatch(match, myPred) {
   }
 
   const { day, time } = formatMatchDateParts(match.utcDate);
+  const venue = typeof displayVenue === 'function' && typeof venueForMatch === 'function'
+    ? displayVenue(venueForMatch(match)) : '';
 
   let othersBtn = '';
-  if (!isTbd) {
+  if (!isTbd && locked) {
     const docs = state.knockout?.predictionDocs || {};
     let pickCount = 0;
     for (const uid of Object.keys(docs)) {
@@ -303,12 +328,14 @@ function renderKnockoutMatch(match, myPred) {
 
   return `
     <article class="bracket-match" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
-      <div class="bracket-match-meta">
-        <span class="bracket-slot">#${match.slot}</span>
-        <span class="bracket-meta-day">${day}</span>
-        <span class="bracket-meta-sep">·</span>
-        <span class="bracket-meta-time">${time}</span>
-        ${othersBtn}
+      <div class="bracket-match-header">
+        <div class="bracket-match-meta">
+          <span class="bracket-meta-day">${day}</span>
+          <span class="bracket-meta-sep">·</span>
+          <span class="bracket-meta-time">${time}</span>
+          ${matchLockText ? `<span class="bracket-meta-sep">·</span>${matchLockText}` : ''}
+        </div>
+        ${venue ? `<div class="bracket-match-venue">${escapeHtml(venue)}</div>` : ''}
       </div>
       <div class="bracket-team-row" data-team="${escapeHtml(match.home || '')}">
         <span class="bracket-team-side">
@@ -330,6 +357,7 @@ function renderKnockoutMatch(match, myPred) {
       </div>
       ${winnerBadge}
       ${resultStrip}
+      ${othersBtn}
     </article>`;
 }
 
@@ -378,27 +406,23 @@ function renderKnockoutBracket() {
     (byStage[m.stage] ||= []).push(m);
   }
   for (const stage of Object.keys(byStage)) {
-    byStage[stage].sort((a, b) => a.slot - b.slot);
+    byStage[stage].sort((a, b) => {
+      const at = a.utcDate ? new Date(a.utcDate).getTime() : Infinity;
+      const bt = b.utcDate ? new Date(b.utcDate).getTime() : Infinity;
+      return at - bt || a.slot - b.slot;
+    });
   }
 
   container.innerHTML = `
     <div class="bracket">
       ${KNOCKOUT_ROUND_ORDER.filter(stage => (byStage[stage] || []).length > 0).map(stage => {
-        const lockMs = knockoutRoundLockTime(stage);
-        const isLocked = lockMs !== null && Date.now() >= lockMs;
-        let lockBadge = '';
-        if (isLocked) {
-          lockBadge = `<span class="bracket-round-lock is-locked" title="${escapeHtml(t('knockout.lockedRound'))}">🔒 ${t('knockout.lockedRound')}</span>`;
-        } else if (lockMs !== null) {
-          const cd = formatKnockoutLockCountdown(lockMs);
-          if (cd) lockBadge = `<span class="bracket-round-lock">${escapeHtml(cd)}</span>`;
-        }
+        const stageMatches = byStage[stage];
+        const allLocked = stageMatches.every(m => isKnockoutMatchLocked(m));
         return `
-        <section class="bracket-round${isLocked ? ' round-locked' : ''}" data-round="${stage}">
+        <section class="bracket-round${allLocked ? ' round-locked' : ''}" data-round="${stage}">
           <header class="bracket-round-header">
             <h3 class="bracket-round-title">${knockoutRoundLabel(stage)}</h3>
             <div class="bracket-round-meta">
-              ${lockBadge}
               <span class="bracket-round-count">${byStage[stage].length}</span>
             </div>
           </header>
@@ -759,7 +783,10 @@ function bindKnockoutEvents() {
     if (!e.target.classList.contains('knockout-score-input')) return;
     if (arePredictionsLocked()) return;
     const card = e.target.closest('.bracket-match');
-    if (card && isKnockoutRoundLocked(card.dataset.stage)) return;
+    if (card) {
+      const m = (state.knockout?.matches || []).find(x => x.id === card.dataset.matchId);
+      if (m && isKnockoutMatchLocked(m)) return;
+    }
     if (card) updateBracketCardTieState(card);
     scheduleKnockoutAutosave();
   });
@@ -770,7 +797,8 @@ function bindKnockoutEvents() {
     if (arePredictionsLocked()) return;
     const card = btn.closest('.bracket-match');
     if (!card) return;
-    if (isKnockoutRoundLocked(card.dataset.stage)) return;
+    const m = (state.knockout?.matches || []).find(x => x.id === card.dataset.matchId);
+    if (m && isKnockoutMatchLocked(m)) return;
     card.querySelectorAll('.penalty-pick-btn').forEach(b => b.classList.remove('is-selected'));
     btn.classList.add('is-selected');
     scheduleKnockoutAutosave();
