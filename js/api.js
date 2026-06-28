@@ -135,6 +135,10 @@ async function loadKnockoutData(apiKey, force = false, maxAgeMs) {
   }));
 
   const out = parseKnockoutResponse(results);
+  const prev = KnockoutApiCache.get(Infinity);
+  if (prev && out.matches.length < prev.matches.length) {
+    return prev;
+  }
   KnockoutApiCache.set(out);
   return out;
 }

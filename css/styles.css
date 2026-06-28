@@ -2868,6 +2868,71 @@ details[open] .admin-toggle::before { transform: rotate(90deg); }
 }
 .rules-paragraph:first-of-type { margin-top: 1.5rem; }
 
+.rules-example-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 1.8rem 0 0.6rem;
+  color: var(--text);
+}
+
+.rules-example {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.rules-example-matchup {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.rules-example-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.rules-example-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.rules-example-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rules-example-score {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+}
+
+.rules-example-row .rule-badge {
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.rules-example-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+  font-style: italic;
+}
+
 .prizes-list {
   display: flex;
   flex-direction: column;
