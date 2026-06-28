@@ -41,11 +41,15 @@ function getKnockoutResults() {
 function calcKnockoutPoints(pred, actual) {
   if (!pred || pred.home == null || pred.away == null) return null;
   if (!actual || actual.home == null || actual.away == null) return null;
-  if (pred.home === actual.home && pred.away === actual.away) return 3;
+  const exactScore = pred.home === actual.home && pred.away === actual.away;
   const winnerOf = s => s.home > s.away ? 'home' : s.away > s.home ? 'away' : (s.winnerPick || null);
   const pw = winnerOf(pred);
   const aw = winnerOf(actual);
-  return pw && aw && pw === aw ? 1 : 0;
+  const correctWinner = pw && aw && pw === aw;
+  if (exactScore && correctWinner) return 4;
+  if (exactScore) return 3;
+  if (correctWinner) return 1;
+  return 0;
 }
 
 let unsubKnockoutPredictions = null;

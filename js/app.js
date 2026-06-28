@@ -1710,7 +1710,7 @@ function matchCard(match, pred = {}, result) {
   const venue = displayVenue(venueForMatch(match));
   const playerInitial = getInitials(state.currentPlayer);
 
-  const rowClass = pts === 3 ? 'predict-row pts-exact'
+  const rowClass = pts >= 3 ? 'predict-row pts-exact'
                  : pts === 1 ? 'predict-row pts-partial'
                  : pts === 0 ? 'predict-row pts-miss'
                  : 'predict-row';
@@ -1729,7 +1729,7 @@ function matchCard(match, pred = {}, result) {
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
     : isLive
       ? ''
-      : pts === 3
+      : pts >= 3
         ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
         : pts === 1
           ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
@@ -2090,7 +2090,7 @@ async function saveResults() {
 }
 
 function calcPoints(pred, actual) {
-  if (pred.home === actual.home && pred.away === actual.away) return 3;
+  if (pred.home === actual.home && pred.away === actual.away) return 4;
   const predOutcome   = Math.sign(pred.home   - pred.away);
   const actualOutcome = Math.sign(actual.home - actual.away);
   return predOutcome === actualOutcome ? 1 : 0;
@@ -2122,7 +2122,7 @@ function computeStandings(resultsOverride) {
       const pts = pointsFn(pred, actual);
       if (pts == null) continue;
       points += pts;
-      if (pts === 3) scored++;
+      if (pts >= 3) scored++;
     }
     return {
       uid,
@@ -2807,7 +2807,7 @@ function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
   const isSelf = ownerUid === state.uid;
   const avatarHue = isSelf ? 145 : hashHue(ownerUid);
 
-  const rowClass = pts === 3 ? 'predict-row pts-exact'
+  const rowClass = pts >= 3 ? 'predict-row pts-exact'
                  : pts === 1 ? 'predict-row pts-partial'
                  : pts === 0 ? 'predict-row pts-miss'
                  : 'predict-row';
@@ -2826,7 +2826,7 @@ function playerPredictionCard(match, pred, result, ownerName, ownerUid) {
     ? `<span class="actual-status status-tbd">${t('match.tbd')}</span>`
     : isLive
       ? ''
-      : pts === 3
+      : pts >= 3
         ? `<span class="actual-status status-label status-exact${liveClass}">${statusLabel}</span>`
         : pts === 1
           ? `<span class="actual-status status-label status-partial${liveClass}">${statusLabel}</span>`
