@@ -3756,6 +3756,17 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.bracket-match.bracket-match-pts-exact {
+  border-color: rgba(45, 255, 165, 0.45);
+}
+.bracket-match.bracket-match-pts-partial {
+  border-color: rgba(255, 200, 90, 0.45);
+}
+.bracket-match.bracket-match-pts-miss {
+  border-color: rgba(255, 90, 95, 0.35);
 }
 
 .bracket-match-header {

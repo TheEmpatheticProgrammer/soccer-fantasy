@@ -297,11 +297,13 @@ function renderKnockoutMatch(match, myPred) {
   }
 
   let resultStrip = '';
+  let matchPtsClass = '';
   if (result) {
     const pts = myPred ? calcKnockoutPoints(myPred, result) : null;
     const ptsBadge = pts !== null
       ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
       : '';
+    if (pts !== null) matchPtsClass = ` bracket-match-pts-${pts >= 3 ? 'exact' : pts === 1 ? 'partial' : 'miss'}`;
     resultStrip = `<div class="bracket-result">
       <span class="bracket-result-label">${t('match.ft')}</span>
       <span class="bracket-result-score">${result.home}<span class="ft-dash">−</span>${result.away}</span>
@@ -332,7 +334,7 @@ function renderKnockoutMatch(match, myPred) {
   }
 
   return `
-    <article class="bracket-match" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
+    <article class="bracket-match${matchPtsClass}" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
       <div class="bracket-match-header">
         <div class="bracket-match-meta">
           <span class="bracket-meta-day">${day}</span>
