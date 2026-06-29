@@ -2131,7 +2131,7 @@ function computeStandings(resultsOverride) {
       scored,
       predicted: Object.keys(preds).length,
     };
-  }).filter(p => p.name).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
+  }).filter(p => p.name && (!isKnockout || p.predicted > 0)).sort((a, b) => b.points - a.points || b.predicted - a.predicted);
 
   if (!useCustom) {
     const vKey = isKnockout
