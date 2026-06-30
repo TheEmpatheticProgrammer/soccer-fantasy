@@ -257,74 +257,6 @@ function renderKnockoutMatch(match, myPred) {
   const isTie   = hasBoth && numHome === numAway;
   const isTbd   = match.home === 'TBD' || match.away === 'TBD';
 
-  // Per-match lock indicator (subtle text, not a pill)
-  let matchLockText = '';
-  if (!result) {
-    const lockMs = knockoutMatchLockTime(match);
-    if (lockMs !== null && Date.now() >= lockMs) {
-      matchLockText = `<span class="bracket-match-lock is-locked">🔒</span>`;
-    } else if (lockMs !== null) {
-      const cd = formatKnockoutLockCountdown(lockMs);
-      if (cd) matchLockText = `<span class="bracket-match-lock">${escapeHtml(cd)}</span>`;
-    }
-  }
-
-  let winnerBadge = '';
-  if (!hasBoth) {
-    winnerBadge = `<div class="winner-badge winner-badge-hint">${t('knockout.predictHint')}</div>`;
-  } else if (!isTie) {
-    if (!result) {
-      const winnerName = numHome > numAway ? match.home : match.away;
-      winnerBadge = `<div class="winner-badge winner-badge-auto">
-        ${knockoutTeamFlag(winnerName)}
-        <span class="winner-badge-text">${escapeHtml(tCountry(winnerName))} ${t('knockout.advances')}</span>
-      </div>`;
-    }
-  } else {
-    const homeSelected = winnerPick === 'home' ? ' is-selected' : '';
-    const awaySelected = winnerPick === 'away' ? ' is-selected' : '';
-    const pickLabel = result ? `<span class="winner-badge-pick-label">${t('knockout.yourPick')}</span>` : '';
-    winnerBadge = `<div class="winner-badge winner-badge-pk">
-      ${pickLabel}
-      <span class="winner-badge-label">${t('knockout.penaltyWinner')}</span>
-      <div class="penalty-pick">
-        <button type="button" class="penalty-pick-btn${homeSelected}" data-side="home" ${locked || isTbd ? 'disabled' : ''}>
-          ${knockoutTeamFlag(match.home)}
-          <span>${escapeHtml(match.home === 'TBD' ? (match.homeAlias || t('knockout.tbd')) : tCountry(match.home))}</span>
-        </button>
-        <button type="button" class="penalty-pick-btn${awaySelected}" data-side="away" ${locked || isTbd ? 'disabled' : ''}>
-          ${knockoutTeamFlag(match.away)}
-          <span>${escapeHtml(match.away === 'TBD' ? (match.awayAlias || t('knockout.tbd')) : tCountry(match.away))}</span>
-        </button>
-      </div>
-    </div>`;
-  }
-
-  let resultStrip = '';
-  let matchPtsClass = '';
-  if (result) {
-    const pts = myPred ? calcKnockoutPoints(myPred, result) : null;
-    const ptsBadge = pts !== null
-      ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
-      : '';
-    if (pts !== null) matchPtsClass = ` bracket-match-pts-${pts >= 3 ? 'exact' : pts === 1 ? 'partial' : 'miss'}`;
-    const actualWinnerSide = result.home > result.away ? 'home' : result.away > result.home ? 'away' : (result.winnerPick || null);
-    const actualWinnerName = actualWinnerSide === 'home' ? match.home : actualWinnerSide === 'away' ? match.away : null;
-    const actualWinnerHtml = actualWinnerName
-      ? `<span class="bracket-result-winner">${knockoutTeamFlag(actualWinnerName)}<span>${escapeHtml(tCountry(actualWinnerName))} ${t('knockout.advanced')}</span></span>`
-      : '';
-    const penHtml = result.penHome != null && result.penAway != null
-      ? `<span class="bracket-result-pen">(${result.penHome} - ${result.penAway})</span>`
-      : '';
-    resultStrip = `<div class="bracket-result">
-      <span class="bracket-result-label">${t('match.ft')}</span>
-      <span class="bracket-result-score">${result.home}<span class="ft-dash">−</span>${result.away}</span>
-      ${penHtml}
-      ${ptsBadge}
-      ${actualWinnerHtml}
-    </div>`;
-  }
-
   const { day, time } = formatMatchDateParts(match.utcDate);
   const venue = typeof displayVenue === 'function' && typeof venueForMatch === 'function'
     ? displayVenue(venueForMatch(match)) : '';
@@ -347,8 +279,116 @@ function renderKnockoutMatch(match, myPred) {
     }
   }
 
+  // --- COMPLETED MATCH: result banner + compact prediction ---
+  if (result) {
+    const pts = myPred ? calcKnockoutPoints(myPred, result) : null;
+    const ptsClass = pts !== null ? (pts >= 3 ? 'exact' : pts === 1 ? 'partial' : 'miss') : '';
+    const matchPtsClass = ptsClass ? ` bracket-match-pts-${ptsClass}` : '';
+    const ptsBadge = pts !== null
+      ? `<span class="bracket-result-pts everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
+      : '';
+    const actualWinnerSide = result.home > result.away ? 'home' : result.away > result.home ? 'away' : (result.winnerPick || null);
+    const actualWinnerName = actualWinnerSide === 'home' ? match.home : actualWinnerSide === 'away' ? match.away : null;
+    const penHtml = result.penHome != null && result.penAway != null
+      ? `<span class="bracket-result-pen">(${result.penHome} - ${result.penAway})</span>`
+      : '';
+    const winnerHtml = actualWinnerName
+      ? `<div class="bracket-result-banner-winner">${knockoutTeamFlag(actualWinnerName)}<span>${escapeHtml(tCountry(actualWinnerName))} ${t('knockout.advanced')}</span></div>`
+      : '';
+
+    let predSection = '';
+    if (myPred && hasBoth) {
+      let winnerPickLine = '';
+      if (isTie && winnerPick) {
+        const pickedName = winnerPick === 'home' ? match.home : match.away;
+        const correct = winnerPick === actualWinnerSide;
+        winnerPickLine = `<div class="bracket-prediction-winner">
+          Winner: ${escapeHtml(tCountry(pickedName))} <span class="${correct ? 'correct' : 'wrong'}">${correct ? '✓' : '✗'}</span>
+        </div>`;
+      }
+      predSection = `<div class="bracket-prediction-section">
+        <span class="bracket-prediction-label">${t('knockout.yourPrediction')}</span>
+        <div class="bracket-prediction-rows">
+          <div class="bracket-prediction-row">
+            ${knockoutTeamFlag(match.home)}
+            <span class="bracket-prediction-name">${escapeHtml(tCountry(match.home))}</span>
+            <span class="bracket-prediction-score">${homeVal}</span>
+          </div>
+          <div class="bracket-prediction-row">
+            ${knockoutTeamFlag(match.away)}
+            <span class="bracket-prediction-name">${escapeHtml(tCountry(match.away))}</span>
+            <span class="bracket-prediction-score">${awayVal}</span>
+          </div>
+          ${winnerPickLine}
+        </div>
+      </div>`;
+    }
+
+    return `
+      <article class="bracket-match${matchPtsClass}" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
+        <div class="bracket-match-header">
+          <div class="bracket-match-meta">
+            <span class="bracket-meta-day">${day}</span>
+            <span class="bracket-meta-sep">·</span>
+            <span class="bracket-meta-time">${time}</span>
+          </div>
+          <div class="bracket-match-header-right">
+            ${venue ? `<span class="bracket-match-venue">${escapeHtml(venue)}</span>` : ''}
+            ${othersBtn}
+          </div>
+        </div>
+        <div class="bracket-result-banner${ptsClass ? ` bracket-result-banner-${ptsClass}` : ''}">
+          <div class="bracket-result-banner-top">
+            <span class="bracket-result-label">${t('match.ft')}</span>
+            <span class="bracket-result-score">${result.home}<span class="ft-dash">−</span>${result.away}</span>
+            ${penHtml}
+            ${ptsBadge}
+          </div>
+          ${winnerHtml}
+        </div>
+        ${predSection}
+      </article>`;
+  }
+
+  // --- PENDING MATCH: inputs + winner badge (unchanged) ---
+  let matchLockText = '';
+  const lockMs = knockoutMatchLockTime(match);
+  if (lockMs !== null && Date.now() >= lockMs) {
+    matchLockText = `<span class="bracket-match-lock is-locked">🔒</span>`;
+  } else if (lockMs !== null) {
+    const cd = formatKnockoutLockCountdown(lockMs);
+    if (cd) matchLockText = `<span class="bracket-match-lock">${escapeHtml(cd)}</span>`;
+  }
+
+  let winnerBadge = '';
+  if (!hasBoth) {
+    winnerBadge = `<div class="winner-badge winner-badge-hint">${t('knockout.predictHint')}</div>`;
+  } else if (!isTie) {
+    const winnerName = numHome > numAway ? match.home : match.away;
+    winnerBadge = `<div class="winner-badge winner-badge-auto">
+      ${knockoutTeamFlag(winnerName)}
+      <span class="winner-badge-text">${escapeHtml(tCountry(winnerName))} ${t('knockout.advances')}</span>
+    </div>`;
+  } else {
+    const homeSelected = winnerPick === 'home' ? ' is-selected' : '';
+    const awaySelected = winnerPick === 'away' ? ' is-selected' : '';
+    winnerBadge = `<div class="winner-badge winner-badge-pk">
+      <span class="winner-badge-label">${t('knockout.penaltyWinner')}</span>
+      <div class="penalty-pick">
+        <button type="button" class="penalty-pick-btn${homeSelected}" data-side="home" ${locked || isTbd ? 'disabled' : ''}>
+          ${knockoutTeamFlag(match.home)}
+          <span>${escapeHtml(match.home === 'TBD' ? (match.homeAlias || t('knockout.tbd')) : tCountry(match.home))}</span>
+        </button>
+        <button type="button" class="penalty-pick-btn${awaySelected}" data-side="away" ${locked || isTbd ? 'disabled' : ''}>
+          ${knockoutTeamFlag(match.away)}
+          <span>${escapeHtml(match.away === 'TBD' ? (match.awayAlias || t('knockout.tbd')) : tCountry(match.away))}</span>
+        </button>
+      </div>
+    </div>`;
+  }
+
   return `
-    <article class="bracket-match${matchPtsClass}" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
+    <article class="bracket-match" data-match-id="${match.id}" data-slot="${match.slot}" data-tie="${isTie}" data-stage="${match.stage}">
       <div class="bracket-match-header">
         <div class="bracket-match-meta">
           <span class="bracket-meta-day">${day}</span>
@@ -380,7 +420,6 @@ function renderKnockoutMatch(match, myPred) {
                value="${awayVal}" ${locked || isTbd ? 'disabled' : ''}>
       </div>
       ${winnerBadge}
-      ${resultStrip}
     </article>`;
 }
 

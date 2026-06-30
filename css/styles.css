@@ -3662,7 +3662,9 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   .bracket-match-venue { font-size: 0.72rem; max-width: 160px; }
   .winner-badge { font-size: 0.88rem; padding: 0.5rem 0.65rem; }
   .penalty-pick-btn { padding: 0.4rem 0.55rem; font-size: 0.88rem; }
-  .bracket-result { font-size: 0.92rem; padding: 0.45rem 0.6rem; }
+  .bracket-result-banner { padding: 0.65rem 0.8rem; }
+  .bracket-result-score { font-size: 1.35rem; }
+  .bracket-prediction-row { font-size: 0.85rem; }
 }
 
 .bracket-round {
@@ -3941,57 +3943,102 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   cursor: not-allowed;
 }
 
-.bracket-result {
-  margin-top: 0.25rem;
+/* Result banner — hero section for completed knockout cards */
+.bracket-result-banner {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.bracket-result-banner-exact { background: rgba(45, 255, 165, 0.08); }
+.bracket-result-banner-partial { background: rgba(255, 200, 90, 0.08); }
+.bracket-result-banner-miss { background: rgba(255, 90, 95, 0.06); }
+
+.bracket-result-banner-top {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 0.55rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  font-size: 0.9rem;
 }
 .bracket-result-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   letter-spacing: 0.05em;
   font-weight: 600;
   color: var(--text-muted, #9ca3af);
 }
 .bracket-result-score {
+  font-size: 1.3rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-.bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
-
+.bracket-result-banner .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 .bracket-result-pen {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted, #9ca3af);
   font-variant-numeric: tabular-nums;
 }
-
-.bracket-result-winner {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+.bracket-result-pts {
   margin-left: auto;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
+}
+.bracket-result-banner-winner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #86efac;
 }
 
-.winner-badge-pick-label {
+/* Prediction section — muted, below the result */
+.bracket-prediction-section {
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 0.1rem;
+}
+.bracket-prediction-label {
   font-size: 0.62rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted, #9ca3af);
-  opacity: 0.8;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  opacity: 0.7;
 }
-
-.bracket-match-pts-exact .winner-badge-pick-label { color: #86efac; opacity: 1; }
-.bracket-match-pts-partial .winner-badge-pick-label { color: #fde68a; opacity: 1; }
-.bracket-match-pts-miss .winner-badge-pick-label { color: #ff8d91; opacity: 1; }
+.bracket-prediction-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+}
+.bracket-prediction-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+.bracket-prediction-name {
+  flex: 1;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bracket-prediction-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 1.2rem;
+  text-align: center;
+}
+.bracket-prediction-winner {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.8;
+  margin-top: 0.15rem;
+}
+.bracket-prediction-winner .correct { color: #86efac; opacity: 1; }
+.bracket-prediction-winner .wrong { color: #ff8d91; opacity: 1; }
 
 .bracket-match-others {
   display: inline-flex;
