@@ -3963,6 +3963,13 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 .bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 
+.bracket-result-pen {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #9ca3af);
+  font-variant-numeric: tabular-nums;
+}
+
 .bracket-result-winner {
   display: inline-flex;
   align-items: center;

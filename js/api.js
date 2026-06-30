@@ -190,7 +190,20 @@ function parseKnockoutResponse(stageResults) {
         status: m.status,
         venue: m.venue || null,
         result: m.score?.fullTime?.home != null
-          ? { home: m.score.fullTime.home, away: m.score.fullTime.away }
+          ? (() => {
+              const r = { home: m.score.fullTime.home, away: m.score.fullTime.away };
+              const pen = m.score?.penalties;
+              if (pen && pen.home != null && pen.away != null) {
+                r.penHome = pen.home;
+                r.penAway = pen.away;
+                if (r.home === r.away) r.winnerPick = pen.home > pen.away ? 'home' : 'away';
+              } else if (r.home === r.away && m.score?.regularTime) {
+                const winner = m.score.regularTime.home > m.score.regularTime.away ? 'away'
+                  : m.score.regularTime.away > m.score.regularTime.home ? 'home' : null;
+                if (winner) r.winnerPick = winner === 'home' ? 'home' : 'away';
+              }
+              return r;
+            })()
           : null,
       });
     });

@@ -313,9 +313,13 @@ function renderKnockoutMatch(match, myPred) {
     const actualWinnerHtml = actualWinnerName
       ? `<span class="bracket-result-winner">${knockoutTeamFlag(actualWinnerName)}<span>${escapeHtml(tCountry(actualWinnerName))} ${t('knockout.advanced')}</span></span>`
       : '';
+    const penHtml = result.penHome != null && result.penAway != null
+      ? `<span class="bracket-result-pen">(${result.penHome} - ${result.penAway})</span>`
+      : '';
     resultStrip = `<div class="bracket-result">
       <span class="bracket-result-label">${t('match.ft')}</span>
       <span class="bracket-result-score">${result.home}<span class="ft-dash">−</span>${result.away}</span>
+      ${penHtml}
       ${ptsBadge}
       ${actualWinnerHtml}
     </div>`;
