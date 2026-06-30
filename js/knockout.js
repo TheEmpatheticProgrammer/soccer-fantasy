@@ -274,14 +274,18 @@ function renderKnockoutMatch(match, myPred) {
     winnerBadge = `<div class="winner-badge winner-badge-hint">${t('knockout.predictHint')}</div>`;
   } else if (!isTie) {
     const winnerName = numHome > numAway ? match.home : match.away;
+    const pickLabel = result ? `<span class="winner-badge-pick-label">${t('knockout.yourPick')}</span>` : '';
     winnerBadge = `<div class="winner-badge winner-badge-auto">
+      ${pickLabel}
       ${knockoutTeamFlag(winnerName)}
       <span class="winner-badge-text">${escapeHtml(tCountry(winnerName))} ${t('knockout.advances')}</span>
     </div>`;
   } else {
     const homeSelected = winnerPick === 'home' ? ' is-selected' : '';
     const awaySelected = winnerPick === 'away' ? ' is-selected' : '';
+    const pickLabel = result ? `<span class="winner-badge-pick-label">${t('knockout.yourPick')}</span>` : '';
     winnerBadge = `<div class="winner-badge winner-badge-pk">
+      ${pickLabel}
       <span class="winner-badge-label">${t('knockout.penaltyWinner')}</span>
       <div class="penalty-pick">
         <button type="button" class="penalty-pick-btn${homeSelected}" data-side="home" ${locked || isTbd ? 'disabled' : ''}>
@@ -304,10 +308,16 @@ function renderKnockoutMatch(match, myPred) {
       ? `<span class="everyone-pts-badge pts-badge-${pts}">${pts > 0 ? '+' : ''}${pts}</span>`
       : '';
     if (pts !== null) matchPtsClass = ` bracket-match-pts-${pts >= 3 ? 'exact' : pts === 1 ? 'partial' : 'miss'}`;
+    const actualWinnerSide = result.home > result.away ? 'home' : result.away > result.home ? 'away' : (result.winnerPick || null);
+    const actualWinnerName = actualWinnerSide === 'home' ? match.home : actualWinnerSide === 'away' ? match.away : null;
+    const actualWinnerHtml = actualWinnerName
+      ? `<span class="bracket-result-winner">${knockoutTeamFlag(actualWinnerName)}<span>${escapeHtml(tCountry(actualWinnerName))} ${t('knockout.advanced')}</span></span>`
+      : '';
     resultStrip = `<div class="bracket-result">
       <span class="bracket-result-label">${t('match.ft')}</span>
       <span class="bracket-result-score">${result.home}<span class="ft-dash">−</span>${result.away}</span>
       ${ptsBadge}
+      ${actualWinnerHtml}
     </div>`;
   }
 

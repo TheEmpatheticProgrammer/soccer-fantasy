@@ -3960,6 +3960,25 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 .bracket-result .ft-dash { margin: 0 0.2rem; opacity: 0.6; }
 
+.bracket-result-winner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #86efac;
+}
+
+.winner-badge-pick-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #9ca3af);
+  opacity: 0.8;
+}
+
 .bracket-match-others {
   display: inline-flex;
   align-items: center;
