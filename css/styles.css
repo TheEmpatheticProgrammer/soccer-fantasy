@@ -3760,13 +3760,16 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
 }
 
 .bracket-match.bracket-match-pts-exact {
-  border-color: rgba(45, 255, 165, 0.45);
+  border-color: rgba(45, 255, 165, 0.6);
+  border-width: 2px;
 }
 .bracket-match.bracket-match-pts-partial {
-  border-color: rgba(255, 200, 90, 0.45);
+  border-color: rgba(255, 200, 90, 0.6);
+  border-width: 2px;
 }
 .bracket-match.bracket-match-pts-miss {
-  border-color: rgba(255, 90, 95, 0.35);
+  border-color: rgba(255, 90, 95, 0.5);
+  border-width: 2px;
 }
 
 .bracket-match-header {
@@ -3978,6 +3981,10 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   color: var(--text-muted, #9ca3af);
   opacity: 0.8;
 }
+
+.bracket-match-pts-exact .winner-badge-pick-label { color: #86efac; opacity: 1; }
+.bracket-match-pts-partial .winner-badge-pick-label { color: #fde68a; opacity: 1; }
+.bracket-match-pts-miss .winner-badge-pick-label { color: #ff8d91; opacity: 1; }
 
 .bracket-match-others {
   display: inline-flex;
