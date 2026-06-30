@@ -273,13 +273,13 @@ function renderKnockoutMatch(match, myPred) {
   if (!hasBoth) {
     winnerBadge = `<div class="winner-badge winner-badge-hint">${t('knockout.predictHint')}</div>`;
   } else if (!isTie) {
-    const winnerName = numHome > numAway ? match.home : match.away;
-    const pickLabel = result ? `<span class="winner-badge-pick-label">${t('knockout.yourPick')}</span>` : '';
-    winnerBadge = `<div class="winner-badge winner-badge-auto">
-      ${pickLabel}
-      ${knockoutTeamFlag(winnerName)}
-      <span class="winner-badge-text">${escapeHtml(tCountry(winnerName))} ${t('knockout.advances')}</span>
-    </div>`;
+    if (!result) {
+      const winnerName = numHome > numAway ? match.home : match.away;
+      winnerBadge = `<div class="winner-badge winner-badge-auto">
+        ${knockoutTeamFlag(winnerName)}
+        <span class="winner-badge-text">${escapeHtml(tCountry(winnerName))} ${t('knockout.advances')}</span>
+      </div>`;
+    }
   } else {
     const homeSelected = winnerPick === 'home' ? ' is-selected' : '';
     const awaySelected = winnerPick === 'away' ? ' is-selected' : '';
