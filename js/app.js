@@ -609,7 +609,11 @@ async function refreshKnockoutMatches() {
         let newResults = false;
         const merged = { ...existing };
         for (const m of matches) {
-          if (m.result && !existing[m.id]) {
+          if (!m.result) continue;
+          const ex = existing[m.id];
+          const changed = !ex || ex.home !== m.result.home || ex.away !== m.result.away
+            || ex.penHome !== m.result.penHome || ex.penAway !== m.result.penAway;
+          if (changed) {
             merged[m.id] = m.result;
             newResults = true;
           }

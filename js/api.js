@@ -92,7 +92,7 @@ function parseWorldCupResponse(json) {
 }
 
 const KnockoutApiCache = {
-  key: 'wc2026_knockout_cache_v2',
+  key: 'wc2026_knockout_cache_v3',
   ttl: 5 * 60 * 1000,
   set(data) { localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data })); },
   get(maxAgeMs) {
@@ -191,15 +191,22 @@ function parseKnockoutResponse(stageResults) {
         venue: m.venue || null,
         result: m.score?.fullTime?.home != null
           ? (() => {
-              const r = { home: m.score.fullTime.home, away: m.score.fullTime.away };
               const pen = m.score?.penalties;
+              const reg = m.score?.regularTime;
+              // When penalties exist, show regulation-time score (90 min) rather
+              // than fullTime which includes extra-time goals in football-data API.
+              const useReg = pen && pen.home != null && reg && reg.home != null;
+              const r = {
+                home: useReg ? reg.home : m.score.fullTime.home,
+                away: useReg ? reg.away : m.score.fullTime.away,
+              };
               if (pen && pen.home != null && pen.away != null) {
                 r.penHome = pen.home;
                 r.penAway = pen.away;
-                if (r.home === r.away) r.winnerPick = pen.home > pen.away ? 'home' : 'away';
-              } else if (r.home === r.away && m.score?.regularTime) {
-                const winner = m.score.regularTime.home > m.score.regularTime.away ? 'away'
-                  : m.score.regularTime.away > m.score.regularTime.home ? 'home' : null;
+                r.winnerPick = pen.home > pen.away ? 'home' : 'away';
+              } else if (r.home === r.away && reg) {
+                const winner = reg.home > reg.away ? 'away'
+                  : reg.away > reg.home ? 'home' : null;
                 if (winner) r.winnerPick = winner === 'home' ? 'home' : 'away';
               }
               return r;
