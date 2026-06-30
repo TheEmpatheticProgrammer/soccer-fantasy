@@ -3987,7 +3987,11 @@ body:not(.league-type-knockout) .nav-btn[data-view="knockout"] { display: none; 
   margin-top: 0.3rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #86efac;
+  color: var(--text-muted);
+}
+.bracket-match-pts-exact .bracket-result-banner-winner { color: #86efac; }
+.bracket-match-pts-partial .bracket-result-banner-winner { color: #fde68a; }
+.bracket-match-pts-miss .bracket-result-banner-winner { color: #ff8d91; }
 }
 
 /* Prediction section — muted, below the result */
