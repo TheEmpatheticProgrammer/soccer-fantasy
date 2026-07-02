@@ -155,12 +155,22 @@ async function runKnockoutAutosave() {
     }
   }
 
+  // Preserve predictions for completed matches (no longer in DOM).
+  const results = getKnockoutResults();
+  for (const [matchId, pred] of Object.entries(existing)) {
+    if (results[matchId] && !preds[matchId]) {
+      preds[matchId] = pred;
+    }
+  }
+
   const cleaned = Object.fromEntries(
     Object.entries(preds).filter(([, p]) => p.home !== undefined && p.away !== undefined)
   );
 
   const matches = state.knockout?.matches || [];
-  const expectedInputs = matches.length * 2;
+  const results = getKnockoutResults();
+  const pendingMatches = matches.filter(m => !results[m.id]);
+  const expectedInputs = pendingMatches.length * 2;
   const actualInputs = document.querySelectorAll('#view-knockout .knockout-score-input').length;
   if (expectedInputs > 0 && actualInputs < expectedInputs) {
     console.warn('[knockout-autosave] DOM not fully rendered, skipping');
