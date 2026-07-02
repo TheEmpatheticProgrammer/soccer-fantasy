@@ -167,12 +167,8 @@ async function runKnockoutAutosave() {
     Object.entries(preds).filter(([, p]) => p.home !== undefined && p.away !== undefined)
   );
 
-  const matches = state.knockout?.matches || [];
-  const pendingMatches = matches.filter(m => !results[m.id]);
-  const expectedInputs = pendingMatches.length * 2;
-  const actualInputs = document.querySelectorAll('#view-knockout .knockout-score-input').length;
-  if (expectedInputs > 0 && actualInputs < expectedInputs) {
-    console.warn('[knockout-autosave] DOM not fully rendered, skipping');
+  if (Object.keys(cleaned).length === 0) {
+    setAutosaveStatus('saved');
     return;
   }
 
