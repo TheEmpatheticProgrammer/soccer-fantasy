@@ -120,21 +120,25 @@ async function loadKnockoutData(apiKey, force = false, maxAgeMs) {
   }
 
   const headers = isUsingProxy() ? {} : { 'X-Auth-Token': apiKey };
-  const results = await Promise.all(KNOCKOUT_API_STAGES.map(async stage => {
-    const res = await fetch(
-      `${getApiBase()}/competitions/${COMPETITION}/matches?stage=${stage}`,
-      { headers }
-    );
-    if (!res.ok) {
-      // A stage may legitimately not exist yet (e.g. R16 before R32 finishes).
-      // Treat non-2xx as "no matches for this stage" rather than failing the whole load.
-      return { stage, matches: [] };
-    }
-    const json = await res.json().catch(() => ({}));
-    return { stage, matches: json.matches || [] };
+  // Single request for all matches; filter to knockout stages client-side.
+  // This avoids 6 parallel requests that trigger rate limits.
+  const res = await fetch(
+    `${getApiBase()}/competitions/${COMPETITION}/matches`,
+    { headers }
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.message || `HTTP ${res.status}`);
+  }
+  const json = await res.json();
+  const allMatches = json.matches || [];
+  const knockoutStageSet = new Set(KNOCKOUT_API_STAGES);
+  const stageResults = KNOCKOUT_API_STAGES.map(stage => ({
+    stage,
+    matches: allMatches.filter(m => m.stage === stage),
   }));
 
-  const out = parseKnockoutResponse(results);
+  const out = parseKnockoutResponse(stageResults);
   const prev = KnockoutApiCache.get(Infinity);
   if (prev && out.matches.length < prev.matches.length) {
     return prev;
