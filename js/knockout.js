@@ -168,7 +168,6 @@ async function runKnockoutAutosave() {
   );
 
   const matches = state.knockout?.matches || [];
-  const results = getKnockoutResults();
   const pendingMatches = matches.filter(m => !results[m.id]);
   const expectedInputs = pendingMatches.length * 2;
   const actualInputs = document.querySelectorAll('#view-knockout .knockout-score-input').length;
