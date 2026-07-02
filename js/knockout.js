@@ -66,6 +66,7 @@ function subscribeToKnockoutPredictions() {
       state.knockout.predVersion = (state.knockout.predVersion || 0) + 1;
 
       const myDoc = state.knockout.predictionDocs[state.uid];
+      console.log('[knockout-sub] loaded predictions for uid=%s, keys=%s', state.uid, myDoc ? Object.keys(myDoc.predictions || {}).join(',') : 'NO DOC');
       const user = firebase.auth().currentUser;
       const myEmail = user?.email || '';
       const nameMismatch = myDoc && state.currentPlayer && myDoc.displayName !== state.currentPlayer;
@@ -110,7 +111,10 @@ function scheduleKnockoutAutosave() {
 }
 
 async function runKnockoutAutosave() {
-  if (!state.uid || !state.leagueId || isSaving) return;
+  if (!state.uid || !state.leagueId || isSaving) {
+    console.log('[knockout-autosave] skip: uid=%s leagueId=%s isSaving=%s', state.uid, state.leagueId, isSaving);
+    return;
+  }
   if (!state.currentLeague) {
     if (knockoutAutosaveRetries++ < KNOCKOUT_AUTOSAVE_MAX_RETRIES) {
       knockoutAutosaveTimer = setTimeout(runKnockoutAutosave, 500);
@@ -122,6 +126,7 @@ async function runKnockoutAutosave() {
   }
   knockoutAutosaveRetries = 0;
   if (arePredictionsLocked()) {
+    console.log('[knockout-autosave] skip: predictions locked');
     setAutosaveStatus('error', t('predictions.saveLocked'));
     return;
   }
@@ -168,10 +173,12 @@ async function runKnockoutAutosave() {
   );
 
   if (Object.keys(cleaned).length === 0) {
+    console.log('[knockout-autosave] skip: cleaned is empty. preds=', JSON.stringify(preds));
     setAutosaveStatus('saved');
     return;
   }
 
+  console.log('[knockout-autosave] saving %d predictions:', Object.keys(cleaned).length, cleaned);
   isSaving = true;
   setAutosaveStatus('saving');
   try {
@@ -182,6 +189,7 @@ async function runKnockoutAutosave() {
       predictions: cleaned,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
+    console.log('[knockout-autosave] SUCCESS — wrote to leagues/%s/knockoutPredictions/%s', state.leagueId, state.uid);
     setAutosaveStatus('saved');
   } catch (err) {
     console.error('[knockout-autosave] failed', err);
