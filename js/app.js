@@ -643,9 +643,10 @@ async function refreshKnockoutMatches() {
       }
 
       // Resolve TBD teams in later rounds from feeder match winners.
-      // When football-data.org is slow to update, we can derive R16+ teams
-      // from R32 results using the bracket template's fromSlots.
-      resolveAdvancingTeams(matches);
+      // Disabled: the bracket template's slot ordering does not match
+      // football-data's actual draw structure. Trust the API to populate
+      // teams as results are confirmed.
+      // resolveAdvancingTeams(matches);
 
       // Preserve previously resolved team names if the API/standings still
       // return TBD — prevents losing names on transient API failures.

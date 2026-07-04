@@ -92,7 +92,7 @@ function parseWorldCupResponse(json) {
 }
 
 const KnockoutApiCache = {
-  key: 'wc2026_knockout_cache_v4',
+  key: 'wc2026_knockout_cache_v5',
   ttl: 5 * 60 * 1000,
   set(data) { localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data })); },
   get(maxAgeMs) {
