@@ -92,7 +92,7 @@ function parseWorldCupResponse(json) {
 }
 
 const KnockoutApiCache = {
-  key: 'wc2026_knockout_cache_v5',
+  key: 'wc2026_knockout_cache_v6',
   ttl: 5 * 60 * 1000,
   set(data) { localStorage.setItem(this.key, JSON.stringify({ ts: Date.now(), data })); },
   get(maxAgeMs) {
@@ -107,6 +107,14 @@ const KnockoutApiCache = {
 };
 
 const KNOCKOUT_API_STAGES = ['LAST_32', 'LAST_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
+
+// Fallback team names for matches the API hasn't populated yet.
+// Sourced from ESPN scoreboard; remove entries once football-data catches up.
+const KNOCKOUT_TEAM_OVERRIDES = {
+  '537379': { home: 'Portugal', away: 'Spain' },
+  '537381': { home: 'Argentina', away: 'Egypt' },
+  '537382': { home: 'Switzerland', away: 'Colombia' },
+};
 
 async function loadKnockoutData(apiKey, force = false, maxAgeMs) {
   if (typeof Storage !== 'undefined' && Storage.getKnockoutDemo && Storage.getKnockoutDemo()) {
@@ -165,8 +173,9 @@ function parseKnockoutResponse(stageResults) {
     sorted.forEach((m, idx) => {
       const homeTeam = m.homeTeam || {};
       const awayTeam = m.awayTeam || {};
-      const home = homeTeam.name || 'TBD';
-      const away = awayTeam.name || 'TBD';
+      const override = KNOCKOUT_TEAM_OVERRIDES[String(m.id)];
+      const home = homeTeam.name || (override && override.home) || 'TBD';
+      const away = awayTeam.name || (override && override.away) || 'TBD';
       if (homeTeam.crest && home !== 'TBD') crests[home] = homeTeam.crest;
       if (awayTeam.crest && away !== 'TBD') crests[away] = awayTeam.crest;
 
