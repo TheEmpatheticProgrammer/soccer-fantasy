@@ -574,6 +574,58 @@ function reassignR32Slots(matches, aliasMap) {
   }
 }
 
+function resolveAdvancingTeams(matches) {
+  if (typeof KNOCKOUT_TEMPLATE === 'undefined') return;
+  const bySlot = new Map(matches.map(m => [m.slot, m]));
+  const results = (typeof getKnockoutResults === 'function') ? getKnockoutResults() : (state.knockout?.results || {});
+
+  for (const m of matches) {
+    if (m.home !== 'TBD' && m.away !== 'TBD') continue;
+    const stages = Object.values(KNOCKOUT_TEMPLATE).flat();
+    const tmpl = stages.find(t => t.slot === m.slot);
+    if (!tmpl || !tmpl.fromSlots) continue;
+    const isLoser = tmpl.sourceType === 'loser';
+
+    const [homeFeeder, awayFeeder] = tmpl.fromSlots;
+    if (m.home === 'TBD' && homeFeeder) {
+      const feeder = bySlot.get(homeFeeder);
+      if (feeder) {
+        const winner = getMatchWinner(feeder, results[feeder.id]);
+        if (winner) m.home = isLoser ? getMatchLoser(feeder, results[feeder.id]) || m.home : winner;
+      }
+    }
+    if (m.away === 'TBD' && awayFeeder) {
+      const feeder = bySlot.get(awayFeeder);
+      if (feeder) {
+        const winner = getMatchWinner(feeder, results[feeder.id]);
+        if (winner) m.away = isLoser ? getMatchLoser(feeder, results[feeder.id]) || m.away : winner;
+      }
+    }
+  }
+}
+
+function getMatchWinner(match, result) {
+  if (result) {
+    if (result.home > result.away) return match.home;
+    if (result.away > result.home) return match.away;
+    if (result.winnerPick === 'home') return match.home;
+    if (result.winnerPick === 'away') return match.away;
+  }
+  if (match.result) {
+    if (match.result.home > match.result.away) return match.home;
+    if (match.result.away > match.result.home) return match.away;
+    if (match.result.winnerPick === 'home') return match.home;
+    if (match.result.winnerPick === 'away') return match.away;
+  }
+  return null;
+}
+
+function getMatchLoser(match, result) {
+  const winner = getMatchWinner(match, result);
+  if (!winner) return null;
+  return winner === match.home ? match.away : match.home;
+}
+
 async function refreshKnockoutMatches() {
   try {
     if (typeof loadKnockoutData !== 'function') return;
@@ -589,6 +641,11 @@ async function refreshKnockoutMatches() {
           }
         } catch (e) { console.warn('[knockout] standings fetch failed:', e.message); }
       }
+
+      // Resolve TBD teams in later rounds from feeder match winners.
+      // When football-data.org is slow to update, we can derive R16+ teams
+      // from R32 results using the bracket template's fromSlots.
+      resolveAdvancingTeams(matches);
 
       // Preserve previously resolved team names if the API/standings still
       // return TBD — prevents losing names on transient API failures.
