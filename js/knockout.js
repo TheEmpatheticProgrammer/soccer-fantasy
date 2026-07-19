@@ -218,7 +218,7 @@ function knockoutTeamLabel(name, alias) {
 const KNOCKOUT_ROUND_LOCK_LEAD_MS = 60 * 60 * 1000; // 1 hour before kickoff
 
 // Per-match lock overrides: lock 5 min before kickoff instead of the default 1 hour.
-const KNOCKOUT_LOCK_OVERRIDE_MS = { '537387': 5 * 60 * 1000 };
+const KNOCKOUT_LOCK_OVERRIDE_MS = { '537387': 5 * 60 * 1000, '537390': 5 * 60 * 1000 };
 
 function knockoutMatchLockTime(match) {
   const t = match?.utcDate ? new Date(match.utcDate).getTime() : NaN;
